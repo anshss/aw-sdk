@@ -48,7 +48,6 @@ export class AgentSigner {
   private litContracts: LitContracts | null = null;
   private toolPolicyContract: ethers.Contract | null = null;
   private pkpInfo: PkpInfo | null = null;
-
   private storage = new LocalStorageImpl();
 
   /**
