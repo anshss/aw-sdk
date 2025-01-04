@@ -2,7 +2,6 @@ import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
 import {
   AUTH_METHOD_SCOPE,
   AUTH_METHOD_SCOPE_VALUES,
-  LIT_NETWORK,
   LIT_RPC,
 } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
@@ -11,6 +10,7 @@ import { ethers } from 'ethers';
 import {
   AdminConfig,
   AgentConfig,
+  DEFAULT_LIT_NETWORK,
   PkpInfo,
   RegisteredTool,
   ToolPolicyRegistryConfig,
@@ -26,7 +26,6 @@ const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
 
 export class Admin {
   private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
-  private static readonly DEFAULT_LIT_NETWORK = LIT_NETWORK.DatilTest;
   // TODO: Add min balance check
   // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 
@@ -66,7 +65,7 @@ export class Admin {
   public static async create(
     adminConfig: AdminConfig,
     {
-      litNetwork = Admin.DEFAULT_LIT_NETWORK,
+      litNetwork = DEFAULT_LIT_NETWORK,
       debug = false,
       toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
     }: AgentConfig = {}

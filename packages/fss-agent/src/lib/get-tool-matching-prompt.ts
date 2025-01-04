@@ -1,6 +1,6 @@
-import type { ToolInfo } from '@lit-protocol/fss-tool-registry';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
-export function getToolMatchingPrompt(tools: ToolInfo[]): string {
+export function getToolMatchingPrompt(tools: FssTool[]): string {
   const toolDescriptions = tools
     .map(
       (tool) =>

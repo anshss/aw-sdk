@@ -1,8 +1,6 @@
 import { OpenAI } from 'openai';
-import {
-  listAvailableTools,
-  type ToolInfo,
-} from '@lit-protocol/fss-tool-registry';
+import { listTools } from '@lit-protocol/fss-tool-registry';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
 import { getToolMatchingPrompt } from './get-tool-matching-prompt';
 
@@ -12,9 +10,9 @@ export async function getToolForIntent(
   userIntent: string
 ): Promise<{
   analysis: any;
-  matchedTool: ToolInfo | null;
+  matchedTool: FssTool | null;
 }> {
-  const availableTools = listAvailableTools();
+  const availableTools = listTools();
 
   const completion = await openai.chat.completions.create({
     model: openAiModel,

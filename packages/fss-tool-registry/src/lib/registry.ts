@@ -1,7 +1,5 @@
-import { FssTool } from '@lit-protocol/fss-tool';
+import type { FssTool } from '@lit-protocol/fss-tool';
 import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
-
-import { FssToolRegistryError, FssToolRegistryErrorType } from './errors';
 
 const toolRegistry = new Map<string, FssTool<any, any>>();
 
@@ -16,45 +14,29 @@ export function registerTool<T extends FssTool<any, any>>(
 }
 
 /**
- * Get a tool from the registry
- * @throws RegistryError if tool is not found
+ * Get a tool from the registry by name
+ * @returns The tool if found, null otherwise
  */
-export function getToolByName<T extends FssTool<any, any>>(name: string): T {
+export function getToolByName<T extends FssTool<any, any>>(
+  name: string
+): T | null {
   const tool = toolRegistry.get(name);
-  if (!tool) {
-    throw new FssToolRegistryError(
-      FssToolRegistryErrorType.TOOL_NOT_FOUND,
-      `Tool not found: ${name}`,
-      { name }
-    );
-  }
-  return tool as T;
+  return tool ? (tool as T) : null;
 }
 
 /**
  * Find a tool by its IPFS CID
- * @throws RegistryError if tool is not found
+ * @returns The tool if found, null otherwise
  */
 export function getToolByIpfsCid<T extends FssTool<any, any>>(
   ipfsCid: string
-): T {
+): T | null {
   for (const tool of toolRegistry.values()) {
     if (tool.ipfsCid === ipfsCid) {
       return tool as T;
     }
   }
-  throw new FssToolRegistryError(
-    FssToolRegistryErrorType.IPFS_CID_NOT_FOUND,
-    `No tool found with IPFS CID: ${ipfsCid}`,
-    { ipfsCid }
-  );
-}
-
-/**
- * Check if a tool exists in the registry
- */
-export function hasTool(name: string): boolean {
-  return toolRegistry.has(name);
+  return null;
 }
 
 /**

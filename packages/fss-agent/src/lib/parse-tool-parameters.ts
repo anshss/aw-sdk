@@ -1,14 +1,18 @@
 import { OpenAI } from 'openai';
-import type { ToolInfo } from '@lit-protocol/fss-tool-registry';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
-export async function parseToolParametersFromIntent(
+export async function parseToolParametersFromIntent<
+  TParams extends Record<string, any>,
+  TPolicy extends { type: string }
+>(
   openai: OpenAI,
   openAiModel: string,
   intent: string,
-  tool: ToolInfo
+  tool: FssTool<TParams, TPolicy>
 ): Promise<{
-  foundParams: Record<string, string>;
-  missingParams: string[];
+  foundParams: Partial<TParams>;
+  missingParams: Array<keyof TParams>;
+  validationErrors: Array<{ param: string; error: string }>;
 }> {
   const completion = await openai.chat.completions.create({
     model: openAiModel,
@@ -18,9 +22,23 @@ export async function parseToolParametersFromIntent(
         content: `You are a parameter parser for web3 transactions. Given a user's intent and a tool's required parameters, extract the parameter values from the intent.
         
         Tool: ${tool.name}
+        Description: ${tool.description}
         Parameters:
-        ${tool.parameters
-          .map((param) => `- ${param.name}: ${param.description}`)
+        ${Object.entries(tool.parameters.descriptions)
+          .map(([param, description]) => {
+            // Try parsing an empty string to get validation error messages
+            const result = tool.parameters.schema.safeParse({ [param]: '' });
+            const validationRules = !result.success
+              ? result.error.issues
+                  .filter((issue) => issue.path[0] === param)
+                  .map((issue) => issue.message)
+                  .join(', ')
+              : '';
+
+            return `- ${param}: ${description}${
+              validationRules ? `\n  Validation: ${validationRules}` : ''
+            }`;
+          })
           .join('\n')}
 
         Return a JSON object with:
@@ -48,8 +66,37 @@ export async function parseToolParametersFromIntent(
   });
 
   const result = JSON.parse(completion.choices[0].message.content || '{}');
+
+  // Validate found parameters
+  const foundParams = result.foundParams || {};
+  const validationResult = tool.parameters.validate(foundParams);
+
+  if (validationResult === true) {
+    return {
+      foundParams,
+      missingParams:
+        result.missingParams || Object.keys(tool.parameters.descriptions),
+      validationErrors: [],
+    };
+  }
+
+  // If validation fails, only treat invalid params as missing
+  const invalidParams = new Set(validationResult.map((error) => error.param));
+  const filteredParams: Partial<TParams> = {};
+  const missingParams = new Set<keyof TParams>(result.missingParams || []);
+
+  // Keep only valid params in foundParams
+  Object.entries(foundParams).forEach(([param, value]) => {
+    if (!invalidParams.has(param)) {
+      filteredParams[param as keyof TParams] = value as TParams[keyof TParams];
+    } else {
+      missingParams.add(param as keyof TParams);
+    }
+  });
+
   return {
-    foundParams: result.foundParams || {},
-    missingParams: result.missingParams || [],
+    foundParams: filteredParams,
+    missingParams: Array.from(missingParams),
+    validationErrors: validationResult,
   };
 }

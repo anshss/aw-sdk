@@ -1,4 +1,4 @@
-import { LIT_ABILITY, LIT_NETWORK, LIT_RPC } from '@lit-protocol/constants';
+import { LIT_ABILITY, LIT_RPC } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
 import {
@@ -13,7 +13,7 @@ import type {
 } from '@lit-protocol/types';
 import { ethers } from 'ethers';
 
-import type { AgentConfig } from './types';
+import { DEFAULT_LIT_NETWORK, type AgentConfig } from './types';
 import {
   isCapacityCreditExpired,
   loadCapacityCreditFromStorage,
@@ -27,7 +27,6 @@ export class Delegatee {
   private static readonly DEFAULT_STORAGE_PATH =
     './.fss-signer-delegatee-storage';
   private static readonly DEFAULT_RPC_URL = LIT_RPC.CHRONICLE_YELLOWSTONE;
-  private static readonly DEFAULT_LIT_NETWORK = LIT_NETWORK.DatilTest;
   // TODO: Add min balance check
   // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 
@@ -76,7 +75,7 @@ export class Delegatee {
   public static async create(
     delegateePrivateKey: string,
     {
-      litNetwork = Delegatee.DEFAULT_LIT_NETWORK,
+      litNetwork = DEFAULT_LIT_NETWORK,
       debug = false,
     }: Omit<AgentConfig, 'toolPolicyRegistryConfig'> = {}
   ) {

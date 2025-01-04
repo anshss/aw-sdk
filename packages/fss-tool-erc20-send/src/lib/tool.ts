@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FSSTool } from '@lit-protocol/fss-tool';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
 import { IPFS_CID } from './ipfs';
 import { SendERC20Policy, type SendERC20PolicyType } from './policy';
@@ -72,15 +72,23 @@ const SendERC20LitActionParameterDescriptions = {
 } as const;
 
 /**
- * Type guard to check if parameters match the required schema
+ * Validate parameters and return detailed error messages if invalid
  */
-const isValidSendERC20Parameters = (
+const validateSendERC20Parameters = (
   params: unknown
-): params is SendERC20LitActionParameters => {
-  return SendERC20LitActionSchema.safeParse(params).success;
+): true | Array<{ param: string; error: string }> => {
+  const result = SendERC20LitActionSchema.safeParse(params);
+  if (result.success) {
+    return true;
+  }
+
+  return result.error.issues.map((issue) => ({
+    param: issue.path[0] as string,
+    error: issue.message,
+  }));
 };
 
-export const SendERC20: FSSTool<
+export const SendERC20: FssTool<
   SendERC20LitActionParameters,
   SendERC20PolicyType
 > = {
@@ -92,7 +100,7 @@ export const SendERC20: FSSTool<
     type: {} as SendERC20LitActionParameters,
     schema: SendERC20LitActionSchema,
     descriptions: SendERC20LitActionParameterDescriptions,
-    validate: isValidSendERC20Parameters,
+    validate: validateSendERC20Parameters,
   },
 
   policy: SendERC20Policy,

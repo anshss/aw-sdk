@@ -1,5 +1,8 @@
+import { LIT_NETWORK } from '@lit-protocol/constants';
 import type { LIT_NETWORKS_KEYS } from '@lit-protocol/types';
 import type { ethers } from 'ethers';
+
+export const DEFAULT_LIT_NETWORK = LIT_NETWORK.DatilTest;
 
 export interface ToolPolicyRegistryConfig {
   rpcUrl: string;

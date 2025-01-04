@@ -2,6 +2,7 @@
   "name": "@lit-protocol/fss-agent",
   "version": "0.0.1",
   "dependencies": {
+    "@lit-protocol/fss-tool": "workspace:*",
     "@lit-protocol/fss-tool-registry": "workspace:*",
     "openai": "^4.77.0",
     "tslib": "^2.3.0"

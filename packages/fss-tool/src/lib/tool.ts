@@ -8,9 +8,7 @@ export type EthereumAddress = z.infer<typeof BaseEthereumAddressSchema>;
 
 export interface FssTool<
   TParams extends Record<string, any> = Record<string, any>,
-  TPolicy extends { type: string } = {
-    type: string;
-  }
+  TPolicy extends { type: string } = { type: string }
 > {
   // Basic tool information
   name: string;
@@ -22,7 +20,9 @@ export interface FssTool<
     type: TParams;
     schema: z.ZodType<TParams>;
     descriptions: Readonly<Record<keyof TParams, string>>;
-    validate: (params: unknown) => params is TParams;
+    validate: (
+      params: unknown
+    ) => true | Array<{ param: string; error: string }>;
   };
 
   // Policy handling

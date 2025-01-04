@@ -77,6 +77,9 @@ importers:
 
   packages/fss-agent:
     dependencies:
+      '@lit-protocol/fss-tool':
+        specifier: workspace:*
+        version: link:../fss-tool
       '@lit-protocol/fss-tool-registry':
         specifier: workspace:*
         version: link:../fss-tool-registry
@@ -218,6 +221,9 @@ importers:
       '@lit-protocol/constants':
         specifier: 7.0.2
         version: 7.0.2(typescript@5.6.3)
+      '@lit-protocol/fss-agent':
+        specifier: workspace:*
+        version: link:../fss-agent
       '@lit-protocol/fss-signer':
         specifier: workspace:*
         version: link:../fss-signer
