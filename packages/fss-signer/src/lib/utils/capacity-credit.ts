@@ -3,8 +3,8 @@ import { LIT_NETWORK } from '@lit-protocol/constants';
 import { ethers } from 'ethers';
 
 import { LocalStorage } from './storage';
-import { CapacityCreditMintOptions, CapacityCreditInfo } from './types';
-import { FssSignerError, FssSignerErrorType } from './errors';
+import { CapacityCreditMintOptions, CapacityCreditInfo } from '../types';
+import { FssSignerError, FssSignerErrorType } from '../errors';
 
 /**
  * Load capacity credit ID from storage

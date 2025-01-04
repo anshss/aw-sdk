@@ -20,8 +20,8 @@ import {
   mintCapacityCredit,
   requiresCapacityCredit,
   saveCapacityCreditToStorage,
-} from './capacity-credit';
-import { LocalStorage } from './storage';
+} from './utils/capacity-credit';
+import { LocalStorage } from './utils/storage';
 
 export class Delegatee {
   private static readonly DEFAULT_STORAGE_PATH =

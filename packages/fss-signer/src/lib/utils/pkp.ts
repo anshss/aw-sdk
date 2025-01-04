@@ -2,8 +2,8 @@ import type { LitContracts } from '@lit-protocol/contracts-sdk';
 import { ethers } from 'ethers';
 
 import type { LocalStorage } from './storage';
-import { PkpInfo } from './types';
-import { FssSignerError, FssSignerErrorType } from './errors';
+import { PkpInfo } from '../types';
+import { FssSignerError, FssSignerErrorType } from '../errors';
 
 export function loadPkpFromStorage(storage: LocalStorage): PkpInfo | null {
   try {

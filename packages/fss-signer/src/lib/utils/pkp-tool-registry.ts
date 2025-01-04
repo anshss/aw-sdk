@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import { ToolPolicyRegistryConfig } from './types';
+import { ToolPolicyRegistryConfig } from '../types';
 
 export const POLICY_ABI = [
   'function setActionPolicy(address pkp, bytes memory policy) external',

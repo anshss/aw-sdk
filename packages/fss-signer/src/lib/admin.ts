@@ -15,9 +15,9 @@ import {
   RegisteredTool,
   ToolPolicyRegistryConfig,
 } from './types';
-import { getPkpToolPolicyRegistryContract } from './pkp-tool-registry';
-import { LocalStorage } from './storage';
-import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './pkp';
+import { getPkpToolPolicyRegistryContract } from './utils/pkp-tool-registry';
+import { LocalStorage } from './utils/storage';
+import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 
 const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
