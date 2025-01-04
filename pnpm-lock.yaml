@@ -200,6 +200,9 @@ importers:
 
   packages/fss-tool-registry:
     dependencies:
+      '@lit-protocol/fss-tool':
+        specifier: workspace:*
+        version: link:../fss-tool
       '@lit-protocol/fss-tool-erc20-send':
         specifier: workspace:*
         version: link:../fss-tool-erc20-send

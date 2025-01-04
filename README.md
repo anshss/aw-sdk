@@ -12,7 +12,7 @@ The Lit AI Agent project consists of several packages that work together to prov
 - `fss-signer`: Handles authentication and signing of transactions
 - `fss-tool-registry`: Registry for available agent tools and capabilities
 - `fss-tool-erc20-send`: Example tool implementation for sending ERC20 tokens
-- `fss-tool-policy-base`: Shared utilities and interfaces for building agent tools
+- `fss-tool`: Shared utilities and interfaces for building agent tools
 
 ## Running the Lit Agent CLI Demo
 

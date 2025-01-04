@@ -4,7 +4,7 @@
   "include": [],
   "references": [
     {
-      "path": "../fss-tool-policy-base"
+      "path": "../fss-tool"
     },
     {
       "path": "../fss-tool-erc20-send"

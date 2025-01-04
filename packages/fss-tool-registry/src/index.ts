@@ -1,1 +1,1 @@
-export * from './lib/agent-tool-registry';
+export * from './lib/registry';

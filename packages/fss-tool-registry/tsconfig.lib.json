@@ -13,7 +13,7 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../fss-tool-policy-base/tsconfig.lib.json"
+      "path": "../fss-tool/tsconfig.lib.json"
     },
     {
       "path": "../fss-tool-erc20-send/tsconfig.lib.json"

@@ -6,7 +6,7 @@ export const BaseEthereumAddressSchema = z
 
 export type EthereumAddress = z.infer<typeof BaseEthereumAddressSchema>;
 
-export interface FSSTool<
+export interface FssTool<
   TParams extends Record<string, any> = Record<string, any>,
   TPolicy extends { type: string } = {
     type: string;
