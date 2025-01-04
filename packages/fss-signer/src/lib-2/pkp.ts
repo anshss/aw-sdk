@@ -4,6 +4,8 @@ import { ethers } from 'ethers';
 import type { LocalStorage } from './storage';
 import { PkpInfo } from './types';
 import { FssSignerError, FssSignerErrorType } from './errors';
+import { AUTH_METHOD_SCOPE_VALUES } from '@lit-protocol/constants';
+import { AUTH_METHOD_SCOPE } from '@lit-protocol/constants';
 
 export function loadPkpFromStorage(storage: LocalStorage): PkpInfo | null {
   try {

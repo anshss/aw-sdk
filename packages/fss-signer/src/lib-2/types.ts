@@ -53,3 +53,9 @@ export interface CapacityCreditMintOptions {
   requestsPerKilosecond?: number;
   daysUntilUTCMidnightExpiration?: number;
 }
+
+export interface RegisteredTool {
+  ipfsCid: string;
+  policy: string;
+  version: string;
+}
