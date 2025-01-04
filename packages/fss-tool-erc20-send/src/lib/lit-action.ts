@@ -53,7 +53,7 @@ export default async () => {
 
       if (!isDelegatee) {
         throw new Error(
-          `Session signer ${sessionSigner} is not a delegatee for PKP ${pkp.ethAddress}`
+          `Session signer ${sessionSigner} is not a delegatee for PKP ${pkp.tokenId}`
         );
       }
     }
@@ -65,7 +65,7 @@ export default async () => {
       // Get policy for this tool
       const TOOL_IPFS_CID = LitAuth.actionIpfsIds[0];
       const [policyData] = await pkpToolRegistryContract.getActionPolicy(
-        pkp.ethAddress,
+        pkp.tokenId,
         TOOL_IPFS_CID
       );
 
