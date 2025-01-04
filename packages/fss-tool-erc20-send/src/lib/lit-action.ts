@@ -25,6 +25,7 @@ declare global {
 
   // Required Inputs
   const pkp: {
+    tokenId: string;
     ethAddress: string;
     publicKey: string;
   };
@@ -39,29 +40,31 @@ declare global {
 
 export default async () => {
   try {
-    async function validatePolicy(amount: any) {
-      // Tool policy registry contract
-      const TOOL_POLICY_ABI = [
-        'function getActionPolicy(address pkp, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
-      ];
-
-      // Create contract instance
-      // TODO: This is a temporary hardcoded value. The user can specify the policy registry, so this should be dynamic.
-      const TOOL_POLICY_REGISTRY = '0xD78e1C1183A29794A092dDA7dB526A91FdE36020';
-      const policyProvider = new ethers.providers.JsonRpcProvider(
-        await Lit.Actions.getRpcUrl({
-          chain: 'yellowstone',
-        })
-      );
-      const policyContract = new ethers.Contract(
-        TOOL_POLICY_REGISTRY,
-        TOOL_POLICY_ABI,
-        policyProvider
+    // Check if the session signer is a delegatee
+    async function checkLitAuthAddressIsDelegatee(
+      pkpToolRegistryContract: any
+    ) {
+      // Check if the session signer is a delegatee
+      const sessionSigner = ethers.utils.getAddress(LitAuth.address);
+      const isDelegatee = await pkpToolRegistryContract.isDelegateeOf(
+        pkp.tokenId,
+        sessionSigner
       );
 
+      if (!isDelegatee) {
+        throw new Error(
+          `Session signer ${sessionSigner} is not a delegatee for PKP ${pkp.ethAddress}`
+        );
+      }
+    }
+
+    async function validateInputsAgainstPolicy(
+      pkpToolRegistryContract: any,
+      amount: any
+    ) {
       // Get policy for this tool
       const TOOL_IPFS_CID = LitAuth.actionIpfsIds[0];
-      const [policyData] = await policyContract.getActionPolicy(
+      const [policyData] = await pkpToolRegistryContract.getActionPolicy(
         pkp.ethAddress,
         TOOL_IPFS_CID
       );
@@ -324,8 +327,27 @@ export default async () => {
     const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
     const tokenInfo = await getTokenInfo(provider);
 
-    // Validate against policy
-    await validatePolicy(tokenInfo.amount);
+    // Create contract instance
+    const PKP_TOOL_REGISTRY_ABI = [
+      'function isDelegateeOf(uint256 pkpTokenId, address delegatee) external view returns (bool)',
+      'function getActionPolicy(address pkp, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
+    ];
+    const PKP_TOOL_REGISTRY = '0xD78e1C1183A29794A092dDA7dB526A91FdE36020';
+    const pkpToolRegistryContract = new ethers.Contract(
+      PKP_TOOL_REGISTRY,
+      PKP_TOOL_REGISTRY_ABI,
+      new ethers.providers.JsonRpcProvider(
+        await Lit.Actions.getRpcUrl({
+          chain: 'yellowstone',
+        })
+      )
+    );
+
+    await checkLitAuthAddressIsDelegatee(pkpToolRegistryContract);
+    await validateInputsAgainstPolicy(
+      pkpToolRegistryContract,
+      tokenInfo.amount
+    );
 
     const gasData = await getGasData();
     const gasLimit = await estimateGasLimit(provider, tokenInfo.amount);
