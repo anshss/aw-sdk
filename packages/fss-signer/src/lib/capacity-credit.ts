@@ -1,15 +1,9 @@
 import { LitContracts } from '@lit-protocol/contracts-sdk';
-import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
-import type { AuthSig } from '@lit-protocol/types';
 import { LIT_NETWORK } from '@lit-protocol/constants';
 import { ethers } from 'ethers';
 
 import { LocalStorage } from './storage';
-import {
-  CapacityCreditMintOptions,
-  CapacityCreditDelegationAuthSigOptions,
-  CapacityCreditInfo,
-} from './types';
+import { CapacityCreditMintOptions, CapacityCreditInfo } from './types';
 import { FssSignerError, FssSignerErrorType } from './errors';
 
 /**

@@ -1,4 +1,4 @@
-import type { AuthSig, LIT_NETWORKS_KEYS } from '@lit-protocol/types';
+import type { LIT_NETWORKS_KEYS } from '@lit-protocol/types';
 import type { ethers } from 'ethers';
 
 export interface ToolPolicyRegistryConfig {
