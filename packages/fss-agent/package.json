@@ -1,0 +1,21 @@
+{
+  "name": "@lit-protocol/fss-agent",
+  "version": "0.0.1",
+  "dependencies": {
+    "@lit-protocol/fss-tool-registry": "workspace:*",
+    "openai": "^4.77.0",
+    "tslib": "^2.3.0"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "nx": {
+    "sourceRoot": "packages/fss-agent/src",
+    "projectType": "library",
+    "name": "fss-agent"
+  }
+}
