@@ -127,27 +127,3 @@ export async function mintCapacityCredit(
     mintedAtUtc: new Date().toISOString(),
   };
 }
-
-/**
- * Get a capacity credit delegation auth signature
- */
-export async function getCapacityCreditDelegationAuthSig(
-  litNodeClient: LitNodeClientNodeJs,
-  ethersWallet: ethers.Wallet,
-  capacityCreditId: string,
-  {
-    delegateeAddresses,
-    uses = '1',
-    expiration = new Date(Date.now() + 1000 * 60 * 10).toISOString(), // 10 minutes from now
-  }: CapacityCreditDelegationAuthSigOptions
-): Promise<AuthSig> {
-  const result = await litNodeClient.createCapacityDelegationAuthSig({
-    dAppOwnerWallet: ethersWallet,
-    capacityTokenId: capacityCreditId,
-    delegateeAddresses,
-    uses,
-    expiration,
-  });
-
-  return result.capacityDelegationAuthSig;
-}

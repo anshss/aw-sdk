@@ -11,7 +11,6 @@ import { ethers } from 'ethers';
 import {
   AdminConfig,
   AgentConfig,
-  CapacityCreditInfo,
   PkpInfo,
   RegisteredTool,
   ToolPolicyRegistryConfig,
@@ -19,14 +18,6 @@ import {
 import { getPkpToolPolicyRegistryContract } from './pkp-tool-registry';
 import { LocalStorage } from './storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './pkp';
-import { Storage } from 'src/lib/storage';
-import {
-  isCapacityCreditExpired,
-  loadCapacityCreditFromStorage,
-  requiresCapacityCredit,
-  saveCapacityCreditToStorage,
-} from './capacity-credit';
-import { mintCapacityCredit } from './capacity-credit';
 
 const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
@@ -34,34 +25,26 @@ const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
 } as const;
 
 export class Admin {
+  private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
   private static readonly DEFAULT_LIT_NETWORK = LIT_NETWORK.DatilTest;
-  private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
+  // TODO: Add min balance check
+  // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 
-  private readonly storage: Storage;
-  private readonly litNodeClient: LitNodeClientNodeJs;
   private readonly litContracts: LitContracts;
   private readonly toolPolicyRegistryContract: ethers.Contract;
   private readonly adminWallet: ethers.Wallet;
   private readonly pkpInfo: PkpInfo;
 
-  private capacityCreditInfo: CapacityCreditInfo | null;
-
   private constructor(
-    storage: Storage,
-    litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
     toolPolicyRegistryContract: ethers.Contract,
     adminWallet: ethers.Wallet,
-    pkpInfo: PkpInfo,
-    capacityCreditInfo: CapacityCreditInfo | null
+    pkpInfo: PkpInfo
   ) {
-    this.storage = storage;
-    this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
     this.toolPolicyRegistryContract = toolPolicyRegistryContract;
     this.adminWallet = adminWallet;
     this.pkpInfo = pkpInfo;
-    this.capacityCreditInfo = capacityCreditInfo;
   }
 
   private static async getPkp(
@@ -80,31 +63,6 @@ export class Admin {
     return mintMetadata;
   }
 
-  private static async getCapacityCredit(
-    litContracts: LitContracts,
-    storage: LocalStorage
-  ) {
-    if (requiresCapacityCredit(litContracts)) {
-      const capacityCreditInfo = loadCapacityCreditFromStorage(storage);
-      if (
-        capacityCreditInfo !== null &&
-        !isCapacityCreditExpired(
-          capacityCreditInfo.mintedAtUtc,
-          capacityCreditInfo.daysUntilUTCMidnightExpiration
-        )
-      ) {
-        return capacityCreditInfo;
-      }
-
-      const mintMetadata = await mintCapacityCredit(litContracts);
-      saveCapacityCreditToStorage(storage, mintMetadata);
-
-      return mintMetadata;
-    }
-
-    return null;
-  }
-
   public static async create(
     adminConfig: AdminConfig,
     {
@@ -113,7 +71,7 @@ export class Admin {
       toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
     }: AgentConfig = {}
   ) {
-    const storage = new LocalStorage();
+    const storage = new LocalStorage(Admin.DEFAULT_STORAGE_PATH);
 
     const litNodeClient = new LitNodeClientNodeJs({
       litNetwork,
@@ -139,13 +97,10 @@ export class Admin {
     await litContracts.connect();
 
     return new Admin(
-      storage,
-      litNodeClient,
       litContracts,
       getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig),
       adminWallet,
-      await Admin.getPkp(litContracts, adminWallet, storage),
-      await Admin.getCapacityCredit(litContracts, storage)
+      await Admin.getPkp(litContracts, adminWallet, storage)
     );
   }
 

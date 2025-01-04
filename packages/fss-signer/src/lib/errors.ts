@@ -1,34 +1,28 @@
-export enum LitAgentErrorType {
-  INITIALIZATION_FAILED = 'INITIALIZATION_FAILED',
-  INSUFFICIENT_BALANCE = 'INSUFFICIENT_BALANCE',
-  WALLET_CREATION_FAILED = 'WALLET_CREATION_FAILED',
-  TOOL_PERMISSION_FAILED = 'TOOL_PERMISSION_FAILED',
-  TOOL_EXECUTION_FAILED = 'TOOL_EXECUTION_FAILED',
-  INVALID_PARAMETERS = 'INVALID_PARAMETERS',
-  TOOL_VALIDATION_FAILED = 'TOOL_VALIDATION_FAILED',
-  TOOL_NOT_FOUND = 'TOOL_NOT_FOUND',
-  TOOL_POLICY_REGISTRATION_FAILED = 'TOOL_POLICY_REGISTRATION_FAILED',
+export enum FssSignerErrorType {
+  INSUFFICIENT_BALANCE_PKP_MINT = 'INSUFFICIENT_BALANCE_PKP_MINT',
+  INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT = 'INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT',
+  STORAGE_FAILED_TO_GET_ITEM = 'STORAGE_FAILED_TO_GET_ITEM',
 }
 
 export type ErrorDetails = {
   name?: string;
   message?: string;
   stack?: string;
-  type?: LitAgentErrorType;
+  type?: FssSignerErrorType;
   details?: unknown;
   [key: string]: unknown;
 };
 
-export class LitAgentError extends Error {
+export class FssSignerError extends Error {
   public readonly serializedDetails: string;
 
   constructor(
-    public readonly type: LitAgentErrorType,
+    public readonly type: FssSignerErrorType,
     message: string,
     public readonly details?: Record<string, ErrorDetails | unknown>
   ) {
     super(message);
-    this.name = 'LitAgentError';
+    this.name = 'FssSignerError';
 
     // Store a serialized version of details for better error logging
     this.serializedDetails = details
@@ -41,7 +35,7 @@ export class LitAgentError extends Error {
                 name: value.name,
                 message: value.message,
                 stack: value.stack,
-                ...(value instanceof LitAgentError
+                ...(value instanceof FssSignerError
                   ? {
                       type: value.type,
                       details: value.serializedDetails

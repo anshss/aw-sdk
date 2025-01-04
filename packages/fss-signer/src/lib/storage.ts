@@ -1,23 +1,10 @@
-import { LocalStorage } from 'node-localstorage';
+import { LocalStorage as NodeLocalStorage } from 'node-localstorage';
 
-/**
- * Storage interface for the fss signer
- */
-export interface Storage {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-  removeItem(key: string): void;
-  clear(): void;
-}
+export class LocalStorage {
+  private storage: NodeLocalStorage;
 
-/**
- * Node.js local storage implementation
- */
-export class LocalStorageImpl implements Storage {
-  private storage: LocalStorage;
-
-  constructor() {
-    this.storage = new LocalStorage('./.fss-signer-storage');
+  constructor(storageFilePath: string) {
+    this.storage = new NodeLocalStorage(storageFilePath);
   }
 
   getItem(key: string): string | null {
