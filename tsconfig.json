@@ -23,6 +23,9 @@
     },
     {
       "path": "./packages/fss-agent"
+    },
+    {
+      "path": "./packages/fss-tool"
     }
   ]
 }

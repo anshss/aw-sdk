@@ -1,39 +1,5 @@
-import {
-  SendERC20LitActionParameters,
-  SendERC20LitActionSchema,
-  SendERC20LitActionMetadata,
-  SendERC20LitActionParameterDescriptions,
-  isValidSendERC20Parameters,
-  sendERC20LitActionDescription,
-  SendERC20Policy,
-  SendERC20PolicySchema,
-  encodeSendERC20Policy,
-  decodeSendERC20Policy,
-  IPFS_CID as SendERC20IpfsCid,
-} from '@lit-protocol/fss-tool-erc20-send';
+import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
 import { ethers } from 'ethers';
-
-export const SendERC20 = {
-  description: sendERC20LitActionDescription,
-  ipfsCid: SendERC20IpfsCid,
-
-  Parameters: {
-    type: {} as SendERC20LitActionParameters,
-    schema: SendERC20LitActionSchema,
-    descriptions: SendERC20LitActionParameterDescriptions,
-    validate: isValidSendERC20Parameters,
-  },
-
-  metadata: SendERC20LitActionMetadata,
-
-  Policy: {
-    type: {} as SendERC20Policy,
-    schema: SendERC20PolicySchema,
-    encode: encodeSendERC20Policy,
-    decode: (encodedPolicy: string, version: string) =>
-      decodeSendERC20Policy(encodedPolicy, version),
-  },
-} as const;
 
 export const SUPPORTED_TOOLS = ['SendERC20'] as const;
 export type SupportedToolTypes = (typeof SUPPORTED_TOOLS)[number];
