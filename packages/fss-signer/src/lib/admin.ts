@@ -22,7 +22,7 @@ import { FssSignerError, FssSignerErrorType } from './errors';
 
 const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-  contractAddress: '0xD78e1C1183A29794A092dDA7dB526A91FdE36020',
+  contractAddress: '0xeCE5088AA7Ad0A6304A80Cd22B271093A5c25d5C',
 } as const;
 
 export class Admin {

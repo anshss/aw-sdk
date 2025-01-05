@@ -12,7 +12,7 @@ export class FssCli {
       case Role.Admin:
         try {
           admin = await Admin.create();
-          await Admin.showMenu();
+          await Admin.showMenu(admin);
         } finally {
           if (admin !== null) {
             admin.disconnect();

@@ -1,10 +1,11 @@
 import { Admin as FssAdmin } from '@lit-protocol/full-self-signing';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
-import prompts from 'prompts';
 
 import { logger } from '../utils/logger';
 import { promptAdminInit } from '../prompts/admin/init';
 import { promptAdminInsufficientBalance } from '../prompts/admin/insuffcient-balance';
+import { promptAdminMenu } from '../prompts/admin/menu';
+import { handlePermitTool } from '../handlers/admin/permit-tool';
 
 export class Admin {
   private fssAdmin: FssAdmin;
@@ -50,35 +51,12 @@ export class Admin {
     return new Admin(fssAdmin);
   }
 
-  public static async showMenu() {
-    const { option } = await prompts({
-      type: 'select',
-      name: 'option',
-      message: 'Select an action:',
-      choices: [
-        { title: 'Permit Tool', value: 'permitTool' },
-        { title: 'Remove Tool', value: 'removeTool' },
-        { title: 'Get Registered Tools', value: 'getRegisteredTools' },
-        { title: 'Get Tool Policy', value: 'getToolPolicy' },
-        { title: 'Set Tool Policy', value: 'setToolPolicy' },
-        { title: 'Remove Tool Policy', value: 'removeToolPolicy' },
-        { title: 'Get Delegatees', value: 'getDelegatees' },
-        { title: 'Check if Address is Delegatee', value: 'isDelegatee' },
-        { title: 'Add Delegatee', value: 'addDelegatee' },
-        { title: 'Remove Delegatee', value: 'removeDelegatee' },
-        { title: 'Batch Add Delegatees', value: 'batchAddDelegatees' },
-        { title: 'Batch Remove Delegatees', value: 'batchRemoveDelegatees' },
-      ],
-    });
-
-    if (!option) {
-      logger.error('No option selected');
-      process.exit(1);
-    }
+  public static async showMenu(admin: Admin) {
+    const option = await promptAdminMenu();
 
     switch (option) {
       case 'permitTool':
-        logger.info('Executing: Permit Tool');
+        await handlePermitTool(admin.fssAdmin);
         break;
       case 'removeTool':
         logger.info('Executing: Remove Tool');
@@ -117,6 +95,8 @@ export class Admin {
         logger.error('Invalid option selected');
         process.exit(1);
     }
+
+    await Admin.showMenu(admin);
   }
 
   public async disconnect() {

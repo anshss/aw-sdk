@@ -98,6 +98,9 @@ importers:
       '@lit-protocol/fss-signer':
         specifier: workspace:*
         version: link:../fss-signer
+      '@lit-protocol/fss-tool':
+        specifier: workspace:*
+        version: link:../fss-tool
       '@lit-protocol/fss-tool-registry':
         specifier: workspace:*
         version: link:../fss-tool-registry

@@ -9,9 +9,10 @@
   },
   "dependencies": {
     "@lit-protocol/constants": "7.0.2",
-    "@lit-protocol/fss-signer": "workspace:*",
-    "@lit-protocol/fss-tool-registry": "workspace:*",
     "@lit-protocol/full-self-signing": "workspace:*",
+    "@lit-protocol/fss-signer": "workspace:*",
+    "@lit-protocol/fss-tool": "workspace:*",
+    "@lit-protocol/fss-tool-registry": "workspace:*",
     "ethers": "5.7.2",
     "node-localstorage": "^3.0.5",
     "prompts": "^2.4.2",

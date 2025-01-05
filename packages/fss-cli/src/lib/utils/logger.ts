@@ -16,4 +16,7 @@ export const logger = {
   warn: (message: string) => {
     console.warn('\n⚠️ ', message);
   },
+  loading: (message: string) => {
+    console.log('\n🔄', message);
+  },
 };
