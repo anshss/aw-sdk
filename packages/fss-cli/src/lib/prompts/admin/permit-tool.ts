@@ -6,7 +6,7 @@ import type { FssTool } from '@lit-protocol/fss-tool';
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
-export const promptSelectTool = async (alreadyPermittedTools?: {
+export const promptSelectToolToPermit = async (alreadyPermittedTools?: {
   toolsWithPolicies: RegisteredTool[];
   toolsWithoutPolicies: string[];
 }) => {
@@ -43,14 +43,16 @@ export const promptSelectTool = async (alreadyPermittedTools?: {
   });
 
   if (!tool) {
-    logger.error('No tool selected.');
-    process.exit(1);
+    throw new FssCliError(
+      FssCliErrorType.ADMIN_PERMIT_TOOL_CANCELLED,
+      'Tool permitting cancelled.'
+    );
   }
 
   return tool;
 };
 
-export const promptPermitTool = async (tool: FssTool) => {
+export const promptConfirmPermit = async (tool: FssTool) => {
   logger.log('');
   logger.log(`Name: ${tool.name}`);
   logger.log(`Description: ${tool.description}`);

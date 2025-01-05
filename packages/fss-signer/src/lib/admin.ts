@@ -6,6 +6,7 @@ import {
 } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { ethers } from 'ethers';
+import bs58 from 'bs58';
 
 import {
   AdminConfig,
@@ -184,6 +185,13 @@ export class Admin {
         this.pkpInfo.info.tokenId
       );
 
+    // Convert hex CIDs to base58
+    const base58PermittedTools = permittedTools.map((hexCid) => {
+      // Remove '0x' prefix and convert to Buffer
+      const bytes = Buffer.from(hexCid.slice(2), 'hex');
+      return bs58.encode(bytes);
+    });
+
     // Get tools with policies
     const [ipfsCids, policyData, versions] =
       await this.toolPolicyRegistryContract.getRegisteredActions(
@@ -197,7 +205,7 @@ export class Admin {
     }));
 
     // Find tools that are permitted but don't have policies
-    const toolsWithoutPolicies = permittedTools.filter(
+    const toolsWithoutPolicies = base58PermittedTools.filter(
       (tool) => !ipfsCids.includes(tool)
     );
 

@@ -1,8 +1,8 @@
 import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
 
 import {
-  promptPermitTool,
-  promptSelectTool,
+  promptConfirmPermit,
+  promptSelectToolToPermit,
 } from '../../prompts/admin/permit-tool';
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
@@ -40,7 +40,7 @@ const getAndDisplayAlreadyPermittedTools = async (fssAdmin: FssAdmin) => {
 };
 
 const permitTool = async (fssAdmin: FssAdmin, tool: FssTool) => {
-  await promptPermitTool(tool);
+  await promptConfirmPermit(tool);
 
   logger.loading('Permitting tool...');
   await fssAdmin.permitTool({ ipfsCid: tool.ipfsCid });
@@ -48,23 +48,26 @@ const permitTool = async (fssAdmin: FssAdmin, tool: FssTool) => {
 };
 
 export const handlePermitTool = async (fssAdmin: FssAdmin) => {
-  const alreadyPermittedTools = await getAndDisplayAlreadyPermittedTools(
-    fssAdmin
-  );
-
   try {
-    await permitTool(fssAdmin, await promptSelectTool(alreadyPermittedTools));
+    const alreadyPermittedTools = await getAndDisplayAlreadyPermittedTools(
+      fssAdmin
+    );
+
+    await permitTool(
+      fssAdmin,
+      await promptSelectToolToPermit(alreadyPermittedTools)
+    );
   } catch (error) {
     if (error instanceof FssCliError) {
       if (
         error.type === FssCliErrorType.ADMIN_PERMIT_TOOL_NO_UNPERMITTED_TOOLS
       ) {
-        logger.info('No unpermitted tools found.');
+        logger.error('No unpermitted tools found.');
         return;
       }
 
       if (error.type === FssCliErrorType.ADMIN_PERMIT_TOOL_CANCELLED) {
-        logger.info('Tool permitting cancelled.');
+        logger.error('Tool permitting cancelled.');
         return;
       }
     }

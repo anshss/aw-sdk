@@ -6,6 +6,7 @@ import { promptAdminInit } from '../prompts/admin/init';
 import { promptAdminInsufficientBalance } from '../prompts/admin/insuffcient-balance';
 import { promptAdminMenu } from '../prompts/admin/menu';
 import { handlePermitTool } from '../handlers/admin/permit-tool';
+import { handleRemoveTool } from '../handlers/admin/remove-tool';
 
 export class Admin {
   private fssAdmin: FssAdmin;
@@ -59,7 +60,7 @@ export class Admin {
         await handlePermitTool(admin.fssAdmin);
         break;
       case 'removeTool':
-        logger.info('Executing: Remove Tool');
+        await handleRemoveTool(admin.fssAdmin);
         break;
       case 'getRegisteredTools':
         logger.info('Executing: Get Registered Tools');
