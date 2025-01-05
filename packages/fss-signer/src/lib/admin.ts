@@ -18,6 +18,7 @@ import {
 import { getPkpToolPolicyRegistryContract } from './utils/pkp-tool-registry';
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
+import { FssSignerError, FssSignerErrorType } from './errors';
 
 const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
@@ -29,17 +30,20 @@ export class Admin {
   // TODO: Add min balance check
   // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 
+  private readonly litNodeClient: LitNodeClientNodeJs;
   private readonly litContracts: LitContracts;
   private readonly toolPolicyRegistryContract: ethers.Contract;
   private readonly adminWallet: ethers.Wallet;
   private readonly pkpInfo: PkpInfo;
 
   private constructor(
+    litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
     toolPolicyRegistryContract: ethers.Contract,
     adminWallet: ethers.Wallet,
     pkpInfo: PkpInfo
   ) {
+    this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
     this.toolPolicyRegistryContract = toolPolicyRegistryContract;
     this.adminWallet = adminWallet;
@@ -72,21 +76,40 @@ export class Admin {
   ) {
     const storage = new LocalStorage(Admin.DEFAULT_STORAGE_PATH);
 
+    const provider = new ethers.providers.JsonRpcProvider(
+      toolPolicyRegistryConfig.rpcUrl
+    );
+
+    let adminWallet: ethers.Wallet;
+    if (adminConfig.type === 'eoa') {
+      const storedPrivateKey = storage.getItem('privateKey');
+      const adminPrivateKey = adminConfig.privateKey || storedPrivateKey;
+
+      if (adminPrivateKey === null) {
+        throw new FssSignerError(
+          FssSignerErrorType.ADMIN_MISSING_PRIVATE_KEY,
+          'Admin private key not provided and not found in storage. Please provide a private key.'
+        );
+      }
+
+      // Only save if not already stored
+      if (!storedPrivateKey) {
+        storage.setItem('privateKey', adminPrivateKey);
+      }
+
+      adminWallet = new ethers.Wallet(adminPrivateKey, provider);
+    } else {
+      throw new FssSignerError(
+        FssSignerErrorType.ADMIN_MULTISIG_NOT_IMPLEMENTED,
+        'Multisig admin not implemented, use EOA instead.'
+      );
+    }
+
     const litNodeClient = new LitNodeClientNodeJs({
       litNetwork,
       debug,
     });
     await litNodeClient.connect();
-
-    const provider = new ethers.providers.JsonRpcProvider(
-      toolPolicyRegistryConfig.rpcUrl
-    );
-    let adminWallet: ethers.Wallet;
-    if (adminConfig.type === 'eoa') {
-      adminWallet = new ethers.Wallet(adminConfig.privateKey, provider);
-    } else {
-      throw new Error('Multisig admin not implemented');
-    }
 
     const litContracts = new LitContracts({
       signer: adminWallet,
@@ -96,6 +119,7 @@ export class Admin {
     await litContracts.connect();
 
     return new Admin(
+      litNodeClient,
       litContracts,
       getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig),
       adminWallet,
@@ -328,5 +352,9 @@ export class Admin {
     );
 
     return await tx.wait();
+  }
+
+  public async disconnect() {
+    this.litNodeClient.disconnect();
   }
 }

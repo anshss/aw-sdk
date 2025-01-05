@@ -7,9 +7,17 @@ export class FssCli {
     const selectedRole = await promptSelectRole();
     logger.success(`Selected role: ${selectedRole}.`);
 
+    let admin: Admin | null = null;
     switch (selectedRole) {
       case Role.Admin:
-        await Admin.create();
+        try {
+          admin = await Admin.create();
+          await Admin.showMenu();
+        } finally {
+          if (admin !== null) {
+            admin.disconnect();
+          }
+        }
         break;
       case Role.Delegatee:
         break;

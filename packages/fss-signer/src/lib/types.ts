@@ -17,7 +17,7 @@ export interface AgentConfig {
 
 interface EoaAdminConfig {
   type: 'eoa';
-  privateKey: string;
+  privateKey?: string;
 }
 
 interface MultisigAdminConfig {
