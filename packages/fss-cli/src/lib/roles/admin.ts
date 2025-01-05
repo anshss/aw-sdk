@@ -2,13 +2,17 @@ import { Admin as FssAdmin } from '@lit-protocol/full-self-signing';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
 
 import { logger } from '../utils/logger';
-import { promptAdminInit } from '../prompts/admin/init';
-import { promptAdminInsufficientBalance } from '../prompts/admin/insuffcient-balance';
-import { promptAdminMenu } from '../prompts/admin/menu';
-import { handlePermitTool } from '../handlers/admin/permit-tool';
-import { handleRemoveTool } from '../handlers/admin/remove-tool';
-import { handleGetTools } from '../handlers/admin/get-tools';
-import { handleGetToolPolicy } from '../handlers/admin/get-tool-policy';
+import {
+  promptAdminInit,
+  promptAdminInsufficientBalance,
+  promptAdminMenu,
+} from '../prompts/admin';
+import {
+  handlePermitTool,
+  handleRemoveTool,
+  handleGetTools,
+  handleGetToolPolicy,
+} from '../handlers/admin';
 
 export class Admin {
   private fssAdmin: FssAdmin;
