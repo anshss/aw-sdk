@@ -1,4 +1,4 @@
-import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+import { Admin as FssAdmin } from '@lit-protocol/full-self-signing';
 
 import {
   promptConfirmPermit,
@@ -7,37 +7,7 @@ import {
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
 import { FssTool } from '@lit-protocol/fss-tool';
-
-const getAndDisplayAlreadyPermittedTools = async (fssAdmin: FssAdmin) => {
-  logger.loading('Getting already permitted tools');
-  const alreadyPermittedTools = await fssAdmin.getRegisteredTools();
-
-  if (
-    alreadyPermittedTools.toolsWithPolicies.length === 0 &&
-    alreadyPermittedTools.toolsWithoutPolicies.length === 0
-  ) {
-    logger.info('No tools are currently permitted.');
-    return;
-  }
-
-  logger.info('Currently Permitted Tools:');
-
-  if (alreadyPermittedTools.toolsWithPolicies.length > 0) {
-    logger.log('Tools with Policies:');
-    alreadyPermittedTools.toolsWithPolicies.forEach((tool) => {
-      logger.log(`  - IPFS CID: ${tool.ipfsCid}`);
-    });
-  }
-
-  if (alreadyPermittedTools.toolsWithoutPolicies.length > 0) {
-    logger.log('Tools without Policies:');
-    alreadyPermittedTools.toolsWithoutPolicies.forEach((ipfsCid) => {
-      logger.log(`  - IPFS CID: ${ipfsCid}`);
-    });
-  }
-
-  return alreadyPermittedTools;
-};
+import { handleGetTools } from './get-tools';
 
 const permitTool = async (fssAdmin: FssAdmin, tool: FssTool) => {
   await promptConfirmPermit(tool);
@@ -49,9 +19,7 @@ const permitTool = async (fssAdmin: FssAdmin, tool: FssTool) => {
 
 export const handlePermitTool = async (fssAdmin: FssAdmin) => {
   try {
-    const alreadyPermittedTools = await getAndDisplayAlreadyPermittedTools(
-      fssAdmin
-    );
+    const alreadyPermittedTools = await handleGetTools(fssAdmin);
 
     await permitTool(
       fssAdmin,
