@@ -7,3 +7,4 @@ export * from './remove-tool-policy';
 export * from './get-delegatees';
 export * from './is-delegatee';
 export * from './add-delegatee';
+export * from './remove-delegatee';

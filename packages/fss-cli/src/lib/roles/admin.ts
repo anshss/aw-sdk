@@ -17,6 +17,7 @@ import {
   handleGetDelegatees,
   handleIsDelegatee,
   handleAddDelegatee,
+  handleRemoveDelegatee,
 } from '../handlers/admin';
 
 export class Admin {
@@ -95,7 +96,7 @@ export class Admin {
         await handleAddDelegatee(admin.fssAdmin);
         break;
       case 'removeDelegatee':
-        // await handleRemoveDelegatee(admin.fssAdmin);
+        await handleRemoveDelegatee(admin.fssAdmin);
         break;
       case 'batchAddDelegatees':
         logger.info('Executing: Batch Add Delegatees');
