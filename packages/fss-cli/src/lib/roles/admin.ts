@@ -12,6 +12,7 @@ import {
   handleRemoveTool,
   handleGetTools,
   handleGetToolPolicy,
+  handleSetToolPolicy,
 } from '../handlers/admin';
 
 export class Admin {
@@ -75,7 +76,7 @@ export class Admin {
         await handleGetToolPolicy(admin.fssAdmin);
         break;
       case 'setToolPolicy':
-        logger.info('Executing: Set Tool Policy');
+        await handleSetToolPolicy(admin.fssAdmin);
         break;
       case 'removeToolPolicy':
         logger.info('Executing: Remove Tool Policy');

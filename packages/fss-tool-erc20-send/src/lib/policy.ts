@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 
 const policySchema = z.object({
   type: z.literal('SendERC20'),
+  version: z.string(),
   maxAmount: z.string().refine(
     (val) => {
       try {
@@ -46,6 +47,7 @@ function decodePolicy(encodedPolicy: string): SendERC20PolicyType {
 
   const policy: SendERC20PolicyType = {
     type: 'SendERC20',
+    version: '1.0.0',
     maxAmount: decoded.maxAmount.toString(),
     allowedTokens: decoded.allowedTokens,
     allowedRecipients: decoded.allowedRecipients,
@@ -58,6 +60,7 @@ export type SendERC20PolicyType = z.infer<typeof policySchema>;
 
 export const SendERC20Policy = {
   type: {} as SendERC20PolicyType,
+  version: '1.0.0',
   schema: policySchema,
   encode: encodePolicy,
   decode: decodePolicy,

@@ -6,3 +6,4 @@ export {
   promptSelectToolForRemoval,
   promptConfirmRemoval,
 } from './remove-tool';
+export { promptPolicyDetails } from './policy-details';

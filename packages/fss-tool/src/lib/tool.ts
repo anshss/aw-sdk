@@ -28,6 +28,7 @@ export interface FssTool<
   // Policy handling
   policy: {
     type: TPolicy;
+    version: string;
     schema: z.ZodType<TPolicy>;
     encode: (policy: TPolicy) => string;
     decode: (encodedPolicy: string) => TPolicy;
