@@ -11,6 +11,7 @@ import {
   handleGetDelegatedPkps,
   handleGetRegisteredTools,
   handleGetToolPolicy,
+  handleExecuteTool,
 } from '../handlers/delegatee';
 
 export class Delegatee {
@@ -72,7 +73,7 @@ export class Delegatee {
         await handleGetToolPolicy(delegatee.fssDelegatee);
         break;
       case 'executeTool':
-        // await handleExecuteTool(delegatee.fssDelegatee);
+        await handleExecuteTool(delegatee.fssDelegatee);
         break;
       default:
         logger.error('Invalid option selected');

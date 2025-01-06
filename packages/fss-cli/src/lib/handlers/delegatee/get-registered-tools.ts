@@ -21,7 +21,7 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
 
   // Get registered tools for the selected PKP
   const { toolsWithPolicies, toolsWithoutPolicies } =
-    await fssDelegatee.getRegisteredToolsForPkp(selectedPkp);
+    await fssDelegatee.getRegisteredToolsForPkp(selectedPkp.tokenId);
 
   return {
     pkpTokenId: selectedPkp,

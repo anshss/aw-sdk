@@ -1,4 +1,7 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
+import type {
+  DelegatedPkpInfo,
+  Delegatee as FssDelegatee,
+} from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 
@@ -12,7 +15,7 @@ export const handleGetDelegatedPkps = async (fssDelegatee: FssDelegatee) => {
   }
 
   logger.info('PKPs Delegated to You:');
-  pkps.forEach((pkpTokenId: string, i: number) => {
-    logger.log(`  ${i + 1}. Token ID: ${pkpTokenId}`);
+  pkps.forEach((pkp: DelegatedPkpInfo, i: number) => {
+    logger.log(`  ${i + 1}. Token ID: ${pkp.tokenId}`);
   });
 };

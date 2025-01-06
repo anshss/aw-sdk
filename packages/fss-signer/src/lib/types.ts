@@ -62,3 +62,9 @@ export interface RegisteredTool {
   policy: string;
   version: string;
 }
+
+export interface DelegatedPkpInfo {
+  tokenId: string;
+  ethAddress: string;
+  publicKey: string;
+}

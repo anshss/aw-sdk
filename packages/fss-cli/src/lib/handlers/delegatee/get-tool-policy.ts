@@ -17,10 +17,10 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
       );
     }
 
-    const selectedPkpTokenId = await promptSelectPkp(pkps);
+    const selectedPkp = await promptSelectPkp(pkps);
 
     const { toolsWithPolicies } = await fssDelegatee.getRegisteredToolsForPkp(
-      selectedPkpTokenId
+      selectedPkp.tokenId
     );
 
     if (toolsWithPolicies.length === 0) {
@@ -53,7 +53,7 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
     const decodedPolicy = registryTool.policy.decode(selectedTool.policy);
 
     logger.info(
-      `Tool Policy for PKP ${selectedPkpTokenId} and Tool ${selectedTool.ipfsCid}:`
+      `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
     );
     logger.log(`Version: ${selectedTool.version}`);
     logger.log('Policy:');

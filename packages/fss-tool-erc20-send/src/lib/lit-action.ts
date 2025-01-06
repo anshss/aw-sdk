@@ -32,7 +32,6 @@ declare global {
   const params: {
     rpcUrl: string;
     chainId: number;
-    tokenIn: string;
     recipientAddress: string;
     amountIn: string;
   };
@@ -91,11 +90,11 @@ export default async () => {
         decodedPolicy.allowedTokens.length > 0 &&
         !decodedPolicy.allowedTokens
           .map((addr: string) => ethers.utils.getAddress(addr))
-          .includes(ethers.utils.getAddress(params.tokenIn))
+          .includes(ethers.utils.getAddress(params.amountIn))
       ) {
         throw new Error(
           `Token ${
-            params.tokenIn
+            params.amountIn
           } not allowed. Allowed tokens: ${decodedPolicy.allowedTokens.join(
             ', '
           )}`
@@ -120,19 +119,19 @@ export default async () => {
     }
 
     async function getTokenInfo(provider: any) {
-      console.log('Getting token info for:', params.tokenIn);
+      console.log('Getting token info for:', params.amountIn);
 
       // Validate token address
       try {
-        ethers.utils.getAddress(params.tokenIn);
+        ethers.utils.getAddress(params.amountIn);
       } catch (error) {
-        throw new Error(`Invalid token address: ${params.tokenIn}`);
+        throw new Error(`Invalid token address: ${params.amountIn}`);
       }
 
       // Check if contract exists
-      const code = await provider.getCode(params.tokenIn);
+      const code = await provider.getCode(params.amountIn);
       if (code === '0x') {
-        throw new Error(`No contract found at address: ${params.tokenIn}`);
+        throw new Error(`No contract found at address: ${params.amountIn}`);
       }
 
       const tokenInterface = new ethers.utils.Interface([
@@ -143,7 +142,7 @@ export default async () => {
 
       console.log('Creating token contract instance...');
       const tokenContract = new ethers.Contract(
-        params.tokenIn,
+        params.amountIn,
         tokenInterface,
         provider
       );
@@ -172,7 +171,7 @@ export default async () => {
       } catch (error) {
         console.error('Error getting token info:', error);
         throw new Error(
-          `Failed to interact with token contract at ${params.tokenIn}. Make sure this is a valid ERC20 token contract.`
+          `Failed to interact with token contract at ${params.amountIn}. Make sure this is a valid ERC20 token contract.`
         );
       }
     }
@@ -212,7 +211,7 @@ export default async () => {
       ]);
 
       const tokenContract = new ethers.Contract(
-        params.tokenIn,
+        params.amountIn,
         tokenInterface,
         provider
       );
@@ -244,7 +243,7 @@ export default async () => {
       ]);
 
       const transferTx = {
-        to: params.tokenIn,
+        to: params.amountIn,
         data: tokenInterface.encodeFunctionData('transfer', [
           params.recipientAddress,
           amount,

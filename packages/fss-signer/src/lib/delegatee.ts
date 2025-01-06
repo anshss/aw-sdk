@@ -13,7 +13,12 @@ import type {
 } from '@lit-protocol/types';
 import { ethers } from 'ethers';
 
-import { DEFAULT_LIT_NETWORK, RegisteredTool, type AgentConfig } from './types';
+import {
+  DEFAULT_LIT_NETWORK,
+  DelegatedPkpInfo,
+  RegisteredTool,
+  type AgentConfig,
+} from './types';
 import {
   isCapacityCreditExpired,
   loadCapacityCreditFromStorage,
@@ -140,7 +145,7 @@ export class Delegatee {
     );
   }
 
-  public async getDelegatedPkps(): Promise<string[]> {
+  public async getDelegatedPkps(): Promise<DelegatedPkpInfo[]> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
@@ -149,9 +154,36 @@ export class Delegatee {
       throw new Error('Delegatee wallet not initialized');
     }
 
-    return this.toolPolicyRegistryContract.getDelegatedPkps(
+    if (!this.litContracts) {
+      throw new Error('Lit contracts not initialized');
+    }
+
+    // Get token IDs of delegated PKPs
+    const tokenIds = await this.toolPolicyRegistryContract.getDelegatedPkps(
       this.delegateeWallet.address
     );
+
+    // For each token ID, get the public key and compute eth address
+    const pkps = await Promise.all(
+      tokenIds.map(async (tokenId: string) => {
+        // Get PKP public key
+        const pkpInfo = await this.litContracts.pkpNftContract.read.getPubkey(
+          tokenId
+        );
+        const publicKey = pkpInfo.toString();
+
+        // Compute eth address from public key
+        const ethAddress = ethers.utils.computeAddress(publicKey);
+
+        return {
+          tokenId: tokenId.toString(),
+          ethAddress,
+          publicKey,
+        };
+      })
+    );
+
+    return pkps;
   }
 
   /**
@@ -190,7 +222,7 @@ export class Delegatee {
   }
 
   public async executeTool(
-    params: JsonExecutionSdkParams
+    params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
   ): Promise<ExecuteJsResponse> {
     if (!this.litNodeClient || !this.litContracts || !this.delegateeWallet) {
       throw new Error('Delegatee not properly initialized');
