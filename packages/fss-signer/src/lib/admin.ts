@@ -23,7 +23,7 @@ import { FssSignerError, FssSignerErrorType } from './errors';
 
 const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-  contractAddress: '0xeCE5088AA7Ad0A6304A80Cd22B271093A5c25d5C',
+  contractAddress: '0xF38e6E7432D1e396Cd7Bf31fda4A8FB7A9ef9e69',
 } as const;
 
 export class Admin {
@@ -122,7 +122,7 @@ export class Admin {
     return new Admin(
       litNodeClient,
       litContracts,
-      getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig),
+      getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig, adminWallet),
       adminWallet,
       await Admin.getPkp(litContracts, adminWallet, storage)
     );
@@ -194,7 +194,7 @@ export class Admin {
 
     // Get tools with policies
     const [ipfsCids, policyData, versions] =
-      await this.toolPolicyRegistryContract.getRegisteredActions(
+      await this.toolPolicyRegistryContract.getRegisteredTools(
         this.pkpInfo.info.tokenId
       );
 
@@ -220,7 +220,6 @@ export class Admin {
    * @param ipfsCid IPFS CID of the tool
    * @returns The policy and version for the tool
    */
-  // TODO: Rename to getToolPolicy
   // TODO: Decode the policy bytes string to a string
   public async getToolPolicy(
     ipfsCid: string
@@ -230,7 +229,7 @@ export class Admin {
     }
 
     const [policy, version] =
-      await this.toolPolicyRegistryContract.getActionPolicy(
+      await this.toolPolicyRegistryContract.getToolPolicy(
         this.pkpInfo.info.tokenId,
         ipfsCid
       );
@@ -245,14 +244,13 @@ export class Admin {
    * @param version Version of the policy
    * @returns Transaction receipt
    */
-  // TODO: Rename to setToolPolicy
   // TODO: Encode the policy string to bytes
   public async setToolPolicy(ipfsCid: string, policy: string, version: string) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    const tx = await this.toolPolicyRegistryContract.setActionPolicy(
+    const tx = await this.toolPolicyRegistryContract.setToolPolicy(
       this.pkpInfo.info.tokenId,
       ipfsCid,
       policy,
@@ -267,7 +265,7 @@ export class Admin {
       throw new Error('Tool policy manager not initialized');
     }
 
-    const tx = await this.toolPolicyRegistryContract.removeActionPolicy(
+    const tx = await this.toolPolicyRegistryContract.removeToolPolicy(
       this.pkpInfo.info.tokenId,
       ipfsCid
     );

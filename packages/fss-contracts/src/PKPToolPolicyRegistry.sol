@@ -8,7 +8,7 @@ interface IPKPNFTFacet {
 
 // Custom errors for better gas efficiency and clearer error messages
 error InvalidPKPTokenId();
-error ActionNotFound(string ipfsCid);
+error ToolNotFound(string ipfsCid);
 error EmptyIPFSCID();
 error EmptyPolicy();
 error EmptyDelegatees();
@@ -20,14 +20,14 @@ event NewDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
 /// @dev Emitted when a delegatee is removed from a PKP
 event DelegateeRemoved(uint256 indexed pkpTokenId, address indexed delegatee);
 /// @dev Emitted when a tool policy is set or updated
-event ActionPolicySet(
+event ToolPolicySet(
     uint256 indexed pkpTokenId,
     string ipfsCid,
     bytes policy,
     string version
 );
 /// @dev Emitted when a tool policy is removed
-event ActionPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
+event ToolPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
 
 /**
  * @title PKPToolPolicyRegistry
@@ -50,7 +50,7 @@ event ActionPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
  * - Cannot be empty
  *
  * Policies:
- * - Must not be empty (use removeActionPolicy to remove a policy)
+ * - Must not be empty (use removeToolPolicy to remove a policy)
  * - Must be properly ABI encoded
  * - Version must be specified
  */
@@ -60,7 +60,7 @@ contract PKPToolPolicyRegistry {
      * @param policy Tool-specific configuration bytes that must be ABI encoded using abi.encode()
      * @param version Version of the policy (e.g., "1.0.0")
      */
-    struct ActionPolicy {
+    struct ToolPolicy {
         bytes policy; // Tool-specific ABI encoded configuration bytes
         string version; // Version of the policy
     }
@@ -75,13 +75,13 @@ contract PKPToolPolicyRegistry {
     mapping(uint256 => mapping(address => bool)) public isDelegatee;
 
     /// @dev Maps PKP token ID -> IPFS CID -> policy
-    mapping(uint256 => mapping(string => ActionPolicy)) public policies;
+    mapping(uint256 => mapping(string => ToolPolicy)) public policies;
 
     /// @dev Maps PKP token ID -> list of registered IPFS CIDs
-    mapping(uint256 => string[]) internal registeredActions;
+    mapping(uint256 => string[]) internal registeredTools;
 
-    /// @dev Maps PKP token ID -> IPFS CID -> index in registeredActions array
-    mapping(uint256 => mapping(string => uint256)) internal actionIndices;
+    /// @dev Maps PKP token ID -> IPFS CID -> index in registeredTools array
+    mapping(uint256 => mapping(string => uint256)) internal toolIndices;
 
     /**
      * @dev Constructor to set the PKP NFT contract address
@@ -108,7 +108,7 @@ contract PKPToolPolicyRegistry {
      * @return policyData Array of ABI encoded policy structs
      * @return versions Array of policy versions
      */
-    function getRegisteredActions(uint256 pkpTokenId)
+    function getRegisteredTools(uint256 pkpTokenId)
         external
         view
         returns (
@@ -117,18 +117,18 @@ contract PKPToolPolicyRegistry {
             string[] memory versions
         )
     {
-        string[] storage actionsList = registeredActions[pkpTokenId];
-        uint256 length = actionsList.length;
+        string[] storage toolsList = registeredTools[pkpTokenId];
+        uint256 length = toolsList.length;
 
         ipfsCids = new string[](length);
         policyData = new bytes[](length);
         versions = new string[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            string memory currentCid = actionsList[i];
+            string memory currentCid = toolsList[i];
             ipfsCids[i] = currentCid;
             
-            ActionPolicy storage currentPolicy = policies[pkpTokenId][currentCid];
+            ToolPolicy storage currentPolicy = policies[pkpTokenId][currentCid];
             policyData[i] = currentPolicy.policy;
             versions[i] = currentPolicy.version;
         }
@@ -143,25 +143,25 @@ contract PKPToolPolicyRegistry {
      * @return policy The ABI encoded policy struct
      * @return version Version of the policy
      */
-    function getActionPolicy(uint256 pkpTokenId, string calldata ipfsCid)
+    function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid)
         external
         view
         returns (bytes memory policy, string memory version)
     {
-        ActionPolicy storage actionPolicy = policies[pkpTokenId][ipfsCid];
-        return (actionPolicy.policy, actionPolicy.version);
+        ToolPolicy storage toolPolicy = policies[pkpTokenId][ipfsCid];
+        return (toolPolicy.policy, toolPolicy.version);
     }
 
     /**
      * @dev Set or update a policy for a specific tool
      * @notice This function must be called by the PKP's admin
-     * @notice Use removeActionPolicy to remove a policy, not an empty policy
+     * @notice Use removeToolPolicy to remove a policy, not an empty policy
      * @param pkpTokenId The PKP token ID to set the policy for
      * @param ipfsCid IPFS CID of the tool
      * @param policy Tool-specific policy bytes that must be ABI encoded
      * @param version Version of the policy
      */
-    function setActionPolicy(
+    function setToolPolicy(
         uint256 pkpTokenId,
         string calldata ipfsCid,
         bytes calldata policy,
@@ -171,18 +171,18 @@ contract PKPToolPolicyRegistry {
         if (policy.length == 0) revert EmptyPolicy();
         if (bytes(version).length == 0) revert EmptyVersion();
 
-        ActionPolicy storage actionPolicy = policies[pkpTokenId][ipfsCid];
+        ToolPolicy storage toolPolicy = policies[pkpTokenId][ipfsCid];
 
-        // If this is a new action, add it to the list
-        if (actionPolicy.policy.length == 0) {
-            actionIndices[pkpTokenId][ipfsCid] = registeredActions[pkpTokenId].length;
-            registeredActions[pkpTokenId].push(ipfsCid);
+        // If this is a new tool, add it to the list
+        if (toolPolicy.policy.length == 0) {
+            toolIndices[pkpTokenId][ipfsCid] = registeredTools[pkpTokenId].length;
+            registeredTools[pkpTokenId].push(ipfsCid);
         }
 
-        actionPolicy.policy = policy;
-        actionPolicy.version = version;
+        toolPolicy.policy = policy;
+        toolPolicy.version = version;
 
-        emit ActionPolicySet(pkpTokenId, ipfsCid, policy, version);
+        emit ToolPolicySet(pkpTokenId, ipfsCid, policy, version);
     }
 
     /**
@@ -191,34 +191,34 @@ contract PKPToolPolicyRegistry {
      * @param pkpTokenId The PKP token ID to remove the policy for
      * @param ipfsCid IPFS CID of the tool to remove
      */
-    function removeActionPolicy(uint256 pkpTokenId, string calldata ipfsCid) external onlyPKPOwner(pkpTokenId) {
+    function removeToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external onlyPKPOwner(pkpTokenId) {
         if (bytes(ipfsCid).length == 0) revert EmptyIPFSCID();
 
         // Get the index of the IPFS CID in the array
-        uint256 index = actionIndices[pkpTokenId][ipfsCid];
-        string[] storage actions = registeredActions[pkpTokenId];
+        uint256 index = toolIndices[pkpTokenId][ipfsCid];
+        string[] storage tools = registeredTools[pkpTokenId];
 
-        // Check if the action exists
-        if (index >= actions.length || 
-            keccak256(bytes(actions[index])) != keccak256(bytes(ipfsCid))) {
-            revert ActionNotFound(ipfsCid);
+        // Check if the tool exists
+        if (index >= tools.length || 
+            keccak256(bytes(tools[index])) != keccak256(bytes(ipfsCid))) {
+            revert ToolNotFound(ipfsCid);
         }
 
         // Get the last element's CID
-        string memory lastCid = actions[actions.length - 1];
+        string memory lastCid = tools[tools.length - 1];
 
         // If we're not removing the last element, move the last element to the removed position
-        if (index != actions.length - 1) {
-            actions[index] = lastCid;
-            actionIndices[pkpTokenId][lastCid] = index;
+        if (index != tools.length - 1) {
+            tools[index] = lastCid;
+            toolIndices[pkpTokenId][lastCid] = index;
         }
 
         // Remove the last element and clean up storage
-        actions.pop();
+        tools.pop();
         delete policies[pkpTokenId][ipfsCid];
-        delete actionIndices[pkpTokenId][ipfsCid];
+        delete toolIndices[pkpTokenId][ipfsCid];
 
-        emit ActionPolicyRemoved(pkpTokenId, ipfsCid);
+        emit ToolPolicyRemoved(pkpTokenId, ipfsCid);
     }
 
     /**
