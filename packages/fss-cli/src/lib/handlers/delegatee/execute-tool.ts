@@ -65,22 +65,16 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
     // Execute the tool
     logger.loading('Executing tool...');
 
-    console.log('executeTool params', {
+    const response = await fssDelegatee.executeTool({
       ipfsId: selectedToolIpfsCid,
       jsParams: {
         pkp: { ...selectedPkp },
         params,
       },
     });
-
-    // await fssDelegatee.executeTool({
-    //   ipfsId: selectedToolIpfsCid,
-    //   jsParams: {
-    //     ...params,
-    //     pkpTokenId: selectedPkpTokenId,
-    //   },
-    // });
     logger.success('Tool executed successfully');
+
+    console.log('response', response);
   } catch (error) {
     if (error instanceof FssCliError) {
       if (error.type === FssCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {

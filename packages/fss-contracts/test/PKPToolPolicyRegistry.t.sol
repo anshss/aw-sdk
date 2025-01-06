@@ -9,7 +9,7 @@ import {
     EmptyPolicy,
     EmptyVersion,
     NotPKPOwner,
-    ActionNotFound
+    ToolNotFound
 } from "../src/PKPToolPolicyRegistry.sol";
 
 contract MockPKPNFT is IPKPNFTFacet {
@@ -33,14 +33,14 @@ contract PKPToolPolicyRegistryTest is Test {
     bytes public constant POLICY = abi.encode(uint256(1e18), "ETH");
     string public constant VERSION = "1.0.0";
 
-    event ActionPolicySet(
+    event ToolPolicySet(
         uint256 indexed pkpTokenId,
         string ipfsCid,
         bytes policy,
         string version
     );
 
-    event ActionPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
+    event ToolPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
 
     event NewDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
     event DelegateeRemoved(uint256 indexed pkpTokenId, address indexed delegatee);
@@ -52,63 +52,63 @@ contract PKPToolPolicyRegistryTest is Test {
         pkpNFT.setOwner(TOKEN_ID, owner);
     }
 
-    function test_SetActionPolicy() public {
+    function test_SetToolPolicy() public {
         vm.startPrank(owner);
 
         vm.expectEmit(true, false, false, true);
-        emit ActionPolicySet(TOKEN_ID, IPFS_CID, POLICY, VERSION);
+        emit ToolPolicySet(TOKEN_ID, IPFS_CID, POLICY, VERSION);
         
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
 
-        (bytes memory storedPolicy, string memory storedVersion) = registry.getActionPolicy(TOKEN_ID, IPFS_CID);
+        (bytes memory storedPolicy, string memory storedVersion) = registry.getToolPolicy(TOKEN_ID, IPFS_CID);
         assertEq(storedPolicy, POLICY);
         assertEq(storedVersion, VERSION);
 
         vm.stopPrank();
     }
 
-    function test_SetActionPolicy_UpdateExisting() public {
+    function test_SetToolPolicy_UpdateExisting() public {
         vm.startPrank(owner);
 
         // Set initial policy
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
 
         // Update with new policy
         bytes memory newPolicy = abi.encode(uint256(2e18), "USDC");
         string memory newVersion = "1.0.1";
 
         vm.expectEmit(true, false, false, true);
-        emit ActionPolicySet(TOKEN_ID, IPFS_CID, newPolicy, newVersion);
+        emit ToolPolicySet(TOKEN_ID, IPFS_CID, newPolicy, newVersion);
 
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, newPolicy, newVersion);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, newPolicy, newVersion);
 
-        (bytes memory storedPolicy, string memory storedVersion) = registry.getActionPolicy(TOKEN_ID, IPFS_CID);
+        (bytes memory storedPolicy, string memory storedVersion) = registry.getToolPolicy(TOKEN_ID, IPFS_CID);
         assertEq(storedPolicy, newPolicy);
         assertEq(storedVersion, newVersion);
 
         vm.stopPrank();
     }
 
-    function test_RemoveActionPolicy() public {
+    function test_RemoveToolPolicy() public {
         vm.startPrank(owner);
 
         // First set a policy
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
 
         vm.expectEmit(true, false, false, true);
-        emit ActionPolicyRemoved(TOKEN_ID, IPFS_CID);
+        emit ToolPolicyRemoved(TOKEN_ID, IPFS_CID);
 
-        registry.removeActionPolicy(TOKEN_ID, IPFS_CID);
+        registry.removeToolPolicy(TOKEN_ID, IPFS_CID);
 
         // Verify policy is removed
-        (bytes memory storedPolicy, string memory storedVersion) = registry.getActionPolicy(TOKEN_ID, IPFS_CID);
+        (bytes memory storedPolicy, string memory storedVersion) = registry.getToolPolicy(TOKEN_ID, IPFS_CID);
         assertEq(storedPolicy, "");
         assertEq(storedVersion, "");
 
         vm.stopPrank();
     }
 
-    function test_GetRegisteredActions() public {
+    function test_GetRegisteredTools() public {
         vm.startPrank(owner);
 
         // Set multiple policies
@@ -119,14 +119,14 @@ contract PKPToolPolicyRegistryTest is Test {
         string memory version1 = "1.0.0";
         string memory version2 = "1.0.1";
 
-        registry.setActionPolicy(TOKEN_ID, cid1, policy1, version1);
-        registry.setActionPolicy(TOKEN_ID, cid2, policy2, version2);
+        registry.setToolPolicy(TOKEN_ID, cid1, policy1, version1);
+        registry.setToolPolicy(TOKEN_ID, cid2, policy2, version2);
 
         (
             string[] memory ipfsCids,
             bytes[] memory policyData,
             string[] memory versions
-        ) = registry.getRegisteredActions(TOKEN_ID);
+        ) = registry.getRegisteredTools(TOKEN_ID);
 
         assertEq(ipfsCids.length, 2);
         assertEq(policyData.length, 2);
@@ -150,10 +150,10 @@ contract PKPToolPolicyRegistryTest is Test {
         vm.startPrank(nonOwner);
 
         vm.expectRevert(NotPKPOwner.selector);
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, POLICY, VERSION);
 
         vm.expectRevert(NotPKPOwner.selector);
-        registry.removeActionPolicy(TOKEN_ID, IPFS_CID);
+        registry.removeToolPolicy(TOKEN_ID, IPFS_CID);
 
         vm.stopPrank();
     }
@@ -162,10 +162,10 @@ contract PKPToolPolicyRegistryTest is Test {
         vm.startPrank(owner);
 
         vm.expectRevert(EmptyIPFSCID.selector);
-        registry.setActionPolicy(TOKEN_ID, "", POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, "", POLICY, VERSION);
 
         vm.expectRevert(EmptyIPFSCID.selector);
-        registry.removeActionPolicy(TOKEN_ID, "");
+        registry.removeToolPolicy(TOKEN_ID, "");
 
         vm.stopPrank();
     }
@@ -174,7 +174,7 @@ contract PKPToolPolicyRegistryTest is Test {
         vm.startPrank(owner);
 
         vm.expectRevert(EmptyPolicy.selector);
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, "", VERSION);
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, "", VERSION);
 
         vm.stopPrank();
     }
@@ -183,21 +183,21 @@ contract PKPToolPolicyRegistryTest is Test {
         vm.startPrank(owner);
 
         vm.expectRevert(EmptyVersion.selector);
-        registry.setActionPolicy(TOKEN_ID, IPFS_CID, POLICY, "");
+        registry.setToolPolicy(TOKEN_ID, IPFS_CID, POLICY, "");
 
         vm.stopPrank();
     }
 
-    function test_RevertWhen_ActionNotFound() public {
+    function test_RevertWhen_ToolNotFound() public {
         vm.startPrank(owner);
 
-        vm.expectRevert(abi.encodeWithSelector(ActionNotFound.selector, IPFS_CID));
-        registry.removeActionPolicy(TOKEN_ID, IPFS_CID);
+        vm.expectRevert(abi.encodeWithSelector(ToolNotFound.selector, IPFS_CID));
+        registry.removeToolPolicy(TOKEN_ID, IPFS_CID);
 
         vm.stopPrank();
     }
 
-    function test_RemoveActionPolicy_WithMultipleActions() public {
+    function test_RemoveToolPolicy_WithMultipleTools() public {
         vm.startPrank(owner);
 
         // Set multiple policies
@@ -205,18 +205,18 @@ contract PKPToolPolicyRegistryTest is Test {
         string memory cid2 = "QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGy";
         string memory cid3 = "QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGz";
         
-        registry.setActionPolicy(TOKEN_ID, cid1, POLICY, VERSION);
-        registry.setActionPolicy(TOKEN_ID, cid2, POLICY, VERSION);
-        registry.setActionPolicy(TOKEN_ID, cid3, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, cid1, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, cid2, POLICY, VERSION);
+        registry.setToolPolicy(TOKEN_ID, cid3, POLICY, VERSION);
 
         // Remove middle policy
-        registry.removeActionPolicy(TOKEN_ID, cid2);
+        registry.removeToolPolicy(TOKEN_ID, cid2);
 
         (
             string[] memory ipfsCids,
             bytes[] memory policyData,
             string[] memory versions
-        ) = registry.getRegisteredActions(TOKEN_ID);
+        ) = registry.getRegisteredTools(TOKEN_ID);
 
         // Verify length
         assertEq(ipfsCids.length, 2);

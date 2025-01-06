@@ -4,7 +4,8 @@ import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
 import {
   createSiweMessage,
   generateAuthSig,
-  LitAccessControlConditionResource,
+  LitActionResource,
+  LitPKPResource,
 } from '@lit-protocol/auth-helpers';
 import type {
   AuthSig,
@@ -254,8 +255,12 @@ export class Delegatee {
           : undefined,
       resourceAbilityRequests: [
         {
-          resource: new LitAccessControlConditionResource('*'),
-          ability: LIT_ABILITY.AccessControlConditionDecryption,
+          resource: new LitActionResource('*'),
+          ability: LIT_ABILITY.LitActionExecution,
+        },
+        {
+          resource: new LitPKPResource('*'),
+          ability: LIT_ABILITY.PKPSigning,
         },
       ],
       authNeededCallback: async ({
