@@ -325,7 +325,7 @@ export class Admin {
     return await tx.wait();
   }
 
-  public async disconnect() {
+  public disconnect() {
     this.litNodeClient.disconnect();
   }
 }

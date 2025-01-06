@@ -7,14 +7,16 @@ import {
   promptDelegateeInsufficientBalance,
   promptDelegateeMenu,
 } from '../prompts/delegatee';
-import { handleGetDelegatedPkps } from '../handlers/delegatee';
+import {
+  handleGetDelegatedPkps,
+  handleGetRegisteredTools,
+} from '../handlers/delegatee';
 
 export class Delegatee {
   private fssDelegatee: FssDelegatee;
 
   private constructor(fssDelegatee: FssDelegatee) {
     this.fssDelegatee = fssDelegatee;
-
     logger.success('Delegatee role initialized successfully.');
   }
 
@@ -63,7 +65,7 @@ export class Delegatee {
         await handleGetDelegatedPkps(delegatee.fssDelegatee);
         break;
       case 'getRegisteredTools':
-        // await handleGetRegisteredTools(delegatee.fssDelegatee);
+        await handleGetRegisteredTools(delegatee.fssDelegatee);
         break;
       case 'getToolPolicy':
         // await handleGetToolPolicy(delegatee.fssDelegatee);
@@ -79,7 +81,7 @@ export class Delegatee {
     await Delegatee.showMenu(delegatee);
   }
 
-  public async disconnect() {
+  public disconnect() {
     this.fssDelegatee.disconnect();
   }
 }

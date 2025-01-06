@@ -114,7 +114,7 @@ export class Admin {
     await Admin.showMenu(admin);
   }
 
-  public async disconnect() {
+  public disconnect() {
     this.fssAdmin.disconnect();
   }
 }

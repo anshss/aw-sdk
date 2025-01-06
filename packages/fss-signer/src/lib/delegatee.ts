@@ -260,7 +260,7 @@ export class Delegatee {
     }
   }
 
-  public async disconnect() {
+  public disconnect() {
     this.litNodeClient.disconnect();
   }
 }
