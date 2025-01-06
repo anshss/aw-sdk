@@ -2,11 +2,9 @@ import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
 import {
   AUTH_METHOD_SCOPE,
   AUTH_METHOD_SCOPE_VALUES,
-  LIT_RPC,
 } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { ethers } from 'ethers';
-import bs58 from 'bs58';
 
 import {
   AdminConfig,
@@ -14,17 +12,16 @@ import {
   DEFAULT_LIT_NETWORK,
   PkpInfo,
   RegisteredTool,
-  ToolPolicyRegistryConfig,
 } from './types';
-import { getPkpToolPolicyRegistryContract } from './utils/pkp-tool-registry';
+import {
+  DEFAULT_REGISTRY_CONFIG,
+  getPkpToolPolicyRegistryContract,
+  getRegisteredTools,
+  getToolPolicy,
+} from './utils/pkp-tool-registry';
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 import { FssSignerError, FssSignerErrorType } from './errors';
-
-const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
-  rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-  contractAddress: '0xF38e6E7432D1e396Cd7Bf31fda4A8FB7A9ef9e69',
-} as const;
 
 export class Admin {
   private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
@@ -179,40 +176,11 @@ export class Admin {
       throw new Error('Tool policy manager not initialized');
     }
 
-    // Get all permitted tools
-    const permittedTools =
-      await this.litContracts.pkpPermissionsContractUtils.read.getPermittedActions(
-        this.pkpInfo.info.tokenId
-      );
-
-    // Convert hex CIDs to base58
-    const base58PermittedTools = permittedTools.map((hexCid) => {
-      // Remove '0x' prefix and convert to Buffer
-      const bytes = Buffer.from(hexCid.slice(2), 'hex');
-      return bs58.encode(bytes);
-    });
-
-    // Get tools with policies
-    const [ipfsCids, policyData, versions] =
-      await this.toolPolicyRegistryContract.getRegisteredTools(
-        this.pkpInfo.info.tokenId
-      );
-
-    const toolsWithPolicies = ipfsCids.map((cid: string, i: number) => ({
-      ipfsCid: cid,
-      policy: policyData[i],
-      version: versions[i],
-    }));
-
-    // Find tools that are permitted but don't have policies
-    const toolsWithoutPolicies = base58PermittedTools.filter(
-      (tool) => !ipfsCids.includes(tool)
+    return getRegisteredTools(
+      this.toolPolicyRegistryContract,
+      this.litContracts,
+      this.pkpInfo.info.tokenId
     );
-
-    return {
-      toolsWithPolicies,
-      toolsWithoutPolicies,
-    };
   }
 
   /**
@@ -220,7 +188,6 @@ export class Admin {
    * @param ipfsCid IPFS CID of the tool
    * @returns The policy and version for the tool
    */
-  // TODO: Decode the policy bytes string to a string
   public async getToolPolicy(
     ipfsCid: string
   ): Promise<{ policy: string; version: string }> {
@@ -228,13 +195,11 @@ export class Admin {
       throw new Error('Tool policy manager not initialized');
     }
 
-    const [policy, version] =
-      await this.toolPolicyRegistryContract.getToolPolicy(
-        this.pkpInfo.info.tokenId,
-        ipfsCid
-      );
-
-    return { policy, version };
+    return getToolPolicy(
+      this.toolPolicyRegistryContract,
+      this.pkpInfo.info.tokenId,
+      ipfsCid
+    );
   }
 
   /**

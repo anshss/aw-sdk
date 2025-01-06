@@ -74,6 +74,12 @@ contract PKPToolPolicyRegistry {
     /// @dev Maps PKP token ID -> delegatee address -> bool to check if address is delegatee
     mapping(uint256 => mapping(address => bool)) public isDelegatee;
 
+    /// @dev Maps delegatee address -> list of PKP token IDs they are delegated to
+    mapping(address => uint256[]) public delegateePkps;
+
+    /// @dev Maps delegatee address -> PKP token ID -> index in delegateePkps array
+    mapping(address => mapping(uint256 => uint256)) internal delegateePkpIndices;
+
     /// @dev Maps PKP token ID -> IPFS CID -> policy
     mapping(uint256 => mapping(string => ToolPolicy)) public policies;
 
@@ -241,6 +247,15 @@ contract PKPToolPolicyRegistry {
     }
 
     /**
+     * @dev Get all PKPs that a delegatee has been delegated to
+     * @param delegatee The delegatee address to get PKPs for
+     * @return Array of PKP token IDs
+     */
+    function getDelegatedPkps(address delegatee) external view returns (uint256[] memory) {
+        return delegateePkps[delegatee];
+    }
+
+    /**
      * @dev Add a single delegatee for a PKP
      * @param pkpTokenId The PKP token ID to add delegatee for
      * @param delegatee Address to add as delegatee
@@ -249,13 +264,17 @@ contract PKPToolPolicyRegistry {
         if (delegatee == address(0)) revert InvalidPKPTokenId();
         if (isDelegatee[pkpTokenId][delegatee]) return; // Already a delegatee
 
+        // Add to PKP's delegatees
         pkpDelegatees[pkpTokenId].push(delegatee);
         isDelegatee[pkpTokenId][delegatee] = true;
 
-        // Emit event with array containing only the new delegatee
-        address[] memory delegatees = new address[](1);
-        delegatees[0] = delegatee;
-        emit NewDelegatees(pkpTokenId, delegatees);
+        // Add to delegatee's PKPs
+        delegateePkpIndices[delegatee][pkpTokenId] = delegateePkps[delegatee].length;
+        delegateePkps[delegatee].push(pkpTokenId);
+
+        address[] memory singleDelegatee = new address[](1);
+        singleDelegatee[0] = delegatee;
+        emit NewDelegatees(pkpTokenId, singleDelegatee);
     }
 
     /**
@@ -266,18 +285,29 @@ contract PKPToolPolicyRegistry {
     function removeDelegatee(uint256 pkpTokenId, address delegatee) external onlyPKPOwner(pkpTokenId) {
         if (!isDelegatee[pkpTokenId][delegatee]) return; // Not a delegatee
 
+        // Remove from PKP's delegatees
         address[] storage delegatees = pkpDelegatees[pkpTokenId];
         for (uint256 i = 0; i < delegatees.length; i++) {
             if (delegatees[i] == delegatee) {
-                // Move the last element to the removed position
                 delegatees[i] = delegatees[delegatees.length - 1];
                 delegatees.pop();
-                isDelegatee[pkpTokenId][delegatee] = false;
-                
-                emit DelegateeRemoved(pkpTokenId, delegatee);
                 break;
             }
         }
+        isDelegatee[pkpTokenId][delegatee] = false;
+
+        // Remove from delegatee's PKPs
+        uint256[] storage pkps = delegateePkps[delegatee];
+        uint256 index = delegateePkpIndices[delegatee][pkpTokenId];
+        if (index < pkps.length - 1) {
+            uint256 lastPkp = pkps[pkps.length - 1];
+            pkps[index] = lastPkp;
+            delegateePkpIndices[delegatee][lastPkp] = index;
+        }
+        pkps.pop();
+        delete delegateePkpIndices[delegatee][pkpTokenId];
+
+        emit DelegateeRemoved(pkpTokenId, delegatee);
     }
 
     /**

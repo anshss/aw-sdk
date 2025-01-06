@@ -1,5 +1,6 @@
 import { promptSelectRole, Role } from './prompts/select-role';
 import { Admin } from './roles/admin';
+import { Delegatee } from './roles/delegatee';
 import { logger } from './utils/logger';
 
 export class FssCli {
@@ -8,6 +9,7 @@ export class FssCli {
     logger.success(`Selected role: ${selectedRole}.`);
 
     let admin: Admin | null = null;
+    let delegatee: Delegatee | null = null;
     switch (selectedRole) {
       case Role.Admin:
         try {
@@ -20,6 +22,14 @@ export class FssCli {
         }
         break;
       case Role.Delegatee:
+        try {
+          delegatee = await Delegatee.create();
+          await Delegatee.showMenu(delegatee);
+        } finally {
+          if (delegatee !== null) {
+            delegatee.disconnect();
+          }
+        }
         break;
       default:
         logger.error('Invalid role selected.');
