@@ -6,3 +6,4 @@ export * from './set-tool-policy';
 export * from './remove-tool-policy';
 export * from './get-delegatees';
 export * from './is-delegatee';
+export * from './add-delegatee';

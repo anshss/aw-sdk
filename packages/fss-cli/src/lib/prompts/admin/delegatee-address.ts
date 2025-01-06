@@ -1,4 +1,5 @@
 import prompts from 'prompts';
+import { ethers } from 'ethers';
 
 import { FssCliError, FssCliErrorType } from '../../errors';
 
@@ -6,18 +7,22 @@ export const promptDelegateeAddress = async () => {
   const { address } = await prompts({
     type: 'text',
     name: 'address',
-    message: 'Enter the address to check:',
+    message: 'Enter the delegatee address:',
     validate: (value) => {
-      if (!value) return 'Address is required';
-      if (!/^0x[a-fA-F0-9]{40}$/.test(value)) return 'Invalid Ethereum address';
-      return true;
+      try {
+        if (!value) return 'Address is required';
+        ethers.utils.getAddress(value);
+        return true;
+      } catch {
+        return 'Invalid Ethereum address';
+      }
     },
   });
 
   if (!address) {
     throw new FssCliError(
-      FssCliErrorType.ADMIN_CHECK_DELEGATEE_CANCELLED,
-      'Delegatee check cancelled.'
+      FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
+      'Delegatee operation cancelled.'
     );
   }
 

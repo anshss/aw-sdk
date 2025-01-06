@@ -23,7 +23,9 @@ export const handleIsDelegatee = async (fssAdmin: FssAdmin) => {
     await checkDelegatee(fssAdmin, address);
   } catch (error) {
     if (error instanceof FssCliError) {
-      if (error.type === FssCliErrorType.ADMIN_CHECK_DELEGATEE_CANCELLED) {
+      if (
+        error.type === FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED
+      ) {
         logger.error('Delegatee check cancelled.');
         return;
       }
