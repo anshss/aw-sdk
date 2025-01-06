@@ -15,6 +15,7 @@ import {
   handleSetToolPolicy,
   handleRemoveToolPolicy,
   handleGetDelegatees,
+  handleIsDelegatee,
 } from '../handlers/admin';
 
 export class Admin {
@@ -87,7 +88,7 @@ export class Admin {
         await handleGetDelegatees(admin.fssAdmin);
         break;
       case 'isDelegatee':
-        logger.info('Executing: Check if Address is Delegatee');
+        await handleIsDelegatee(admin.fssAdmin);
         break;
       case 'addDelegatee':
         logger.info('Executing: Add Delegatee');

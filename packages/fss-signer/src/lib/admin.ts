@@ -294,7 +294,7 @@ export class Admin {
 
     return await this.toolPolicyRegistryContract.isDelegateeOf(
       this.pkpInfo.info.tokenId,
-      delegatee
+      ethers.utils.getAddress(delegatee)
     );
   }
 

@@ -7,3 +7,4 @@ export {
   promptConfirmRemoval,
 } from './remove-tool';
 export { promptPolicyDetails } from './policy-details';
+export { promptDelegateeAddress } from './delegatee-address';
