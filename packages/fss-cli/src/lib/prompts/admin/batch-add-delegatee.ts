@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { FssCliError, FssCliErrorType } from '../../errors';
 import { logger } from '../../utils/logger';
 
-export const promptBatchDelegateeAddresses = async () => {
+export const promptSelectDelegateesToAdd = async () => {
   const addresses: string[] = [];
 
   logger.info('Enter delegatee addresses:');
@@ -36,8 +36,8 @@ export const promptBatchDelegateeAddresses = async () => {
         });
         if (confirmed) {
           throw new FssCliError(
-            FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
-            'Batch delegatee operation cancelled.'
+            FssCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
+            'Batch delegatee addition cancelled.'
           );
         }
         continue;
@@ -50,7 +50,7 @@ export const promptBatchDelegateeAddresses = async () => {
   }
 
   // Show addresses and ask for confirmation
-  logger.warn('Delegatee addresses:');
+  logger.warn('Adding delegatee addresses:');
   addresses.forEach((addr, i) => {
     logger.log(`  ${i + 1}. ${addr}`);
   });
@@ -65,7 +65,7 @@ export const promptBatchDelegateeAddresses = async () => {
   if (!confirmed) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
-      'Batch delegatee operation cancelled.'
+      'Batch delegatee addition cancelled.'
     );
   }
 

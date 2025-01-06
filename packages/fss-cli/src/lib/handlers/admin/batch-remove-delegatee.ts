@@ -2,7 +2,7 @@ import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
-import { promptBatchDelegateeAddresses } from '../../prompts/admin';
+import { promptSelectDelegateesToRemove } from '../../prompts/admin';
 
 const batchRemoveDelegatees = async (
   fssAdmin: FssAdmin,
@@ -15,17 +15,12 @@ const batchRemoveDelegatees = async (
 
 export const handleBatchRemoveDelegatee = async (fssAdmin: FssAdmin) => {
   try {
-    const addresses = await promptBatchDelegateeAddresses();
+    const addresses = await promptSelectDelegateesToRemove(
+      await fssAdmin.getDelegatees()
+    );
     await batchRemoveDelegatees(fssAdmin, addresses);
   } catch (error) {
     if (error instanceof FssCliError) {
-      if (
-        error.type === FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED
-      ) {
-        logger.error('Batch delegatee removal cancelled.');
-        return;
-      }
-
       if (
         error.type === FssCliErrorType.ADMIN_BATCH_REMOVE_DELEGATEE_CANCELLED
       ) {
