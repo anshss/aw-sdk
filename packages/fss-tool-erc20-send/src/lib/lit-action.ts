@@ -25,12 +25,13 @@ declare global {
 
   // Required Inputs
   const pkp: {
+    tokenId: string;
     ethAddress: string;
     publicKey: string;
   };
   const params: {
     rpcUrl: string;
-    chainId: number;
+    chainId: string;
     tokenIn: string;
     recipientAddress: string;
     amountIn: string;
@@ -39,34 +40,55 @@ declare global {
 
 export default async () => {
   try {
-    async function validatePolicy(amount: any) {
-      // Tool policy registry contract
-      const TOOL_POLICY_ABI = [
-        'function getActionPolicy(address pkp, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
-      ];
+    // Check if the session signer is a delegatee
+    async function checkLitAuthAddressIsDelegatee(
+      pkpToolRegistryContract: any
+    ) {
+      console.log(
+        `Checking if Lit Auth address: ${LitAuth.authSigAddress} is a delegatee for PKP ${pkp.tokenId}...`
+      );
 
-      // Create contract instance
-      // TODO: This is a temporary hardcoded value. The user can specify the policy registry, so this should be dynamic.
-      const TOOL_POLICY_REGISTRY = '0xD78e1C1183A29794A092dDA7dB526A91FdE36020';
-      const policyProvider = new ethers.providers.JsonRpcProvider(
-        await Lit.Actions.getRpcUrl({
-          chain: 'yellowstone',
-        })
+      // Check if the session signer is a delegatee
+      const sessionSigner = ethers.utils.getAddress(LitAuth.authSigAddress);
+      const isDelegatee = await pkpToolRegistryContract.isDelegateeOf(
+        pkp.tokenId,
+        sessionSigner
       );
-      const policyContract = new ethers.Contract(
-        TOOL_POLICY_REGISTRY,
-        TOOL_POLICY_ABI,
-        policyProvider
+
+      if (!isDelegatee) {
+        throw new Error(
+          `Session signer ${sessionSigner} is not a delegatee for PKP ${pkp.tokenId}`
+        );
+      }
+
+      console.log(
+        `Session signer ${sessionSigner} is a delegatee for PKP ${pkp.tokenId}`
       );
+    }
+
+    async function validateInputsAgainstPolicy(
+      pkpToolRegistryContract: any,
+      amount: any
+    ) {
+      console.log(`Validating inputs against policy...`);
 
       // Get policy for this tool
       const TOOL_IPFS_CID = LitAuth.actionIpfsIds[0];
-      const [policyData] = await policyContract.getActionPolicy(
-        pkp.ethAddress,
+      console.log(`Getting policy for tool ${TOOL_IPFS_CID}...`);
+      const [policyData] = await pkpToolRegistryContract.getToolPolicy(
+        pkp.tokenId,
         TOOL_IPFS_CID
       );
 
+      if (policyData === '0x') {
+        console.log(
+          `No policy found for tool ${TOOL_IPFS_CID} on PKP ${pkp.tokenId}`
+        );
+        return;
+      }
+
       // Decode policy
+      console.log(`Decoding policy...`);
       const decodedPolicy = ethers.utils.defaultAbiCoder.decode(
         [
           'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
@@ -114,6 +136,8 @@ export default async () => {
           )}`
         );
       }
+
+      console.log(`Inputs validated against policy`);
     }
 
     async function getTokenInfo(provider: any) {
@@ -175,6 +199,8 @@ export default async () => {
     }
 
     async function getGasData() {
+      console.log(`Getting gas data...`);
+
       const gasData = await Lit.Actions.runOnce(
         { waitForResponse: true, name: 'gasPriceGetter' },
         async () => {
@@ -200,10 +226,14 @@ export default async () => {
         }
       );
 
+      console.log(`Gas data: ${gasData}`);
+
       return JSON.parse(gasData);
     }
 
     async function estimateGasLimit(provider: any, amount: any) {
+      console.log(`Estimating gas limit...`);
+
       const tokenInterface = new ethers.utils.Interface([
         'function transfer(address to, uint256 amount) external returns (bool)',
       ]);
@@ -236,6 +266,8 @@ export default async () => {
       amount: any,
       gasData: any
     ) {
+      console.log(`Creating and signing transaction...`);
+
       const tokenInterface = new ethers.utils.Interface([
         'function transfer(address to, uint256 amount) external returns (bool)',
       ]);
@@ -255,14 +287,18 @@ export default async () => {
         type: 2,
       };
 
-      console.log('Signing transfer...');
+      console.log(`Signing transfer with PKP public key: ${pkp.publicKey}...`);
       const transferSig = await Lit.Actions.signAndCombineEcdsa({
         toSign: ethers.utils.arrayify(
           ethers.utils.keccak256(ethers.utils.serializeTransaction(transferTx))
         ),
-        publicKey: pkp.publicKey,
+        publicKey: pkp.publicKey.startsWith('0x')
+          ? pkp.publicKey.slice(2)
+          : pkp.publicKey,
         sigName: 'erc20TransferSig',
       });
+
+      console.log(`Transaction signed`);
 
       return ethers.utils.serializeTransaction(
         transferTx,
@@ -324,8 +360,27 @@ export default async () => {
     const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
     const tokenInfo = await getTokenInfo(provider);
 
-    // Validate against policy
-    await validatePolicy(tokenInfo.amount);
+    // Create contract instance
+    const PKP_TOOL_REGISTRY_ABI = [
+      'function isDelegateeOf(uint256 pkpTokenId, address delegatee) external view returns (bool)',
+      'function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
+    ];
+    const PKP_TOOL_REGISTRY = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
+    const pkpToolRegistryContract = new ethers.Contract(
+      PKP_TOOL_REGISTRY,
+      PKP_TOOL_REGISTRY_ABI,
+      new ethers.providers.JsonRpcProvider(
+        await Lit.Actions.getRpcUrl({
+          chain: 'yellowstone',
+        })
+      )
+    );
+
+    await checkLitAuthAddressIsDelegatee(pkpToolRegistryContract);
+    await validateInputsAgainstPolicy(
+      pkpToolRegistryContract,
+      tokenInfo.amount
+    );
 
     const gasData = await getGasData();
     const gasLimit = await estimateGasLimit(provider, tokenInfo.amount);

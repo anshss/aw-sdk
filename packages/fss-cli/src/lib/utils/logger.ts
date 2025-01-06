@@ -9,11 +9,14 @@ export const logger = {
   success: (message: string) => {
     console.log('\n✅', message);
   },
-  error: (message: string | Error) => {
-    const errorMessage = message instanceof Error ? message.message : message;
+  error: (message: string, error?: Error) => {
+    const errorMessage = error ? error.message : message;
     console.error('\n❌', errorMessage);
   },
   warn: (message: string) => {
     console.warn('\n⚠️ ', message);
+  },
+  loading: (message: string) => {
+    console.log('\n🔄', message);
   },
 };

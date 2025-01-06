@@ -52,9 +52,9 @@ export const originalConsole = {
   error: originalError,
 };
 
-import { AgentCLI } from './lib/agent-cli';
+import { FssCli } from './lib/cli';
 
-const cli = new AgentCLI();
+const cli = new FssCli();
 cli.start().catch((error) => {
   console.error('Failed to start CLI:', error);
   process.exit(1);

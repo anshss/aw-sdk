@@ -7,9 +7,6 @@
       "path": "./packages/fss-signer"
     },
     {
-      "path": "./packages/fss-tool-policy-base"
-    },
-    {
       "path": "./packages/fss-tool-erc20-send"
     },
     {
@@ -20,6 +17,12 @@
     },
     {
       "path": "./packages/full-self-signing"
+    },
+    {
+      "path": "./packages/fss-agent"
+    },
+    {
+      "path": "./packages/fss-tool"
     }
   ]
 }

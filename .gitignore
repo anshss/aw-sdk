@@ -1,5 +1,10 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# Ignore .env files
+.env
+**/.env
+
+
 # compiled output
 dist
 tmp
@@ -44,4 +49,5 @@ Thumbs.db
 test-output
 
 .fss-cli-storage
-.fss-signer-storage
+.fss-signer-admin-storage
+.fss-signer-delegatee-storage

@@ -37,9 +37,7 @@
       "@lit-protocol/fss-tool-erc20-send": [
         "./packages/fss-tool-erc20-send/src"
       ],
-      "@lit-protocol/fss-tool-policy-base": [
-        "./packages/fss-tool-policy-base/src"
-      ],
+      "@lit-protocol/fss-tool": ["./packages/fss-tool/src"],
       "@lit-protocol/fss-tool-registry": ["./packages/fss-tool-registry/src"],
       "@lit-protocol/full-self-signing": ["./packages/full-self-signing/src"]
     }
