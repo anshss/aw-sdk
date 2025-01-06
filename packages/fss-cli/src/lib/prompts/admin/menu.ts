@@ -14,7 +14,7 @@ export const promptAdminMenu = async () => {
       { title: 'Get Tool Policy', value: 'getToolPolicy' },
       { title: 'Set Tool Policy', value: 'setToolPolicy' },
       { title: 'Remove Tool Policy', value: 'removeToolPolicy' },
-      { title: 'Get Delegatees', value: 'getDelegatees' },
+      { title: 'List Delegatees', value: 'getDelegatees' },
       { title: 'Check if Address is Delegatee', value: 'isDelegatee' },
       { title: 'Add Delegatee', value: 'addDelegatee' },
       { title: 'Remove Delegatee', value: 'removeDelegatee' },
