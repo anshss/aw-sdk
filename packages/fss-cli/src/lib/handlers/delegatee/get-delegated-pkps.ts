@@ -2,13 +2,9 @@ import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing'
 
 import { logger } from '../../utils/logger';
 
-const getDelegatedPkps = async (fssDelegatee: FssDelegatee) => {
-  logger.loading('Getting delegated PKPs...');
-  return fssDelegatee.getDelegatedPkps();
-};
-
 export const handleGetDelegatedPkps = async (fssDelegatee: FssDelegatee) => {
-  const pkps = await getDelegatedPkps(fssDelegatee);
+  logger.loading('Getting delegated PKPs...');
+  const pkps = await fssDelegatee.getDelegatedPkps();
 
   if (pkps.length === 0) {
     logger.error('No PKPs are currently delegated to you.');

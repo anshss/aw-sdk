@@ -10,6 +10,7 @@ import {
 import {
   handleGetDelegatedPkps,
   handleGetRegisteredTools,
+  handleGetToolPolicy,
 } from '../handlers/delegatee';
 
 export class Delegatee {
@@ -68,7 +69,7 @@ export class Delegatee {
         await handleGetRegisteredTools(delegatee.fssDelegatee);
         break;
       case 'getToolPolicy':
-        // await handleGetToolPolicy(delegatee.fssDelegatee);
+        await handleGetToolPolicy(delegatee.fssDelegatee);
         break;
       case 'executeTool':
         // await handleExecuteTool(delegatee.fssDelegatee);

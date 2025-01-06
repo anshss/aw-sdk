@@ -140,7 +140,7 @@ export class Delegatee {
     );
   }
 
-  public async getDelegatedPkps() {
+  public async getDelegatedPkps(): Promise<string[]> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
