@@ -19,6 +19,7 @@ import {
   handleAddDelegatee,
   handleRemoveDelegatee,
   handleBatchAddDelegatee,
+  handleBatchRemoveDelegatee,
 } from '../handlers/admin';
 
 export class Admin {
@@ -103,7 +104,7 @@ export class Admin {
         await handleBatchAddDelegatee(admin.fssAdmin);
         break;
       case 'batchRemoveDelegatees':
-        logger.info('Executing: Batch Remove Delegatees');
+        await handleBatchRemoveDelegatee(admin.fssAdmin);
         break;
       default:
         logger.error('Invalid option selected');

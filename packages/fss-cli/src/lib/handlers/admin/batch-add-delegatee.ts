@@ -7,7 +7,7 @@ import { promptBatchDelegateeAddresses } from '../../prompts/admin';
 const batchAddDelegatees = async (fssAdmin: FssAdmin, addresses: string[]) => {
   logger.loading('Adding delegatees...');
   await fssAdmin.batchAddDelegatees(addresses);
-  logger.success('Successfully added delegatees:');
+  logger.success('Successfully added delegatees');
 };
 
 export const handleBatchAddDelegatee = async (fssAdmin: FssAdmin) => {

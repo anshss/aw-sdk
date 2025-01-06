@@ -47,11 +47,10 @@ export const promptBatchDelegateeAddresses = async () => {
 
     const normalizedAddress = ethers.utils.getAddress(address);
     addresses.push(normalizedAddress);
-    logger.success(`Added: ${normalizedAddress}`);
   }
 
   // Show addresses and ask for confirmation
-  logger.warn('Adding delegatee addresses:');
+  logger.warn('Delegatee addresses:');
   addresses.forEach((addr, i) => {
     logger.log(`  ${i + 1}. ${addr}`);
   });
