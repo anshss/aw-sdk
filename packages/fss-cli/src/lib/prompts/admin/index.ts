@@ -8,3 +8,4 @@ export {
 } from './remove-tool';
 export { promptPolicyDetails } from './policy-details';
 export { promptDelegateeAddress } from './delegatee-address';
+export { promptBatchDelegateeAddresses } from './batch-delegatee-addresses';
