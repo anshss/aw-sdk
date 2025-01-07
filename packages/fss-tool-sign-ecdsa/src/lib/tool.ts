@@ -1,8 +1,12 @@
 import { z } from 'zod';
-import type { FssTool, SupportedLitNetwork } from '@lit-protocol/fss-tool';
+import {
+  type FssTool,
+  type SupportedLitNetwork,
+  NETWORK_CONFIGS,
+  NetworkConfig,
+} from '@lit-protocol/fss-tool';
 
 import { SignEcdsaPolicy, type SignEcdsaPolicyType } from './policy';
-import { NETWORK_CONFIGS, type NetworkConfig } from './networks';
 import { IPFS_CIDS } from './ipfs';
 
 /**

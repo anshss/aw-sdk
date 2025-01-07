@@ -6,6 +6,32 @@ export type SupportedLitNetwork =
   | (typeof LIT_NETWORK)['DatilTest']
   | (typeof LIT_NETWORK)['Datil'];
 
+/**
+ * Network-specific configuration for the ERC20Transfer tool
+ */
+export interface NetworkConfig {
+  litNetwork: string;
+  ipfsCid: string;
+}
+
+/**
+ * Network-specific configurations
+ */
+export const NETWORK_CONFIGS: Record<string, NetworkConfig> = {
+  'datil-dev': {
+    litNetwork: 'datil-dev',
+    ipfsCid: '',
+  },
+  'datil-test': {
+    litNetwork: 'datil-test',
+    ipfsCid: '',
+  },
+  datil: {
+    litNetwork: 'datil',
+    ipfsCid: '',
+  },
+};
+
 export const BaseEthereumAddressSchema = z
   .string()
   .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address format');
