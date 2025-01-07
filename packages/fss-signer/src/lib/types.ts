@@ -1,7 +1,6 @@
 import { LIT_NETWORK } from '@lit-protocol/constants';
 import type { ethers } from 'ethers';
 
-export const DEFAULT_LIT_NETWORK = LIT_NETWORK.DatilTest;
 export type LitNetwork =
   | (typeof LIT_NETWORK)['DatilDev']
   | (typeof LIT_NETWORK)['DatilTest']

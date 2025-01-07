@@ -1,40 +1,36 @@
+import { existsSync } from 'fs';
 import { join } from 'path';
-import { readFileSync, existsSync } from 'fs';
 
-interface IpfsArtifact {
-  IpfsHash: string;
-  PinSize: number;
-  Timestamp: string;
-  isDuplicate: boolean;
-  Duration: number;
-}
+// Default development CIDs
+const DEFAULT_CIDS = {
+  'datil-dev': 'DEV_IPFS_CID',
+  'datil-test': 'TEST_IPFS_CID',
+  datil: 'PROD_IPFS_CID',
+} as const;
 
-interface IpfsArtifacts {
-  signingSimpleLitAction: IpfsArtifact;
-}
+// Try to read the IPFS CIDs from the build output
+let deployedCids: Record<keyof typeof DEFAULT_CIDS, string> = DEFAULT_CIDS;
 
-// Default development CID - this will be used if ipfs.json doesn't exist
-const DEV_IPFS_CID = 'QmQwNvbP9YAY4B4wYgFoD6cNnX3udNDBjWC7RqN48GdpmN';
-
-// Try to read the artifacts from the build output
-let IPFS_CID = DEV_IPFS_CID;
 try {
-  const artifactsPath = join(__dirname, '../../../dist/ipfs.json');
-  if (existsSync(artifactsPath)) {
-    const artifacts: IpfsArtifacts = JSON.parse(
-      readFileSync(artifactsPath, 'utf-8')
-    );
-    IPFS_CID = artifacts.signingSimpleLitAction.IpfsHash;
+  const ipfsPath = join(__dirname, '../../../dist/ipfs.json');
+  if (existsSync(ipfsPath)) {
+    // We know this import will work because we checked the file exists
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ipfsJson = require(ipfsPath);
+    deployedCids = ipfsJson;
   } else {
     console.warn(
-      'ipfs.json not found. Using development CID. Please run deploy script to update.'
+      'ipfs.json not found. Using development CIDs. Please run deploy script to update.'
     );
   }
 } catch (error) {
   console.warn(
-    'Failed to read ipfs.json. Using development CID:',
+    'Failed to read ipfs.json. Using development CIDs:',
     error instanceof Error ? error.message : String(error)
   );
 }
 
-export { IPFS_CID };
+/**
+ * IPFS CIDs for each network's Lit Action
+ */
+export const IPFS_CIDS = deployedCids;

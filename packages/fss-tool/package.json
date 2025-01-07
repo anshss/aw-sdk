@@ -2,6 +2,7 @@
   "name": "@lit-protocol/fss-tool",
   "version": "0.0.1",
   "dependencies": {
+    "@lit-protocol/constants": "7.0.2",
     "tslib": "^2.3.0",
     "zod": "^3.24.1"
   },

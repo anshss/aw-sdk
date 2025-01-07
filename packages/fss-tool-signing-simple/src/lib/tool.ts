@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import type { FssTool, SupportedLitNetwork } from '@lit-protocol/fss-tool';
 
-import { IPFS_CID } from './ipfs';
 import { SigningSimplePolicy, type SigningSimplePolicyType } from './policy';
+import { NETWORK_CONFIGS, type NetworkConfig } from './networks';
+import { IPFS_CIDS } from './ipfs';
 
 /**
  * Parameters required for the Signing Simple Lit Action
@@ -44,20 +45,35 @@ const validateSigningSimpleParameters = (
   }));
 };
 
-export const SigningSimple: FssTool<
-  SigningSimpleLitActionParameters,
-  SigningSimplePolicyType
-> = {
+/**
+ * Create a network-specific SendERC20 tool
+ */
+const createNetworkTool = (
+  network: SupportedLitNetwork,
+  config: NetworkConfig
+): FssTool<SigningSimpleLitActionParameters, SigningSimplePolicyType> => ({
   name: 'SigningSimple',
-  description: 'A Lit Action that allows signing for a set of message prefixes.',
-  ipfsCid: IPFS_CID,
-
+  description: `A Lit Action that signs a message with an allowlist of message prefixes, using the ${config.litNetwork} network for signing.`,
+  ipfsCid: IPFS_CIDS[network],
   parameters: {
     type: {} as SigningSimpleLitActionParameters,
     schema: SigningSimpleLitActionSchema,
     descriptions: SigningSimpleLitActionParameterDescriptions,
     validate: validateSigningSimpleParameters,
   },
-
   policy: SigningSimplePolicy,
-};
+});
+
+/**
+ * Export network-specific SendERC20 tools
+ */
+export const SigningSimple = Object.entries(NETWORK_CONFIGS).reduce(
+  (acc, [network, config]) => ({
+    ...acc,
+    [network]: createNetworkTool(network as SupportedLitNetwork, config),
+  }),
+  {} as Record<
+    SupportedLitNetwork,
+    FssTool<SigningSimpleLitActionParameters, SigningSimplePolicyType>
+  >
+);

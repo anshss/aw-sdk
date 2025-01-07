@@ -1,12 +1,9 @@
 import { z } from 'zod';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import type { FssTool, SupportedLitNetwork } from '@lit-protocol/fss-tool';
 
 import { SendERC20Policy, type SendERC20PolicyType } from './policy';
 import { NETWORK_CONFIGS, type NetworkConfig } from './networks';
 import { IPFS_CIDS } from './ipfs';
-
-// Type for supported networks
-type SupportedNetwork = 'datil-dev' | 'datil-test' | 'datil';
 
 /**
  * Parameters required for the ERC20 Send Lit Action
@@ -106,11 +103,11 @@ const validateSendERC20Parameters = (
  * Create a network-specific SendERC20 tool
  */
 const createNetworkTool = (
-  network: SupportedNetwork,
+  network: SupportedLitNetwork,
   config: NetworkConfig
 ): FssTool<SendERC20LitActionParameters, SendERC20PolicyType> => ({
   name: 'SendERC20',
-  description: `A Lit Action that sends ERC-20 tokens on the ${config.litNetwork} network.`,
+  description: `A Lit Action that sends ERC-20 tokens, using the ${config.litNetwork} network for signing.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
     type: {} as SendERC20LitActionParameters,
@@ -127,10 +124,10 @@ const createNetworkTool = (
 export const SendERC20 = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
     ...acc,
-    [network]: createNetworkTool(network as SupportedNetwork, config),
+    [network]: createNetworkTool(network as SupportedLitNetwork, config),
   }),
   {} as Record<
-    SupportedNetwork,
+    SupportedLitNetwork,
     FssTool<SendERC20LitActionParameters, SendERC20PolicyType>
   >
 );

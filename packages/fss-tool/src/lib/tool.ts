@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import { LIT_NETWORK } from '@lit-protocol/constants';
+
+export type SupportedLitNetwork =
+  | (typeof LIT_NETWORK)['DatilDev']
+  | (typeof LIT_NETWORK)['DatilTest']
+  | (typeof LIT_NETWORK)['Datil'];
 
 export const BaseEthereumAddressSchema = z
   .string()

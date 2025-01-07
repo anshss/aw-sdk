@@ -44,15 +44,15 @@ export default async () => {
   try {
     let UNISWAP_V3_QUOTER: string;
     let UNISWAP_V3_ROUTER: string;
-    switch(params.chainId) {
-      case "8453":
-        UNISWAP_V3_QUOTER = "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a";
-        UNISWAP_V3_ROUTER = "0x2626664c2603336E57B271c5C0b26F421741e481";
+    switch (params.chainId) {
+      case '8453':
+        UNISWAP_V3_QUOTER = '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a';
+        UNISWAP_V3_ROUTER = '0x2626664c2603336E57B271c5C0b26F421741e481';
         break;
-      case "1":
-      case "42161":
-        UNISWAP_V3_QUOTER = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e";
-        UNISWAP_V3_ROUTER = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+      case '1':
+      case '42161':
+        UNISWAP_V3_QUOTER = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
+        UNISWAP_V3_ROUTER = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
         break;
       default:
         throw new Error(`Unsupported chain ID: ${params.chainId}`);
@@ -108,9 +108,7 @@ export default async () => {
       // Decode policy - only maxAmount and allowedTokens
       console.log(`Decoding policy...`);
       const decodedPolicy = ethers.utils.defaultAbiCoder.decode(
-        [
-          'tuple(uint256 maxAmount, address[] allowedTokens)',
-        ],
+        ['tuple(uint256 maxAmount, address[] allowedTokens)'],
         policyData
       )[0];
 
@@ -159,24 +157,24 @@ export default async () => {
     }
 
     async function getTokenInfo(provider: JsonRpcProvider) {
-      console.log("Gathering token info...");
+      console.log('Gathering token info...');
       ethers.utils.getAddress(params.tokenIn);
       ethers.utils.getAddress(params.tokenOut);
 
       // Check code
       const codeIn = await provider.getCode(params.tokenIn);
-      if (codeIn === "0x") {
+      if (codeIn === '0x') {
         throw new Error(`No contract found at ${params.tokenIn}`);
       }
       const codeOut = await provider.getCode(params.tokenOut);
-      if (codeOut === "0x") {
+      if (codeOut === '0x') {
         throw new Error(`No contract found at ${params.tokenOut}`);
       }
 
       const tokenInterface = new ethers.utils.Interface([
-        "function decimals() view returns (uint8)",
-        "function balanceOf(address) view returns (uint256)",
-        "function approve(address,uint256) external returns (bool)",
+        'function decimals() view returns (uint8)',
+        'function balanceOf(address) view returns (uint256)',
+        'function approve(address,uint256) external returns (bool)',
       ]);
       const tokenInContract = new ethers.Contract(
         params.tokenIn,
@@ -194,21 +192,21 @@ export default async () => {
         tokenInContract.decimals(),
         tokenOutContract.decimals(),
       ]);
-      console.log("Token decimals:", decimalsIn, decimalsOut);
+      console.log('Token decimals:', decimalsIn, decimalsOut);
 
       const [balanceIn, balanceOut] = await Promise.all([
         tokenInContract.balanceOf(pkp.ethAddress),
         tokenOutContract.balanceOf(pkp.ethAddress),
       ]);
       console.log(
-        "Token balances (in/out):",
+        'Token balances (in/out):',
         balanceIn.toString(),
         balanceOut.toString()
       );
 
       const amountIn = ethers.utils.parseUnits(params.amountIn, decimalsIn);
       if (amountIn.gt(balanceIn)) {
-        throw new Error("Insufficient tokenIn balance");
+        throw new Error('Insufficient tokenIn balance');
       }
       return {
         tokenIn: {
@@ -232,7 +230,7 @@ export default async () => {
     ) {
       console.log('Getting best quote for swap...');
       const quoterInterface = new ethers.utils.Interface([
-        "function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)"
+        'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
       ]);
 
       const FEE_TIERS = [3000, 500];
@@ -246,41 +244,61 @@ export default async () => {
             tokenOut: params.tokenOut,
             amountIn: amount,
             fee: fee,
-            sqrtPriceLimitX96: 0
+            sqrtPriceLimitX96: 0,
           };
 
-          console.log(`Trying fee tier ${fee/10000}%...`);
+          console.log(`Trying fee tier ${fee / 10000}%...`);
           const quote = await provider.call({
             to: UNISWAP_V3_QUOTER,
-            data: quoterInterface.encodeFunctionData("quoteExactInputSingle", [quoteParams])
+            data: quoterInterface.encodeFunctionData('quoteExactInputSingle', [
+              quoteParams,
+            ]),
           });
-          
-          const [amountOut] = quoterInterface.decodeFunctionResult("quoteExactInputSingle", quote);
+
+          const [amountOut] = quoterInterface.decodeFunctionResult(
+            'quoteExactInputSingle',
+            quote
+          );
           const currentQuote = ethers.BigNumber.from(amountOut);
 
           if (!bestQuote || currentQuote.gt(bestQuote)) {
             bestQuote = currentQuote;
             bestFee = fee;
-            console.log(`New best quote found with fee tier ${fee/10000}%: ${ethers.utils.formatUnits(currentQuote, decimalsOut)}`);
+            console.log(
+              `New best quote found with fee tier ${
+                fee / 10000
+              }%: ${ethers.utils.formatUnits(currentQuote, decimalsOut)}`
+            );
           }
         } catch (error) {
-          if ((error as { reason?: string }).reason === "Unexpected error") {
-            console.log(`No pool found for fee tier ${fee/10000}%`);
+          if ((error as { reason?: string }).reason === 'Unexpected error') {
+            console.log(`No pool found for fee tier ${fee / 10000}%`);
           } else {
-            console.error("Debug: Quoter call failed for fee tier:", fee, error);
+            console.error(
+              'Debug: Quoter call failed for fee tier:',
+              fee,
+              error
+            );
           }
           continue;
         }
       }
 
       if (!bestQuote || !bestFee) {
-        throw new Error("Failed to get quote from Uniswap V3. No valid pool found for this token pair.");
+        throw new Error(
+          'Failed to get quote from Uniswap V3. No valid pool found for this token pair.'
+        );
       }
 
       // Calculate minimum output with 0.5% slippage tolerance
       const slippageTolerance = 0.005;
-      const amountOutMin = bestQuote.mul(1000 - (slippageTolerance * 1000)).div(1000);
-      console.log("Minimum output:", ethers.utils.formatUnits(amountOutMin, decimalsOut));
+      const amountOutMin = bestQuote
+        .mul(1000 - slippageTolerance * 1000)
+        .div(1000);
+      console.log(
+        'Minimum output:',
+        ethers.utils.formatUnits(amountOutMin, decimalsOut)
+      );
 
       return { bestQuote, bestFee, amountOutMin };
     }
@@ -339,7 +357,7 @@ export default async () => {
           );
         } else if (swapParams) {
           const routerInterface = new ethers.utils.Interface([
-            "function exactInputSingle((address,address,uint24,address,uint256,uint256,uint160)) external payable returns (uint256)"
+            'function exactInputSingle((address,address,uint24,address,uint256,uint256,uint160)) external payable returns (uint256)',
           ]);
 
           const routerContract = new ethers.Contract(
@@ -356,7 +374,7 @@ export default async () => {
               pkp.ethAddress,
               amount,
               swapParams.amountOutMin,
-              0
+              0,
             ],
             { from: pkp.ethAddress }
           );
@@ -368,11 +386,10 @@ export default async () => {
         const gasLimit = estimatedGas.mul(120).div(100);
         console.log(`Estimated gas limit: ${gasLimit.toString()}`);
         return gasLimit;
-
       } catch (error) {
         console.error('Error estimating gas:', error);
         // Use fallback gas limits
-        const fallbackGas = isApproval ? "300000" : "500000";
+        const fallbackGas = isApproval ? '300000' : '500000';
         console.log(`Using fallback gas limit: ${fallbackGas}`);
         return ethers.BigNumber.from(fallbackGas);
       }
@@ -380,7 +397,7 @@ export default async () => {
 
     async function signTx(tx: any, sigName: string) {
       console.log(`Signing TX: ${sigName}`);
-      const pkForLit = pkp.publicKey.startsWith("0x")
+      const pkForLit = pkp.publicKey.startsWith('0x')
         ? pkp.publicKey.slice(2)
         : pkp.publicKey;
 
@@ -395,8 +412,8 @@ export default async () => {
       return ethers.utils.serializeTransaction(
         tx,
         ethers.utils.joinSignature({
-          r: "0x" + JSON.parse(sig).r.substring(2),
-          s: "0x" + JSON.parse(sig).s,
+          r: '0x' + JSON.parse(sig).r.substring(2),
+          s: '0x' + JSON.parse(sig).s,
           v: JSON.parse(sig).v,
         })
       );
@@ -425,7 +442,7 @@ export default async () => {
         ]);
       } else if (swapParams) {
         const routerInterface = new ethers.utils.Interface([
-          "function exactInputSingle((address,address,uint24,address,uint256,uint256,uint160)) external payable returns (uint256)"
+          'function exactInputSingle((address,address,uint24,address,uint256,uint256,uint160)) external payable returns (uint256)',
         ]);
         txData = routerInterface.encodeFunctionData('exactInputSingle', [
           [
@@ -435,8 +452,8 @@ export default async () => {
             pkp.ethAddress,
             amount,
             swapParams.amountOutMin,
-            0
-          ]
+            0,
+          ],
         ]);
       } else {
         throw new Error('Missing swap parameters for transaction creation');
@@ -461,7 +478,9 @@ export default async () => {
         { waitForResponse: true, name: 'txnSender' },
         async () => {
           try {
-            const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
+            const provider = new ethers.providers.JsonRpcProvider(
+              params.rpcUrl
+            );
             const receipt = await provider.sendTransaction(signedTx);
             console.log('Transaction sent:', receipt.hash);
             return receipt.hash;
@@ -485,15 +504,15 @@ export default async () => {
 
     // Set up PKP Tool Registry
     const PKP_TOOL_REGISTRY_ABI = [
-      "function isDelegateeOf(uint256,address) external view returns (bool)",
-      "function getToolPolicy(uint256,string) external view returns (bytes memory, string memory)",
+      'function isDelegateeOf(uint256,address) external view returns (bool)',
+      'function getToolPolicy(uint256,string) external view returns (bytes memory, string memory)',
     ];
-    const PKP_TOOL_REGISTRY_ADDR = "0xb8000069FeD07794c23Fc1622F02fe54788Dae3F";
+    const PKP_TOOL_REGISTRY_ADDR = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
     const pkpToolRegistry = new ethers.Contract(
       PKP_TOOL_REGISTRY_ADDR,
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
-        await Lit.Actions.getRpcUrl({ chain: "yellowstone" })
+        await Lit.Actions.getRpcUrl({ chain: 'yellowstone' })
       )
     );
 
@@ -504,7 +523,10 @@ export default async () => {
     const tokenInfo = await getTokenInfo(provider);
 
     // Validate inputs against policy
-    await validateInputsAgainstPolicy(pkpToolRegistry, tokenInfo.tokenIn.amount);
+    await validateInputsAgainstPolicy(
+      pkpToolRegistry,
+      tokenInfo.tokenIn.amount
+    );
 
     // Get best quote and calculate minimum output
     const { bestFee, amountOutMin } = await getBestQuote(
@@ -531,13 +553,16 @@ export default async () => {
       true
     );
 
-    const signedApprovalTx = await signTx(approvalTx, "erc20ApprovalSig");
+    const signedApprovalTx = await signTx(approvalTx, 'erc20ApprovalSig');
     const approvalHash = await broadcastTransaction(signedApprovalTx);
     console.log('Approval transaction hash:', approvalHash);
 
     // Wait for approval confirmation
     console.log('Waiting for approval confirmation...');
-    const approvalConfirmation = await provider.waitForTransaction(approvalHash, 1);
+    const approvalConfirmation = await provider.waitForTransaction(
+      approvalHash,
+      1
+    );
     if (approvalConfirmation.status === 0) {
       throw new Error('Approval transaction failed');
     }
@@ -559,7 +584,7 @@ export default async () => {
       { fee: bestFee, amountOutMin }
     );
 
-    const signedSwapTx = await signTx(swapTx, "erc20SwapSig");
+    const signedSwapTx = await signTx(swapTx, 'erc20SwapSig');
     const swapHash = await broadcastTransaction(signedSwapTx);
     console.log('Swap transaction hash:', swapHash);
 
