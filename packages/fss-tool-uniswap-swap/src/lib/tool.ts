@@ -35,35 +35,35 @@ const UniswapSwapLitActionSchema = z.object({
     .regex(
       /^0x[a-fA-F0-9]{40}$/,
       'Must be a valid Ethereum contract address (0x followed by 40 hexadecimal characters)'
-    ), // Validates Ethereum contract address format
+    ),
   tokenOut: z
     .string()
     .regex(
       /^0x[a-fA-F0-9]{40}$/,
       'Must be a valid Ethereum contract address (0x followed by 40 hexadecimal characters)'
-    ), // Validates Ethereum contract address format
+    ),
   amountIn: z
     .string()
     .regex(
       /^\d*\.?\d+$/,
       'Must be a valid decimal number as a string (e.g. "1.5" or "100")'
-    ), // Validates decimal number format
+    ),
   chainId: z
     .string()
-    .regex(/^\d+$/, 'Must be a valid chain ID number as a string'), // Validates chain ID format
+    .regex(/^\d+$/, 'Must be a valid chain ID number as a string'),
   rpcUrl: z
     .string()
     .url()
     .startsWith(
       'https://',
       'Must be a valid HTTPS URL for the blockchain RPC endpoint'
-    ), // Validates HTTPS URL format
+    ),
 });
 
 /**
  * Descriptions of each parameter for the Swap Uniswap Lit Action.
  * These descriptions are designed to be consumed by LLMs to understand the required parameters.
- * @type {Object}
+ * @type {Record<string, string>}
  */
 const UniswapSwapLitActionParameterDescriptions = {
   tokenIn:
@@ -79,9 +79,9 @@ const UniswapSwapLitActionParameterDescriptions = {
 } as const;
 
 /**
- * Validates parameters and returns detailed error messages if invalid.
+ * Validates the provided parameters against the UniswapSwapLitActionSchema.
  * @param {unknown} params - The parameters to validate.
- * @returns {true | Array<{ param: string; error: string }>} - Returns `true` if valid, or an array of errors if invalid.
+ * @returns {true | Array<{ param: string; error: string }>} - Returns `true` if valid, otherwise an array of errors.
  */
 const validateUniswapSwapParameters = (
   params: unknown
@@ -99,34 +99,34 @@ const validateUniswapSwapParameters = (
 
 /**
  * Creates a network-specific UniswapSwap tool.
- * @param {SupportedLitNetwork} network - The Lit network to configure the tool for.
- * @param {NetworkConfig} config - The network configuration.
- * @returns {FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>} - The configured UniswapSwap tool.
+ * @param {SupportedLitNetwork} network - The Lit network to use.
+ * @param {NetworkConfig} config - The configuration for the network.
+ * @returns {FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>} - The configured FssTool instance.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
 ): FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
-  name: 'UniswapSwap', // Name of the tool
-  description: `A Lit Action that swaps tokens on Uniswap, using the ${config.litNetwork} network for signing.`, // Description of the tool
-  ipfsCid: IPFS_CIDS[network], // IPFS CID for the Lit Action
+  name: 'UniswapSwap',
+  description: `A Lit Action that swaps tokens on Uniswap, using the ${config.litNetwork} network for signing.`,
+  ipfsCid: IPFS_CIDS[network],
   parameters: {
-    type: {} as UniswapSwapLitActionParameters, // Placeholder for parameter type
-    schema: UniswapSwapLitActionSchema, // Zod schema for parameter validation
-    descriptions: UniswapSwapLitActionParameterDescriptions, // Descriptions of parameters
-    validate: validateUniswapSwapParameters, // Validation function
+    type: {} as UniswapSwapLitActionParameters,
+    schema: UniswapSwapLitActionSchema,
+    descriptions: UniswapSwapLitActionParameterDescriptions,
+    validate: validateUniswapSwapParameters,
   },
-  policy: UniswapSwapPolicy, // Policy utility for encoding/decoding policies
+  policy: UniswapSwapPolicy,
 });
 
 /**
- * Exports network-specific UniswapSwap tools.
+ * A collection of network-specific UniswapSwap tools.
  * @type {Record<SupportedLitNetwork, FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>>}
  */
 export const UniswapSwap = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
     ...acc,
-    [network]: createNetworkTool(network as SupportedLitNetwork, config), // Create a tool for each network
+    [network]: createNetworkTool(network as SupportedLitNetwork, config),
   }),
   {} as Record<
     SupportedLitNetwork,
