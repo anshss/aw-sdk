@@ -23,6 +23,10 @@ import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 import { FssSignerError, FssSignerErrorType } from './errors';
 
+/**
+ * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.
+ * It handles tasks such as transferring ownership, permitting tools, managing policies, and managing delegatees.
+ */
 export class Admin {
   private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
   // TODO: Add min balance check
@@ -36,6 +40,15 @@ export class Admin {
 
   public readonly litNetwork: LitNetwork;
 
+  /**
+   * Private constructor for the Admin class.
+   * @param litNetwork - The Lit network to use.
+   * @param litNodeClient - An instance of `LitNodeClientNodeJs`.
+   * @param litContracts - An instance of `LitContracts`.
+   * @param toolPolicyRegistryContract - An instance of the tool policy registry contract.
+   * @param adminWallet - The wallet used for Admin operations.
+   * @param pkpInfo - Information about the PKP (Programmable Key Pair).
+   */
   private constructor(
     litNetwork: LitNetwork,
     litNodeClient: LitNodeClientNodeJs,
@@ -52,6 +65,15 @@ export class Admin {
     this.pkpInfo = pkpInfo;
   }
 
+  /**
+   * Retrieves or mints a PKP (Programmable Key Pair) for the Admin.
+   * If a PKP is already stored, it is loaded; otherwise, a new PKP is minted.
+   *
+   * @param litContracts - An instance of `LitContracts`.
+   * @param wallet - The wallet used for Admin operations.
+   * @param storage - An instance of `LocalStorage` for storing PKP information.
+   * @returns A promise that resolves to the PKP information.
+   */
   private static async getPkp(
     litContracts: LitContracts,
     wallet: ethers.Wallet,
@@ -68,6 +90,15 @@ export class Admin {
     return mintMetadata;
   }
 
+  /**
+   * Creates an instance of the `Admin` class.
+   * Initializes the Lit node client, contracts, and PKP.
+   *
+   * @param adminConfig - Configuration for the Admin role.
+   * @param agentConfig - Configuration for the agent, including the Lit network and debug mode.
+   * @returns A promise that resolves to an instance of the `Admin` class.
+   * @throws {FssSignerError} If the Lit network is not provided or the private key is missing.
+   */
   public static async create(
     adminConfig: AdminConfig,
     {
@@ -137,6 +168,12 @@ export class Admin {
     );
   }
 
+  /**
+   * Transfers ownership of the PKP to a new owner.
+   * @param newOwner - The address of the new owner.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the Admin instance is not properly initialized.
+   */
   public async transferOwnership(newOwner: string) {
     if (!this.litContracts || !this.pkpInfo) {
       throw new Error('Not properly initialized');
@@ -147,6 +184,13 @@ export class Admin {
     ](this.adminWallet.address, newOwner, this.pkpInfo.info.tokenId);
   }
 
+  /**
+   * Permits a tool to be used with the PKP.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param signingScopes - The signing scopes for the tool (default is `SignAnything`).
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the Admin instance is not properly initialized.
+   */
   public async permitTool({
     ipfsCid,
     signingScopes = [AUTH_METHOD_SCOPE.SignAnything],
@@ -165,6 +209,12 @@ export class Admin {
     });
   }
 
+  /**
+   * Removes a tool from the list of permitted tools.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the Admin instance is not properly initialized.
+   */
   public async removeTool(ipfsCid: string) {
     if (!this.litContracts || !this.pkpInfo) {
       throw new Error('Not properly initialized');
@@ -177,8 +227,9 @@ export class Admin {
   }
 
   /**
-   * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing arrays of tools with and without policies
+   * Retrieves all registered tools and categorizes them based on whether they have policies.
+   * @returns An object containing arrays of tools with and without policies.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async getRegisteredTools(): Promise<{
     toolsWithPolicies: RegisteredTool[];
@@ -196,9 +247,10 @@ export class Admin {
   }
 
   /**
-   * Get the policy for a specific tool
-   * @param ipfsCid IPFS CID of the tool
-   * @returns The policy and version for the tool
+   * Retrieves the policy for a specific tool.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @returns An object containing the policy and version for the tool.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async getToolPolicy(
     ipfsCid: string
@@ -215,13 +267,13 @@ export class Admin {
   }
 
   /**
-   * Set or update a policy for a specific tool
-   * @param ipfsCid IPFS CID of the tool
-   * @param policy Tool-specific policy bytes that must be ABI encoded
-   * @param version Version of the policy
-   * @returns Transaction receipt
+   * Sets or updates a policy for a specific tool.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param policy - The policy bytes (must be ABI encoded).
+   * @param version - The version of the policy.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
    */
-  // TODO: Encode the policy string to bytes
   public async setToolPolicy(ipfsCid: string, policy: string, version: string) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -237,6 +289,12 @@ export class Admin {
     return await tx.wait();
   }
 
+  /**
+   * Removes the policy for a specific tool.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
   public async removeToolPolicy(ipfsCid: string) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -251,8 +309,9 @@ export class Admin {
   }
 
   /**
-   * Get all delegatees for the PKP
-   * @returns Array of delegatee addresses
+   * Retrieves all delegatees for the PKP.
+   * @returns An array of delegatee addresses.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async getDelegatees(): Promise<string[]> {
     if (!this.toolPolicyRegistryContract) {
@@ -264,6 +323,12 @@ export class Admin {
     );
   }
 
+  /**
+   * Checks if an address is a delegatee for the PKP.
+   * @param delegatee - The address to check.
+   * @returns A promise that resolves to a boolean indicating whether the address is a delegatee.
+   * @throws If the tool policy registry contract is not initialized.
+   */
   public async isDelegatee(delegatee: string) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -276,9 +341,10 @@ export class Admin {
   }
 
   /**
-   * Add a delegatee for the PKP
-   * @param delegatee Address to add as delegatee
-   * @returns Transaction receipt
+   * Adds a delegatee for the PKP.
+   * @param delegatee - The address to add as a delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async addDelegatee(delegatee: string) {
     if (!this.toolPolicyRegistryContract) {
@@ -294,9 +360,10 @@ export class Admin {
   }
 
   /**
-   * Remove a delegatee for the PKP
-   * @param delegatee Address to remove as delegatee
-   * @returns Transaction receipt
+   * Removes a delegatee for the PKP.
+   * @param delegatee - The address to remove as a delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async removeDelegatee(delegatee: string) {
     if (!this.toolPolicyRegistryContract) {
@@ -311,6 +378,12 @@ export class Admin {
     return await tx.wait();
   }
 
+  /**
+   * Adds multiple delegatees for the PKP in a single transaction.
+   * @param delegatees - An array of addresses to add as delegatees.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
   public async batchAddDelegatees(delegatees: string[]) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -324,6 +397,12 @@ export class Admin {
     return await tx.wait();
   }
 
+  /**
+   * Removes multiple delegatees for the PKP in a single transaction.
+   * @param delegatees - An array of addresses to remove as delegatees.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
   public async batchRemoveDelegatees(delegatees: string[]) {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -337,6 +416,9 @@ export class Admin {
     return await tx.wait();
   }
 
+  /**
+   * Disconnects the Lit node client.
+   */
   public disconnect() {
     this.litNodeClient.disconnect();
   }
