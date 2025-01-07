@@ -10,30 +10,33 @@ import { SignEcdsaPolicy, type SignEcdsaPolicyType } from './policy';
 import { IPFS_CIDS } from './ipfs';
 
 /**
- * Parameters required for the Signing ECDSA Lit Action
- * @property message - The message to sign
+ * Parameters required for the Signing ECDSA Lit Action.
+ * @property message - The message to sign.
  */
 export interface SignEcdsaLitActionParameters {
   message: string;
 }
 
 /**
- * Zod schema for validating SignEcdsaLitActionParameters
+ * Zod schema for validating `SignEcdsaLitActionParameters`.
+ * Ensures that the message is a valid string.
  */
 const SignEcdsaLitActionSchema = z.object({
   message: z.string(),
 });
 
 /**
- * Descriptions of each parameter for the Signing ECDSA Lit Action
- * These descriptions are designed to be consumed by LLMs to understand the required parameters
+ * Descriptions of each parameter for the Signing ECDSA Lit Action.
+ * These descriptions are designed to be consumed by LLMs (Language Learning Models) to understand the required parameters.
  */
 const SignEcdsaLitActionParameterDescriptions = {
   message: 'The message you want to sign.',
 } as const;
 
 /**
- * Validate parameters and return detailed error messages if invalid
+ * Validates the parameters for the Signing ECDSA Lit Action.
+ * @param params - The parameters to validate.
+ * @returns `true` if the parameters are valid, or an array of errors if invalid.
  */
 const validateSignEcdsaParameters = (
   params: unknown
@@ -43,6 +46,7 @@ const validateSignEcdsaParameters = (
     return true;
   }
 
+  // Map validation errors to a more user-friendly format
   return result.error.issues.map((issue) => ({
     param: issue.path[0] as string,
     error: issue.message,
@@ -50,7 +54,10 @@ const validateSignEcdsaParameters = (
 };
 
 /**
- * Create a network-specific ERC20Transfer tool
+ * Creates a network-specific SignEcdsa tool.
+ * @param network - The supported Lit network (e.g., `datil-dev`, `datil-test`, `datil`).
+ * @param config - The network configuration.
+ * @returns A configured `FssTool` instance for the Signing ECDSA Lit Action.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
@@ -69,7 +76,8 @@ const createNetworkTool = (
 });
 
 /**
- * Export network-specific ERC20Transfer tools
+ * Exports network-specific SignEcdsa tools.
+ * Each tool is configured for a specific Lit network (e.g., `datil-dev`, `datil-test`, `datil`).
  */
 export const SignEcdsa = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
