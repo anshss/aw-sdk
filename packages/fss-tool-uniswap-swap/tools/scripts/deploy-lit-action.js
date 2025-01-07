@@ -6,7 +6,7 @@ const networks = require('../config/networks');
 const dotenvx = require('@dotenvx/dotenvx');
 
 // Load environment variables
-dotenvx.config();
+dotenvx.config({ path: path.join(__dirname, '../../../../.env') });
 
 async function uploadToIPFS(filePath) {
   try {
