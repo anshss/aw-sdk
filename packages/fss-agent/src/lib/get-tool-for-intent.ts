@@ -1,5 +1,8 @@
 import { OpenAI } from 'openai';
-import { listTools } from '@lit-protocol/fss-tool-registry';
+import {
+  listToolsByNetwork,
+  type LitNetwork,
+} from '@lit-protocol/fss-tool-registry';
 import type { FssTool } from '@lit-protocol/fss-tool';
 
 import { getToolMatchingPrompt } from './get-tool-matching-prompt';
@@ -7,12 +10,13 @@ import { getToolMatchingPrompt } from './get-tool-matching-prompt';
 export async function getToolForIntent(
   openai: OpenAI,
   openAiModel: string,
-  userIntent: string
+  userIntent: string,
+  litNetwork: LitNetwork
 ): Promise<{
   analysis: any;
   matchedTool: FssTool | null;
 }> {
-  const availableTools = listTools();
+  const availableTools = listToolsByNetwork(litNetwork);
 
   const completion = await openai.chat.completions.create({
     model: openAiModel,

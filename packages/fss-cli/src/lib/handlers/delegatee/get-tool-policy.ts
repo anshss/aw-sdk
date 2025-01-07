@@ -1,4 +1,7 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
+import {
+  type FssTool,
+  type Delegatee as FssDelegatee,
+} from '@lit-protocol/full-self-signing';
 import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
 
 import { logger } from '../../utils/logger';
@@ -19,43 +22,51 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
 
     const selectedPkp = await promptSelectPkp(pkps);
 
-    const { toolsWithPolicies } = await fssDelegatee.getRegisteredToolsForPkp(
+    const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
       selectedPkp.tokenId
     );
 
-    if (toolsWithPolicies.length === 0) {
+    if (registeredTools.toolsWithPolicies.length === 0) {
       throw new FssCliError(
         FssCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_TOOLS_WITH_POLICY,
         'No registered tools with a policy for this PKP.'
       );
     }
 
-    const { ipfsCid: selectedToolIpfsCid } = await promptSelectTool(
-      toolsWithPolicies,
-      []
-    );
+    const toolsWithPolicies: FssTool<any, any>[] = [];
+    registeredTools.toolsWithPolicies.forEach((registeredTool) => {
+      const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
+      if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
+        toolsWithPolicies.push(registryTool.tool);
+      }
+    });
 
-    const selectedTool = toolsWithPolicies.find(
-      (tool) => tool.ipfsCid === selectedToolIpfsCid
-    );
-
-    if (!selectedTool) {
-      throw new Error('Selected tool not found');
-    }
+    const selectedTool = await promptSelectTool(toolsWithPolicies, []);
 
     // Get the tool from the registry to decode the policy
-    const registryTool = getToolByIpfsCid(selectedToolIpfsCid);
+    const registryTool = getToolByIpfsCid(selectedTool.ipfsCid);
     if (!registryTool) {
-      throw new Error(`Tool not found in registry: ${selectedToolIpfsCid}`);
+      throw new Error(`Tool not found in registry: ${selectedTool.ipfsCid}`);
     }
 
     // Decode the policy
-    const decodedPolicy = registryTool.policy.decode(selectedTool.policy);
+    const toolPolicy = registeredTools.toolsWithPolicies.find(
+      (t) => t.ipfsCid === selectedTool.ipfsCid
+    )?.policy;
+
+    if (!toolPolicy) {
+      throw new FssCliError(
+        FssCliErrorType.DELEGATEE_GET_TOOL_POLICY_TOOL_NOT_FOUND,
+        'Selected tool not found'
+      );
+    }
+
+    const decodedPolicy = registryTool.tool.policy.decode(toolPolicy);
 
     logger.info(
       `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
     );
-    logger.log(`Version: ${selectedTool.version}`);
+    logger.log(`Version: ${selectedTool.policy.version}`);
     logger.log('Policy:');
     logger.log(JSON.stringify(decodedPolicy, null, 2));
   } catch (error) {
@@ -65,7 +76,9 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
         return;
       }
       if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS) {
-        logger.error('No tools available for the selected PKP');
+        logger.error(
+          'No known tools with policies available for the selected PKP'
+        );
         return;
       }
       if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED) {

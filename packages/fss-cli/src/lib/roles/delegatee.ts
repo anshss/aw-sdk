@@ -1,4 +1,7 @@
-import { Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
+import {
+  Delegatee as FssDelegatee,
+  LitNetwork,
+} from '@lit-protocol/full-self-signing';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
 
 import { logger } from '../utils/logger';
@@ -23,16 +26,17 @@ export class Delegatee {
   }
 
   private static async createFssDelegatee(
+    litNetwork: LitNetwork,
     privateKey?: string
   ): Promise<FssDelegatee> {
     let fssDelegatee: FssDelegatee;
     try {
-      fssDelegatee = await FssDelegatee.create(privateKey);
+      fssDelegatee = await FssDelegatee.create(privateKey, { litNetwork });
     } catch (error) {
       if (error instanceof FssSignerError) {
         if (error.type === FssSignerErrorType.DELEGATEE_MISSING_PRIVATE_KEY) {
           const privateKey = await promptDelegateeInit();
-          return Delegatee.createFssDelegatee(privateKey);
+          return Delegatee.createFssDelegatee(litNetwork, privateKey);
         }
 
         if (
@@ -41,7 +45,7 @@ export class Delegatee {
         ) {
           const hasFunded = await promptDelegateeInsufficientBalance();
           if (hasFunded) {
-            return Delegatee.createFssDelegatee(privateKey);
+            return Delegatee.createFssDelegatee(litNetwork, privateKey);
           }
         }
       }
@@ -53,9 +57,9 @@ export class Delegatee {
     return fssDelegatee;
   }
 
-  public static async create() {
+  public static async create(litNetwork: LitNetwork) {
     logger.info('Initializing Delegatee role...');
-    const fssDelegatee = await Delegatee.createFssDelegatee();
+    const fssDelegatee = await Delegatee.createFssDelegatee(litNetwork);
     return new Delegatee(fssDelegatee);
   }
 

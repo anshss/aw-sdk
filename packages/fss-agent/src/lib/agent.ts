@@ -2,6 +2,7 @@ import { OpenAI } from 'openai';
 
 import { getToolForIntent } from './get-tool-for-intent';
 import { parseToolParametersFromIntent } from './parse-tool-parameters';
+import { type LitNetwork } from '@lit-protocol/fss-tool-registry';
 
 export class FssAgent {
   private openai: OpenAI;
@@ -12,11 +13,15 @@ export class FssAgent {
     this.openAiModel = openAiModel;
   }
 
-  public async analyzeIntentAndMatchAction(intent: string) {
+  public async analyzeIntentAndMatchAction(
+    intent: string,
+    litNetwork: LitNetwork
+  ) {
     const { analysis, matchedTool } = await getToolForIntent(
       this.openai,
       this.openAiModel,
-      intent
+      intent,
+      litNetwork
     );
 
     const params = matchedTool
