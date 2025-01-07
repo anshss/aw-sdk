@@ -3,22 +3,42 @@ import { ERC20Transfer } from '@lit-protocol/fss-tool-erc20-transfer';
 import { UniswapSwap } from '@lit-protocol/fss-tool-uniswap-swap';
 import { SignEcdsa } from '@lit-protocol/fss-tool-sign-ecdsa';
 
+/**
+ * Represents the Lit network environment.
+ * Can be one of the predefined Lit network types: `datil-dev`, `datil-test`, or `datil`.
+ */
 export type LitNetwork = 'datil-dev' | 'datil-test' | 'datil';
 
+/**
+ * Represents a tool that is specific to a Lit network.
+ * @template T - The type of the tool, which must extend `FssTool`.
+ */
 export type NetworkSpecificTool<T extends FssTool<any, any>> = Record<
   LitNetwork,
   T
 >;
 
+/**
+ * Represents a collection of tools, categorized by whether they have policies.
+ */
 export type PermittedTools = {
+  /** Tools that have associated policies. */
   toolsWithPolicies: FssTool<any, any>[];
+
+  /** Tools that do not have associated policies. */
   toolsWithoutPolicies: FssTool<any, any>[];
 };
 
+/**
+ * A registry for storing and managing tools.
+ * The registry maps tool names to their network-specific implementations.
+ */
 const toolRegistry = new Map<string, NetworkSpecificTool<FssTool<any, any>>>();
 
 /**
- * Register a tool in the registry
+ * Registers a tool in the registry.
+ * @param name - The name of the tool.
+ * @param tool - The network-specific implementation of the tool.
  */
 export function registerTool<T extends FssTool<any, any>>(
   name: string,
@@ -28,8 +48,10 @@ export function registerTool<T extends FssTool<any, any>>(
 }
 
 /**
- * Get a tool from the registry by name and network
- * @returns The tool if found, null otherwise
+ * Retrieves a tool from the registry by its name and network.
+ * @param name - The name of the tool.
+ * @param network - The Lit network for which the tool is registered.
+ * @returns The tool if found, or `null` if the tool is not registered for the specified network.
  */
 export function getToolByName<T extends FssTool<any, any>>(
   name: string,
@@ -41,8 +63,9 @@ export function getToolByName<T extends FssTool<any, any>>(
 }
 
 /**
- * Find a tool by its IPFS CID
- * @returns The tool and its network if found, null otherwise
+ * Finds a tool by its IPFS CID (Content Identifier).
+ * @param ipfsCid - The IPFS CID of the tool.
+ * @returns An object containing the tool and its network if found, or `null` if the tool is not found.
  */
 export function getToolByIpfsCid<T extends FssTool<any, any>>(
   ipfsCid: string
@@ -61,7 +84,9 @@ export function getToolByIpfsCid<T extends FssTool<any, any>>(
 }
 
 /**
- * List all registered tools for a specific network
+ * Lists all registered tools for a specific network.
+ * @param network - The Lit network for which to list the tools.
+ * @returns An array of tools registered for the specified network.
  */
 export function listToolsByNetwork<T extends FssTool<any, any>>(
   network: LitNetwork
@@ -72,7 +97,8 @@ export function listToolsByNetwork<T extends FssTool<any, any>>(
 }
 
 /**
- * List all registered tools for all networks
+ * Lists all registered tools for all networks.
+ * @returns An array of objects containing the tool and its network.
  */
 export function listAllTools<T extends FssTool<any, any>>(): Array<{
   tool: T;
