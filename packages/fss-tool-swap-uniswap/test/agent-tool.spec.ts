@@ -1,18 +1,18 @@
-import type { SendERC20LitActionParameters } from '../src/lib/tool';
-import { SendERC20 } from '../src/lib/tool';
+import type { SwapUniswapLitActionParameters } from '../src/lib/tool';
+import { SwapUniswap } from '../src/lib/tool';
 
-describe('SendERC20', () => {
-  const validParams: SendERC20LitActionParameters = {
+describe('SwapUniswap', () => {
+  const validParams: SwapUniswapLitActionParameters = {
     tokenIn: '0x1234567890123456789012345678901234567890',
-    recipientAddress: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+    tokenOut: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
     amountIn: '1.5',
     chainId: '1',
     rpcUrl: 'https://eth-mainnet.example.com',
   };
 
-  describe('SendERC20.parameters.schema', () => {
+  describe('SwapUniswap.parameters.schema', () => {
     it('should validate correct parameters', () => {
-      const result = SendERC20.parameters.schema.safeParse(validParams);
+      const result = SwapUniswap.parameters.schema.safeParse(validParams);
       expect(result.success).toBe(true);
     });
 
@@ -26,7 +26,7 @@ describe('SendERC20', () => {
         ];
 
         invalidTokens.forEach((tokenIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = SwapUniswap.parameters.schema.safeParse({
             ...validParams,
             tokenIn,
           });
@@ -35,19 +35,19 @@ describe('SendERC20', () => {
       });
     });
 
-    describe('recipientAddress validation', () => {
+    describe('tokenOut validation', () => {
       it('should reject invalid Ethereum addresses', () => {
-        const invalidAddresses = [
+        const invalidTokens = [
           '0x123', // too short
           '0xGGGGdefabcdefabcdefabcdefabcdefabcdefabcd', // invalid hex
           'abcdefabcdefabcdefabcdefabcdefabcdefabcd', // missing 0x prefix
           '0xabcdefabcdefabcdefabcdefabcdefabcdefabcde', // too long
         ];
 
-        invalidAddresses.forEach((recipientAddress) => {
-          const result = SendERC20.parameters.schema.safeParse({
+        invalidTokens.forEach((tokenOut) => {
+          const result = SwapUniswap.parameters.schema.safeParse({
             ...validParams,
-            recipientAddress,
+            tokenOut,
           });
           expect(result.success).toBe(false);
         });
@@ -59,7 +59,7 @@ describe('SendERC20', () => {
         const validAmounts = ['1.5', '100', '0.01', '1000.55555'];
 
         validAmounts.forEach((amountIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = SwapUniswap.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -77,7 +77,7 @@ describe('SendERC20', () => {
         ];
 
         invalidAmounts.forEach((amountIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = SwapUniswap.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -85,11 +85,77 @@ describe('SendERC20', () => {
         });
       });
     });
+
+    describe('chainId validation', () => {
+      it('should accept valid chain IDs', () => {
+        const validChainIds = ['1', '8453', '42161'];
+
+        validChainIds.forEach((chainId) => {
+          const result = SwapUniswap.parameters.schema.safeParse({
+            ...validParams,
+            chainId,
+          });
+          expect(result.success).toBe(true);
+        });
+      });
+
+      it('should reject invalid chain IDs', () => {
+        const invalidChainIds = [
+          'abc', // not a number
+          '1.5', // decimal
+          '-1', // negative
+          '', // empty string
+        ];
+
+        invalidChainIds.forEach((chainId) => {
+          const result = SwapUniswap.parameters.schema.safeParse({
+            ...validParams,
+            chainId,
+          });
+          expect(result.success).toBe(false);
+        });
+      });
+    });
+
+    describe('rpcUrl validation', () => {
+      it('should accept valid HTTPS URLs', () => {
+        const validUrls = [
+          'https://eth-mainnet.example.com',
+          'https://base-sepolia-rpc.publicnode.com',
+          'https://arbitrum-mainnet.infura.io/v3/123',
+        ];
+
+        validUrls.forEach((rpcUrl) => {
+          const result = SwapUniswap.parameters.schema.safeParse({
+            ...validParams,
+            rpcUrl,
+          });
+          expect(result.success).toBe(true);
+        });
+      });
+
+      it('should reject invalid URLs', () => {
+        const invalidUrls = [
+          'not a url',
+          'http://insecure.com', // not HTTPS
+          'ftp://wrong-protocol.com',
+          '', // empty string
+        ];
+
+        invalidUrls.forEach((rpcUrl) => {
+          const result = SwapUniswap.parameters.schema.safeParse({
+            ...validParams,
+            rpcUrl,
+          });
+          expect(result.success).toBe(false);
+        });
+      });
+    });
   });
 
-  describe('SendERC20.parameters.validate', () => {
+  describe('SwapUniswap.parameters.validate', () => {
     it('should return true for valid parameters', () => {
-      expect(SendERC20.parameters.validate(validParams)).toBe(true);
+      expect(SwapUniswap.parameters.validate(validParams)).toBe(true);
     });
 
     it('should return array of errors for invalid parameters', () => {
@@ -113,7 +179,7 @@ describe('SendERC20', () => {
       ];
 
       invalidParams.forEach((params) => {
-        const result = SendERC20.parameters.validate(params);
+        const result = SwapUniswap.parameters.validate(params);
         expect(Array.isArray(result)).toBe(true);
         if (Array.isArray(result)) {
           expect(result.length).toBeGreaterThan(0);
@@ -129,9 +195,9 @@ describe('SendERC20', () => {
     });
   });
 
-  describe('SendERC20 metadata', () => {
+  describe('SwapUniswap metadata', () => {
     it('should have the correct structure', () => {
-      expect(SendERC20).toMatchObject({
+      expect(SwapUniswap).toMatchObject({
         name: expect.any(String),
         description: expect.any(String),
         parameters: expect.any(Object),
@@ -139,9 +205,9 @@ describe('SendERC20', () => {
     });
 
     it('should have descriptions for all parameters', () => {
-      const params = Object.keys(SendERC20.parameters.descriptions);
-      const required = ['tokenIn', 'recipientAddress', 'amountIn', 'chainId', 'rpcUrl'];
+      const params = Object.keys(SwapUniswap.parameters.descriptions);
+      const required = ['tokenIn', 'tokenOut', 'amountIn', 'chainId', 'rpcUrl'];
       expect(params.sort()).toEqual(required.sort());
     });
   });
-});
+}); 

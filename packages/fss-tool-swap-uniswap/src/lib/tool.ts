@@ -12,7 +12,7 @@ import { SwapUniswapPolicy, type SwapUniswapPolicyType } from './policy';
  * @property chainId - The ID of the blockchain network
  * @property rpcUrl - The RPC URL of the blockchain network
  */
-interface SwapUniswapLitActionParameters {
+export interface SwapUniswapLitActionParameters {
   tokenIn: string;
   tokenOut: string;
   amountIn: string;

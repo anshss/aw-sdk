@@ -1,28 +1,24 @@
 import { ethers } from 'ethers';
 
 import {
-  SendERC20Policy,
-  SendERC20PolicyType
+  SwapUniswapPolicy,
+  type SwapUniswapPolicyType
 } from '../src/lib/policy';
 
-describe('SendERC20Policy', () => {
-  const validPolicy: SendERC20PolicyType = {
-    type: 'SendERC20',
+describe('SwapUniswapPolicy', () => {
+  const validPolicy: SwapUniswapPolicyType = {
+    type: 'SwapUniswap',
     version: '1.0.0',
     maxAmount: ethers.utils.parseEther('1.0').toString(), // 1 ETH in wei
     allowedTokens: [
       ethers.utils.getAddress('0x1234567890123456789012345678901234567890'),
       ethers.utils.getAddress('0xabcdefabcdefabcdefabcdefabcdefabcdefabcd'),
     ],
-    allowedRecipients: [
-      ethers.utils.getAddress('0x2234567890123456789012345678901234567890'),
-      ethers.utils.getAddress('0xbbcdefabcdefabcdefabcdefabcdefabcdefabcd'),
-    ],
   };
 
-  describe('SendERC20Policy.schema', () => {
+  describe('SwapUniswapPolicy.schema', () => {
     it('should validate a correct policy', () => {
-      const result = SendERC20Policy.schema.safeParse(validPolicy);
+      const result = SwapUniswapPolicy.schema.safeParse(validPolicy);
       expect(result.success).toBe(true);
     });
 
@@ -35,7 +31,7 @@ describe('SendERC20Policy', () => {
         ];
 
         validAmounts.forEach((maxAmount) => {
-          const result = SendERC20Policy.schema.safeParse({
+          const result = SwapUniswapPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -59,7 +55,7 @@ describe('SendERC20Policy', () => {
         ];
 
         invalidAmounts.forEach((maxAmount) => {
-          const result = SendERC20Policy.schema.safeParse({
+          const result = SwapUniswapPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -68,7 +64,7 @@ describe('SendERC20Policy', () => {
       });
 
       it('should reject negative numbers', () => {
-        const result = SendERC20Policy.schema.safeParse({
+        const result = SwapUniswapPolicy.schema.safeParse({
           ...validPolicy,
           maxAmount: '-1000000000000000000',
         });
@@ -85,7 +81,7 @@ describe('SendERC20Policy', () => {
 
     describe('allowedTokens validation', () => {
       it('should accept valid Ethereum addresses', () => {
-        const result = SendERC20Policy.schema.safeParse(validPolicy);
+        const result = SwapUniswapPolicy.schema.safeParse(validPolicy);
         expect(result.success).toBe(true);
       });
 
@@ -97,12 +93,12 @@ describe('SendERC20Policy', () => {
             '0xGGGG567890123456789012345678901234567890', // invalid hex
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(invalidPolicy);
+        const result = SwapUniswapPolicy.schema.safeParse(invalidPolicy);
         expect(result.success).toBe(false);
       });
 
       it('should accept empty array of allowed tokens', () => {
-        const result = SendERC20Policy.schema.safeParse({
+        const result = SwapUniswapPolicy.schema.safeParse({
           ...validPolicy,
           allowedTokens: [],
         });
@@ -117,81 +113,41 @@ describe('SendERC20Policy', () => {
             '0xaBcDeF1234567890123456789012345678901234',
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(mixedCasePolicy);
-        expect(result.success).toBe(true);
-      });
-    });
-
-    describe('allowedRecipients validation', () => {
-      it('should accept valid Ethereum addresses', () => {
-        const result = SendERC20Policy.schema.safeParse(validPolicy);
-        expect(result.success).toBe(true);
-      });
-
-      it('should reject invalid Ethereum addresses', () => {
-        const invalidPolicy = {
-          ...validPolicy,
-          allowedRecipients: [
-            '0x123', // too short
-            '0xGGGG567890123456789012345678901234567890', // invalid hex
-          ],
-        };
-        const result = SendERC20Policy.schema.safeParse(invalidPolicy);
-        expect(result.success).toBe(false);
-      });
-
-      it('should accept empty array of allowed recipients', () => {
-        const result = SendERC20Policy.schema.safeParse({
-          ...validPolicy,
-          allowedRecipients: [],
-        });
-        expect(result.success).toBe(true);
-      });
-
-      it('should normalize address case', () => {
-        const mixedCasePolicy = {
-          ...validPolicy,
-          allowedRecipients: [
-            '0x1234567890123456789012345678901234567890',
-            '0xaBcDeF1234567890123456789012345678901234',
-          ],
-        };
-        const result = SendERC20Policy.schema.safeParse(mixedCasePolicy);
+        const result = SwapUniswapPolicy.schema.safeParse(mixedCasePolicy);
         expect(result.success).toBe(true);
       });
     });
   });
 
-  describe('SendERC20Policy.encode', () => {
+  describe('SwapUniswapPolicy.encode', () => {
     it('should encode a valid policy', () => {
-      const encoded = SendERC20Policy.encode(validPolicy);
+      const encoded = SwapUniswapPolicy.encode(validPolicy);
       expect(typeof encoded).toBe('string');
       expect(encoded.startsWith('0x')).toBe(true);
     });
 
     it('should throw on invalid policy', () => {
       const invalidPolicy = {
-        ...validPolicy,
+        type: 'SwapUniswap' as const,
+        version: '1.0.0',
         maxAmount: 'invalid',
+        allowedTokens: ['0x123'], // Invalid address
       };
       expect(() => {
-        SendERC20Policy.encode(invalidPolicy as SendERC20PolicyType);
+        SwapUniswapPolicy.encode(invalidPolicy as SwapUniswapPolicyType);
       }).toThrow();
     });
   });
 
-  describe('SendERC20Policy.decode', () => {
+  describe('SwapUniswapPolicy.decode', () => {
     it('should decode an encoded policy correctly', () => {
-      const encoded = SendERC20Policy.encode(validPolicy);
-      const decoded = SendERC20Policy.decode(encoded);
+      const encoded = SwapUniswapPolicy.encode(validPolicy);
+      const decoded = SwapUniswapPolicy.decode(encoded);
 
       // Compare with normalized addresses
       const normalizedPolicy = {
         ...validPolicy,
         allowedTokens: validPolicy.allowedTokens.map((addr: string) =>
-          ethers.utils.getAddress(addr)
-        ),
-        allowedRecipients: validPolicy.allowedRecipients.map((addr: string) =>
           ethers.utils.getAddress(addr)
         ),
       };
@@ -202,18 +158,17 @@ describe('SendERC20Policy', () => {
     it('should throw on invalid encoded data', () => {
       const invalidEncoded = '0x1234'; // Invalid encoded data
       expect(() => {
-        SendERC20Policy.decode(invalidEncoded);
+        SwapUniswapPolicy.decode(invalidEncoded);
       }).toThrow();
     });
 
     it('should maintain data integrity through encode/decode cycle', () => {
-      const testCases: SendERC20PolicyType[] = [
+      const testCases: SwapUniswapPolicyType[] = [
         validPolicy,
         {
           ...validPolicy,
           maxAmount: '0',
           allowedTokens: [],
-          allowedRecipients: [],
         },
         {
           ...validPolicy,
@@ -222,16 +177,13 @@ describe('SendERC20Policy', () => {
       ];
 
       testCases.forEach((policy) => {
-        const encoded = SendERC20Policy.encode(policy);
-        const decoded = SendERC20Policy.decode(encoded);
+        const encoded = SwapUniswapPolicy.encode(policy);
+        const decoded = SwapUniswapPolicy.decode(encoded);
 
         // Normalize addresses in the original policy for comparison
         const normalizedPolicy = {
           ...policy,
           allowedTokens: policy.allowedTokens.map((addr) =>
-            ethers.utils.getAddress(addr)
-          ),
-          allowedRecipients: policy.allowedRecipients.map((addr) =>
             ethers.utils.getAddress(addr)
           ),
         };
@@ -240,4 +192,4 @@ describe('SendERC20Policy', () => {
       });
     });
   });
-});
+}); 

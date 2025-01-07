@@ -8,7 +8,7 @@ import { SigningSimplePolicy, type SigningSimplePolicyType } from './policy';
  * Parameters required for the Signing Simple Lit Action
  * @property message - The message to sign
  */
-interface SigningSimpleLitActionParameters {
+export interface SigningSimpleLitActionParameters {
   message: string;
 }
 

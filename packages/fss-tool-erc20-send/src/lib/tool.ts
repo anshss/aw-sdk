@@ -12,7 +12,7 @@ import { SendERC20Policy, type SendERC20PolicyType } from './policy';
  * @property chainId - The ID of the blockchain network
  * @property rpcUrl - The RPC URL of the blockchain network
  */
-interface SendERC20LitActionParameters {
+export interface SendERC20LitActionParameters {
   tokenIn: string;
   recipientAddress: string;
   amountIn: string;
