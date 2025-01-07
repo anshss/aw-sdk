@@ -10,13 +10,13 @@ import { type LitNetwork } from '@lit-protocol/fss-tool-registry';
 export class FssAgent {
   /** Instance of the OpenAI client. */
   private openai: OpenAI;
-  /** The OpenAI model to be used for analysis. */
+  /** The name of the OpenAI model to be used for analysis. */
   private openAiModel: string;
 
   /**
    * Creates an instance of the FssAgent.
    * @param {string} openAiApiKey - The API key for OpenAI.
-   * @param {string} [openAiModel='gpt-4o-mini'] - The OpenAI model to use (defaults to 'gpt-4o-mini').
+   * @param {string} [openAiModel='gpt-4o-mini'] - The name of the OpenAI model to use (defaults to 'gpt-4o-mini').
    */
   constructor(openAiApiKey: string, openAiModel = 'gpt-4o-mini') {
     this.openai = new OpenAI({ apiKey: openAiApiKey });
