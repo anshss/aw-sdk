@@ -7,7 +7,7 @@
       "path": "./packages/fss-signer"
     },
     {
-      "path": "./packages/fss-tool-erc20-send"
+      "path": "./packages/fss-tool-erc20-transfer"
     },
     {
       "path": "./packages/fss-cli"

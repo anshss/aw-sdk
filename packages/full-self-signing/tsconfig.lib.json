@@ -19,7 +19,7 @@
       "path": "../fss-tool/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-erc20-send/tsconfig.lib.json"
+      "path": "../fss-tool-erc20-transfer/tsconfig.lib.json"
     },
     {
       "path": "../fss-tool-registry/tsconfig.lib.json"

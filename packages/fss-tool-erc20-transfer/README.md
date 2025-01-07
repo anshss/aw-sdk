@@ -1,4 +1,4 @@
-# @lit-protocol/fss-tool-erc20-send
+# @lit-protocol/fss-tool-erc20-transfer
 
 A Lit AI Agent tool for sending ERC20 tokens. This package provides a secure way to transfer ERC20 tokens with policy-based controls.
 
@@ -14,7 +14,7 @@ A Lit AI Agent tool for sending ERC20 tokens. This package provides a secure way
 ## Installation
 
 ```bash
-pnpm add @lit-protocol/fss-tool-erc20-send
+pnpm add @lit-protocol/fss-tool-erc20-transfer
 ```
 
 ## Usage
@@ -46,7 +46,7 @@ The tool supports flexible policy configuration to ensure secure token transfers
 
 ```typescript
 const policy = {
-  type: 'SendERC20',
+  type: 'ERC20Transfer',
   version: '1.0.0',
   // Maximum amount in base units (e.g., wei)
   maxAmount: '1000000000000000000',
@@ -88,23 +88,23 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 ### Required Parameters
 
-| Parameter          | Type     | Description                                                |
-| ----------------- | -------- | ---------------------------------------------------------- |
-| `tokenIn`         | `string` | Token contract address (must be valid Ethereum address)    |
-| `recipientAddress`| `string` | Recipient address (must be valid Ethereum address)         |
-| `amountIn`        | `string` | Amount of tokens as decimal string (e.g., "1.5")          |
-| `chainId`         | `string` | Chain ID as string                                        |
-| `rpcUrl`          | `string` | HTTPS RPC endpoint URL for the blockchain network         |
+| Parameter          | Type     | Description                                             |
+| ------------------ | -------- | ------------------------------------------------------- |
+| `tokenIn`          | `string` | Token contract address (must be valid Ethereum address) |
+| `recipientAddress` | `string` | Recipient address (must be valid Ethereum address)      |
+| `amountIn`         | `string` | Amount of tokens as decimal string (e.g., "1.5")        |
+| `chainId`          | `string` | Chain ID as string                                      |
+| `rpcUrl`           | `string` | HTTPS RPC endpoint URL for the blockchain network       |
 
 ### Policy Parameters
 
-| Parameter          | Type       | Description                                    |
-| ----------------- | ---------- | ---------------------------------------------- |
-| `type`            | `string`   | Must be 'SendERC20'                           |
-| `version`         | `string`   | Policy version (e.g., '1.0.0')                |
-| `maxAmount`       | `string`   | Maximum transfer amount in base units          |
-| `allowedTokens`   | `string[]` | Array of allowed token contract addresses      |
-| `allowedRecipients`| `string[]`| Array of allowed recipient addresses          |
+| Parameter           | Type       | Description                               |
+| ------------------- | ---------- | ----------------------------------------- |
+| `type`              | `string`   | Must be 'ERC20Transfer'                   |
+| `version`           | `string`   | Policy version (e.g., '1.0.0')            |
+| `maxAmount`         | `string`   | Maximum transfer amount in base units     |
+| `allowedTokens`     | `string[]` | Array of allowed token contract addresses |
+| `allowedRecipients` | `string[]` | Array of allowed recipient addresses      |
 
 ## Deployment
 
@@ -114,7 +114,7 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 2. Deploy your Lit Action to IPFS:
 ```bash
-pnpm nx deploy fss-tool-erc20-send
+pnpm nx deploy fss-tool-erc20-transfer
 ```
 
 This will pin your Lit Action code to IPFS using Pinata.
@@ -124,13 +124,13 @@ This will pin your Lit Action code to IPFS using Pinata.
 ### Building
 
 ```bash
-pnpm nx build fss-tool-erc20-send
+pnpm nx build fss-tool-erc20-transfer
 ```
 
 ### Testing
 
 ```bash
-pnpm nx test fss-tool-erc20-send
+pnpm nx test fss-tool-erc20-transfer
 ```
 
 ## Contributing

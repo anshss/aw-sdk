@@ -1,5 +1,5 @@
 /**
- * Network-specific configuration for the SendERC20 tool
+ * Network-specific configuration for the ERC20Transfer tool
  */
 export interface NetworkConfig {
   litNetwork: string;

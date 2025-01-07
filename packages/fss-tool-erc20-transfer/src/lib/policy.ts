@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ethers } from 'ethers';
 
 const policySchema = z.object({
-  type: z.literal('SendERC20'),
+  type: z.literal('ERC20Transfer'),
   version: z.string(),
   maxAmount: z.string().refine(
     (val) => {
@@ -20,7 +20,7 @@ const policySchema = z.object({
   allowedRecipients: z.array(BaseEthereumAddressSchema),
 });
 
-function encodePolicy(policy: SendERC20PolicyType): string {
+function encodePolicy(policy: ERC20TransferPolicyType): string {
   policySchema.parse(policy);
 
   return ethers.utils.defaultAbiCoder.encode(
@@ -37,7 +37,7 @@ function encodePolicy(policy: SendERC20PolicyType): string {
   );
 }
 
-function decodePolicy(encodedPolicy: string): SendERC20PolicyType {
+function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
   const decoded = ethers.utils.defaultAbiCoder.decode(
     [
       'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
@@ -45,8 +45,8 @@ function decodePolicy(encodedPolicy: string): SendERC20PolicyType {
     encodedPolicy
   )[0];
 
-  const policy: SendERC20PolicyType = {
-    type: 'SendERC20',
+  const policy: ERC20TransferPolicyType = {
+    type: 'ERC20Transfer',
     version: '1.0.0',
     maxAmount: decoded.maxAmount.toString(),
     allowedTokens: decoded.allowedTokens,
@@ -56,10 +56,10 @@ function decodePolicy(encodedPolicy: string): SendERC20PolicyType {
   return policySchema.parse(policy);
 }
 
-export type SendERC20PolicyType = z.infer<typeof policySchema>;
+export type ERC20TransferPolicyType = z.infer<typeof policySchema>;
 
-export const SendERC20Policy = {
-  type: {} as SendERC20PolicyType,
+export const ERC20TransferPolicy = {
+  type: {} as ERC20TransferPolicyType,
   version: '1.0.0',
   schema: policySchema,
   encode: encodePolicy,

@@ -1,13 +1,13 @@
 import { ethers } from 'ethers';
 
 import {
-  SendERC20Policy,
-  SendERC20PolicyType
+  ERC20TransferPolicy,
+  ERC20TransferPolicyType,
 } from '../src/lib/policy';
 
-describe('SendERC20Policy', () => {
-  const validPolicy: SendERC20PolicyType = {
-    type: 'SendERC20',
+describe('ERC20TransferPolicy', () => {
+  const validPolicy: ERC20TransferPolicyType = {
+    type: 'ERC20Transfer',
     version: '1.0.0',
     maxAmount: ethers.utils.parseEther('1.0').toString(), // 1 ETH in wei
     allowedTokens: [
@@ -20,9 +20,9 @@ describe('SendERC20Policy', () => {
     ],
   };
 
-  describe('SendERC20Policy.schema', () => {
+  describe('ERC20TransferPolicy.schema', () => {
     it('should validate a correct policy', () => {
-      const result = SendERC20Policy.schema.safeParse(validPolicy);
+      const result = ERC20TransferPolicy.schema.safeParse(validPolicy);
       expect(result.success).toBe(true);
     });
 
@@ -35,7 +35,7 @@ describe('SendERC20Policy', () => {
         ];
 
         validAmounts.forEach((maxAmount) => {
-          const result = SendERC20Policy.schema.safeParse({
+          const result = ERC20TransferPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -59,7 +59,7 @@ describe('SendERC20Policy', () => {
         ];
 
         invalidAmounts.forEach((maxAmount) => {
-          const result = SendERC20Policy.schema.safeParse({
+          const result = ERC20TransferPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -68,7 +68,7 @@ describe('SendERC20Policy', () => {
       });
 
       it('should reject negative numbers', () => {
-        const result = SendERC20Policy.schema.safeParse({
+        const result = ERC20TransferPolicy.schema.safeParse({
           ...validPolicy,
           maxAmount: '-1000000000000000000',
         });
@@ -85,7 +85,7 @@ describe('SendERC20Policy', () => {
 
     describe('allowedTokens validation', () => {
       it('should accept valid Ethereum addresses', () => {
-        const result = SendERC20Policy.schema.safeParse(validPolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(validPolicy);
         expect(result.success).toBe(true);
       });
 
@@ -97,12 +97,12 @@ describe('SendERC20Policy', () => {
             '0xGGGG567890123456789012345678901234567890', // invalid hex
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(invalidPolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(invalidPolicy);
         expect(result.success).toBe(false);
       });
 
       it('should accept empty array of allowed tokens', () => {
-        const result = SendERC20Policy.schema.safeParse({
+        const result = ERC20TransferPolicy.schema.safeParse({
           ...validPolicy,
           allowedTokens: [],
         });
@@ -117,14 +117,14 @@ describe('SendERC20Policy', () => {
             '0xaBcDeF1234567890123456789012345678901234',
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(mixedCasePolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(mixedCasePolicy);
         expect(result.success).toBe(true);
       });
     });
 
     describe('allowedRecipients validation', () => {
       it('should accept valid Ethereum addresses', () => {
-        const result = SendERC20Policy.schema.safeParse(validPolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(validPolicy);
         expect(result.success).toBe(true);
       });
 
@@ -136,12 +136,12 @@ describe('SendERC20Policy', () => {
             '0xGGGG567890123456789012345678901234567890', // invalid hex
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(invalidPolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(invalidPolicy);
         expect(result.success).toBe(false);
       });
 
       it('should accept empty array of allowed recipients', () => {
-        const result = SendERC20Policy.schema.safeParse({
+        const result = ERC20TransferPolicy.schema.safeParse({
           ...validPolicy,
           allowedRecipients: [],
         });
@@ -156,15 +156,15 @@ describe('SendERC20Policy', () => {
             '0xaBcDeF1234567890123456789012345678901234',
           ],
         };
-        const result = SendERC20Policy.schema.safeParse(mixedCasePolicy);
+        const result = ERC20TransferPolicy.schema.safeParse(mixedCasePolicy);
         expect(result.success).toBe(true);
       });
     });
   });
 
-  describe('SendERC20Policy.encode', () => {
+  describe('ERC20TransferPolicy.encode', () => {
     it('should encode a valid policy', () => {
-      const encoded = SendERC20Policy.encode(validPolicy);
+      const encoded = ERC20TransferPolicy.encode(validPolicy);
       expect(typeof encoded).toBe('string');
       expect(encoded.startsWith('0x')).toBe(true);
     });
@@ -175,15 +175,15 @@ describe('SendERC20Policy', () => {
         maxAmount: 'invalid',
       };
       expect(() => {
-        SendERC20Policy.encode(invalidPolicy as SendERC20PolicyType);
+        ERC20TransferPolicy.encode(invalidPolicy as ERC20TransferPolicyType);
       }).toThrow();
     });
   });
 
-  describe('SendERC20Policy.decode', () => {
+  describe('ERC20TransferPolicy.decode', () => {
     it('should decode an encoded policy correctly', () => {
-      const encoded = SendERC20Policy.encode(validPolicy);
-      const decoded = SendERC20Policy.decode(encoded);
+      const encoded = ERC20TransferPolicy.encode(validPolicy);
+      const decoded = ERC20TransferPolicy.decode(encoded);
 
       // Compare with normalized addresses
       const normalizedPolicy = {
@@ -202,12 +202,12 @@ describe('SendERC20Policy', () => {
     it('should throw on invalid encoded data', () => {
       const invalidEncoded = '0x1234'; // Invalid encoded data
       expect(() => {
-        SendERC20Policy.decode(invalidEncoded);
+        ERC20TransferPolicy.decode(invalidEncoded);
       }).toThrow();
     });
 
     it('should maintain data integrity through encode/decode cycle', () => {
-      const testCases: SendERC20PolicyType[] = [
+      const testCases: ERC20TransferPolicyType[] = [
         validPolicy,
         {
           ...validPolicy,
@@ -222,8 +222,8 @@ describe('SendERC20Policy', () => {
       ];
 
       testCases.forEach((policy) => {
-        const encoded = SendERC20Policy.encode(policy);
-        const decoded = SendERC20Policy.decode(encoded);
+        const encoded = ERC20TransferPolicy.encode(policy);
+        const decoded = ERC20TransferPolicy.decode(encoded);
 
         // Normalize addresses in the original policy for comparison
         const normalizedPolicy = {

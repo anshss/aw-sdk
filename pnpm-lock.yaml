@@ -176,7 +176,7 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
 
-  packages/fss-tool-erc20-send:
+  packages/fss-tool-erc20-transfer:
     dependencies:
       '@lit-protocol/fss-tool':
         specifier: workspace:*
@@ -206,9 +206,9 @@ importers:
       '@lit-protocol/fss-tool':
         specifier: workspace:*
         version: link:../fss-tool
-      '@lit-protocol/fss-tool-erc20-send':
+      '@lit-protocol/fss-tool-erc20-transfer':
         specifier: workspace:*
-        version: link:../fss-tool-erc20-send
+        version: link:../fss-tool-erc20-transfer
       '@lit-protocol/fss-tool-sign-ecdsa':
         specifier: workspace:*
         version: link:../fss-tool-sign-ecdsa

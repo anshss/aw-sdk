@@ -1,5 +1,5 @@
 import type { FssTool } from '@lit-protocol/fss-tool';
-import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
+import { ERC20Transfer } from '@lit-protocol/fss-tool-erc20-transfer';
 import { SwapUniswap } from '@lit-protocol/fss-tool-swap-uniswap';
 import { SignEcdsa } from '@lit-protocol/fss-tool-sign-ecdsa';
 
@@ -92,7 +92,7 @@ export function listAllTools<T extends FssTool<any, any>>(): Array<{
   return tools;
 }
 
-// Register the SendERC20 tool
-registerTool('SendERC20', SendERC20);
+// Register the ERC20Transfer tool
+registerTool('ERC20Transfer', ERC20Transfer);
 registerTool('SwapUniswap', SwapUniswap);
 registerTool('SignEcdsa', SignEcdsa);

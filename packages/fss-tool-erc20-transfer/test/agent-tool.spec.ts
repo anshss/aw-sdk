@@ -1,8 +1,8 @@
-import type { SendERC20LitActionParameters } from '../src/lib/tool';
-import { SendERC20 } from '../src/lib/tool';
+import type { ERC20TransferLitActionParameters } from '../src/lib/tool';
+import { ERC20Transfer } from '../src/lib/tool';
 
-describe('SendERC20', () => {
-  const validParams: SendERC20LitActionParameters = {
+describe('ERC20Transfer', () => {
+  const validParams: ERC20TransferLitActionParameters = {
     tokenIn: '0x1234567890123456789012345678901234567890',
     recipientAddress: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
     amountIn: '1.5',
@@ -10,9 +10,9 @@ describe('SendERC20', () => {
     rpcUrl: 'https://eth-mainnet.example.com',
   };
 
-  describe('SendERC20.parameters.schema', () => {
+  describe('ERC20Transfer.parameters.schema', () => {
     it('should validate correct parameters', () => {
-      const result = SendERC20.parameters.schema.safeParse(validParams);
+      const result = ERC20Transfer.parameters.schema.safeParse(validParams);
       expect(result.success).toBe(true);
     });
 
@@ -26,7 +26,7 @@ describe('SendERC20', () => {
         ];
 
         invalidTokens.forEach((tokenIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = ERC20Transfer.parameters.schema.safeParse({
             ...validParams,
             tokenIn,
           });
@@ -45,7 +45,7 @@ describe('SendERC20', () => {
         ];
 
         invalidAddresses.forEach((recipientAddress) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = ERC20Transfer.parameters.schema.safeParse({
             ...validParams,
             recipientAddress,
           });
@@ -59,7 +59,7 @@ describe('SendERC20', () => {
         const validAmounts = ['1.5', '100', '0.01', '1000.55555'];
 
         validAmounts.forEach((amountIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = ERC20Transfer.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -77,7 +77,7 @@ describe('SendERC20', () => {
         ];
 
         invalidAmounts.forEach((amountIn) => {
-          const result = SendERC20.parameters.schema.safeParse({
+          const result = ERC20Transfer.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -87,9 +87,9 @@ describe('SendERC20', () => {
     });
   });
 
-  describe('SendERC20.parameters.validate', () => {
+  describe('ERC20Transfer.parameters.validate', () => {
     it('should return true for valid parameters', () => {
-      expect(SendERC20.parameters.validate(validParams)).toBe(true);
+      expect(ERC20Transfer.parameters.validate(validParams)).toBe(true);
     });
 
     it('should return array of errors for invalid parameters', () => {
@@ -113,7 +113,7 @@ describe('SendERC20', () => {
       ];
 
       invalidParams.forEach((params) => {
-        const result = SendERC20.parameters.validate(params);
+        const result = ERC20Transfer.parameters.validate(params);
         expect(Array.isArray(result)).toBe(true);
         if (Array.isArray(result)) {
           expect(result.length).toBeGreaterThan(0);
@@ -129,9 +129,9 @@ describe('SendERC20', () => {
     });
   });
 
-  describe('SendERC20 metadata', () => {
+  describe('ERC20Transfer metadata', () => {
     it('should have the correct structure', () => {
-      expect(SendERC20).toMatchObject({
+      expect(ERC20Transfer).toMatchObject({
         name: expect.any(String),
         description: expect.any(String),
         parameters: expect.any(Object),
@@ -139,8 +139,14 @@ describe('SendERC20', () => {
     });
 
     it('should have descriptions for all parameters', () => {
-      const params = Object.keys(SendERC20.parameters.descriptions);
-      const required = ['tokenIn', 'recipientAddress', 'amountIn', 'chainId', 'rpcUrl'];
+      const params = Object.keys(ERC20Transfer.parameters.descriptions);
+      const required = [
+        'tokenIn',
+        'recipientAddress',
+        'amountIn',
+        'chainId',
+        'rpcUrl',
+      ];
       expect(params.sort()).toEqual(required.sort());
     });
   });

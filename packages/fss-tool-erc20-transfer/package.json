@@ -1,5 +1,5 @@
 {
-  "name": "@lit-protocol/fss-tool-erc20-send",
+  "name": "@lit-protocol/fss-tool-erc20-transfer",
   "version": "0.1.1-10",
   "publishConfig": {
     "access": "public"
@@ -24,7 +24,7 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
-    "sourceRoot": "packages/fss-tool-erc20-send/src",
+    "sourceRoot": "packages/fss-tool-erc20-transfer/src",
     "projectType": "library",
     "targets": {
       "build": {
@@ -33,11 +33,11 @@
           "{options.outputPath}"
         ],
         "options": {
-          "outputPath": "packages/fss-tool-erc20-send/dist",
-          "main": "packages/fss-tool-erc20-send/src/index.ts",
-          "tsConfig": "packages/fss-tool-erc20-send/tsconfig.lib.json",
+          "outputPath": "packages/fss-tool-erc20-transfer/dist",
+          "main": "packages/fss-tool-erc20-transfer/src/index.ts",
+          "tsConfig": "packages/fss-tool-erc20-transfer/tsconfig.lib.json",
           "assets": [
-            "packages/fss-tool-erc20-send/*.md"
+            "packages/fss-tool-erc20-transfer/*.md"
           ]
         }
       },
@@ -50,11 +50,11 @@
           "commands": [
             "node tools/scripts/build-lit-action.js"
           ],
-          "cwd": "packages/fss-tool-erc20-send",
+          "cwd": "packages/fss-tool-erc20-transfer",
           "parallel": false
         },
         "outputs": [
-          "{workspaceRoot}/packages/fss-tool-erc20-send/dist/deployed-lit-action.js"
+          "{workspaceRoot}/packages/fss-tool-erc20-transfer/dist/deployed-lit-action.js"
         ]
       },
       "deploy": {
@@ -66,7 +66,7 @@
           "commands": [
             "node tools/scripts/deploy-lit-action.js"
           ],
-          "cwd": "packages/fss-tool-erc20-send"
+          "cwd": "packages/fss-tool-erc20-transfer"
         }
       },
       "publish": {
@@ -79,6 +79,6 @@
         }
       }
     },
-    "name": "fss-tool-erc20-send"
+    "name": "fss-tool-erc20-transfer"
   }
 }

@@ -7,7 +7,7 @@
       "path": "../fss-tool"
     },
     {
-      "path": "../fss-tool-erc20-send"
+      "path": "../fss-tool-erc20-transfer"
     },
     {
       "path": "../fss-tool-registry"

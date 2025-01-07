@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FssTool, SupportedLitNetwork } from '@lit-protocol/fss-tool';
 
-import { SendERC20Policy, type SendERC20PolicyType } from './policy';
+import { ERC20TransferPolicy, type ERC20TransferPolicyType } from './policy';
 import { NETWORK_CONFIGS, type NetworkConfig } from './networks';
 import { IPFS_CIDS } from './ipfs';
 
@@ -14,7 +14,7 @@ import { IPFS_CIDS } from './ipfs';
  * @property chainId - The ID of the blockchain network
  * @property rpcUrl - The RPC URL of the blockchain network
  */
-interface SendERC20LitActionParameters {
+interface ERC20TransferLitActionParameters {
   pkpEthAddress: string;
   tokenIn: string;
   recipientAddress: string;
@@ -24,9 +24,9 @@ interface SendERC20LitActionParameters {
 }
 
 /**
- * Zod schema for validating SendERC20LitActionParameters
+ * Zod schema for validating ERC20TransferLitActionParameters
  */
-const SendERC20LitActionSchema = z.object({
+const ERC20TransferLitActionSchema = z.object({
   pkpEthAddress: z
     .string()
     .regex(
@@ -67,7 +67,7 @@ const SendERC20LitActionSchema = z.object({
  * Descriptions of each parameter for the ERC20 Send Lit Action
  * These descriptions are designed to be consumed by LLMs to understand the required parameters
  */
-const SendERC20LitActionParameterDescriptions = {
+const ERC20TransferLitActionParameterDescriptions = {
   pkpEthAddress:
     'The Ethereum address of the PKP that will be used to sign and send the transaction.',
   tokenIn:
@@ -85,10 +85,10 @@ const SendERC20LitActionParameterDescriptions = {
 /**
  * Validate parameters and return detailed error messages if invalid
  */
-const validateSendERC20Parameters = (
+const validateERC20TransferParameters = (
   params: unknown
 ): true | Array<{ param: string; error: string }> => {
-  const result = SendERC20LitActionSchema.safeParse(params);
+  const result = ERC20TransferLitActionSchema.safeParse(params);
   if (result.success) {
     return true;
   }
@@ -100,34 +100,34 @@ const validateSendERC20Parameters = (
 };
 
 /**
- * Create a network-specific SendERC20 tool
+ * Create a network-specific ERC20Transfer tool
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
-): FssTool<SendERC20LitActionParameters, SendERC20PolicyType> => ({
-  name: 'SendERC20',
+): FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType> => ({
+  name: 'ERC20Transfer',
   description: `A Lit Action that sends ERC-20 tokens, using the ${config.litNetwork} network for signing.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
-    type: {} as SendERC20LitActionParameters,
-    schema: SendERC20LitActionSchema,
-    descriptions: SendERC20LitActionParameterDescriptions,
-    validate: validateSendERC20Parameters,
+    type: {} as ERC20TransferLitActionParameters,
+    schema: ERC20TransferLitActionSchema,
+    descriptions: ERC20TransferLitActionParameterDescriptions,
+    validate: validateERC20TransferParameters,
   },
-  policy: SendERC20Policy,
+  policy: ERC20TransferPolicy,
 });
 
 /**
- * Export network-specific SendERC20 tools
+ * Export network-specific ERC20Transfer tools
  */
-export const SendERC20 = Object.entries(NETWORK_CONFIGS).reduce(
+export const ERC20Transfer = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
     ...acc,
     [network]: createNetworkTool(network as SupportedLitNetwork, config),
   }),
   {} as Record<
     SupportedLitNetwork,
-    FssTool<SendERC20LitActionParameters, SendERC20PolicyType>
+    FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>
   >
 );

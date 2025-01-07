@@ -90,7 +90,7 @@ const validateSwapUniswapParameters = (
 };
 
 /**
- * Create a network-specific SendERC20 tool
+ * Create a network-specific ERC20Transfer tool
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
@@ -109,7 +109,7 @@ const createNetworkTool = (
 });
 
 /**
- * Export network-specific SendERC20 tools
+ * Export network-specific ERC20Transfer tools
  */
 export const SwapUniswap = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
