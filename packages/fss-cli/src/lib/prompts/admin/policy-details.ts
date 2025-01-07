@@ -76,7 +76,7 @@ export const promptPolicyDetails = async (ipfsCid: string) => {
   for (const [field, fieldSchema] of policyFields) {
     // Skip type field as it's fixed
     if (field === 'type') {
-      policyValues[field] = 'SendERC20';
+      policyValues[field] = tool.name;
       continue;
     }
 

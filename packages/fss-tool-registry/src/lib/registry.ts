@@ -1,5 +1,7 @@
 import type { FssTool } from '@lit-protocol/fss-tool';
 import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
+import { SwapUniswap } from '@lit-protocol/fss-tool-swap-uniswap';
+import { SigningSimple } from '@lit-protocol/fss-tool-signing-simple';
 
 const toolRegistry = new Map<string, FssTool<any, any>>();
 
@@ -47,3 +49,5 @@ export function listTools(): Array<FssTool<any, any>> {
 }
 
 registerTool('SendERC20', SendERC20);
+registerTool('SwapUniswap', SwapUniswap);
+registerTool('SigningSimple', SigningSimple);

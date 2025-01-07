@@ -23,6 +23,12 @@
     },
     {
       "path": "./packages/fss-tool"
+    },
+    {
+      "path": "./packages/fss-tool-swap-uniswap"
+    },
+    {
+      "path": "./packages/fss-tool-signing-simple"
     }
   ]
 }
