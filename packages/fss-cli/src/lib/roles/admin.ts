@@ -1,4 +1,7 @@
-import { Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+import {
+  Admin as FssAdmin,
+  type LitNetwork,
+} from '@lit-protocol/full-self-signing';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
 
 import { logger } from '../utils/logger';
@@ -31,24 +34,32 @@ export class Admin {
     logger.success('Admin role initialized successfully.');
   }
 
-  private static async createFssAdmin(privateKey?: string): Promise<FssAdmin> {
+  private static async createFssAdmin(
+    litNetwork: LitNetwork,
+    privateKey?: string
+  ): Promise<FssAdmin> {
     let fssAdmin: FssAdmin;
     try {
-      fssAdmin = await FssAdmin.create({
-        type: 'eoa',
-        privateKey,
-      });
+      fssAdmin = await FssAdmin.create(
+        {
+          type: 'eoa',
+          privateKey,
+        },
+        {
+          litNetwork,
+        }
+      );
     } catch (error) {
       if (error instanceof FssSignerError) {
         if (error.type === FssSignerErrorType.ADMIN_MISSING_PRIVATE_KEY) {
           const privateKey = await promptAdminInit();
-          return Admin.createFssAdmin(privateKey);
+          return Admin.createFssAdmin(litNetwork, privateKey);
         }
 
         if (error.type === FssSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT) {
           const hasFunded = await promptAdminInsufficientBalance();
           if (hasFunded) {
-            return Admin.createFssAdmin(privateKey);
+            return Admin.createFssAdmin(litNetwork, privateKey);
           }
         }
       }
@@ -60,9 +71,9 @@ export class Admin {
     return fssAdmin;
   }
 
-  public static async create() {
+  public static async create(litNetwork: LitNetwork) {
     logger.info('Initializing Admin role...');
-    const fssAdmin = await Admin.createFssAdmin();
+    const fssAdmin = await Admin.createFssAdmin(litNetwork);
     return new Admin(fssAdmin);
   }
 

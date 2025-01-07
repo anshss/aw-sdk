@@ -1,4 +1,7 @@
-import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+import {
+  type Admin as FssAdmin,
+  type FssTool,
+} from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
@@ -8,11 +11,11 @@ import {
 } from '../../prompts/admin/remove-tool';
 import { handleGetTools } from './get-tools';
 
-const removeTool = async (fssAdmin: FssAdmin, ipfsCid: string) => {
-  await promptConfirmRemoval(ipfsCid);
+const removeTool = async (fssAdmin: FssAdmin, tool: FssTool<any, any>) => {
+  await promptConfirmRemoval(tool);
 
   logger.loading('Removing tool...');
-  await fssAdmin.removeTool(ipfsCid);
+  await fssAdmin.removeTool(tool.ipfsCid);
   logger.success('Tool removed successfully.');
 };
 
@@ -20,11 +23,7 @@ export const handleRemoveTool = async (fssAdmin: FssAdmin) => {
   try {
     const permittedTools = await handleGetTools(fssAdmin);
 
-    if (
-      permittedTools === undefined ||
-      (permittedTools.toolsWithPolicies.length === 0 &&
-        permittedTools.toolsWithoutPolicies.length === 0)
-    ) {
+    if (permittedTools === null) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
         'No tools are currently permitted.'

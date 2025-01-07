@@ -1,16 +1,18 @@
 import type { FssTool } from '@lit-protocol/fss-tool';
 import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
 
-// Define the supported networks
 export type LitNetwork = 'datil-dev' | 'datil-test' | 'datil';
 
-// Type for network-specific tools
 export type NetworkSpecificTool<T extends FssTool<any, any>> = Record<
   LitNetwork,
   T
 >;
 
-// Map of tool name to network-specific tools
+export type PermittedTools = {
+  toolsWithPolicies: FssTool<any, any>[];
+  toolsWithoutPolicies: FssTool<any, any>[];
+};
+
 const toolRegistry = new Map<string, NetworkSpecificTool<FssTool<any, any>>>();
 
 /**

@@ -92,9 +92,6 @@ importers:
 
   packages/fss-cli:
     dependencies:
-      '@lit-protocol/constants':
-        specifier: 7.0.2
-        version: 7.0.2(typescript@5.6.3)
       '@lit-protocol/fss-signer':
         specifier: workspace:*
         version: link:../fss-signer
@@ -110,9 +107,6 @@ importers:
       ethers:
         specifier: 5.7.2
         version: 5.7.2
-      node-localstorage:
-        specifier: ^3.0.5
-        version: 3.0.5
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -123,9 +117,6 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
-      '@types/node-localstorage':
-        specifier: ^1.3.3
-        version: 1.3.3
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
@@ -233,6 +224,9 @@ importers:
       '@lit-protocol/fss-signer':
         specifier: workspace:*
         version: link:../fss-signer
+      '@lit-protocol/fss-tool':
+        specifier: workspace:*
+        version: link:../fss-tool
       '@lit-protocol/fss-tool-registry':
         specifier: workspace:*
         version: link:../fss-tool-registry

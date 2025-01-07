@@ -1,6 +1,6 @@
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
 import prompts from 'prompts';
 import { z } from 'zod';
+import { type FssTool } from '@lit-protocol/full-self-signing';
 
 import { FssCliError, FssCliErrorType } from '../../errors';
 import { logger } from '../../utils/logger';
@@ -54,15 +54,7 @@ const promptArrayValues = async (
   return values;
 };
 
-export const promptPolicyDetails = async (ipfsCid: string) => {
-  const tool = getToolByIpfsCid(ipfsCid);
-  if (!tool) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_SET_TOOL_POLICY_TOOL_NOT_IN_REGISTRY,
-      `Tool not found for IPFS CID: ${ipfsCid}`
-    );
-  }
-
+export const promptPolicyDetails = async (tool: FssTool<any, any>) => {
   logger.info('Tool Policy Configuration:');
   logger.log(`Name: ${tool.name}`);
   logger.log(`Description: ${tool.description}`);

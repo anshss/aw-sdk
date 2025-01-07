@@ -1,4 +1,7 @@
-import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+import {
+  type Admin as FssAdmin,
+  type FssTool,
+} from '@lit-protocol/full-self-signing';
 import prompts from 'prompts';
 
 import { logger } from '../../utils/logger';
@@ -6,43 +9,36 @@ import { FssCliError, FssCliErrorType } from '../../errors';
 import { handleGetTools } from './get-tools';
 
 const promptSelectToolForPolicy = async (
-  toolsWithPolicies: Array<{ ipfsCid: string }>
+  toolsWithPolicies: FssTool<any, any>[]
 ) => {
-  if (toolsWithPolicies.length === 0) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
-      'No tools with policies found.'
-    );
-  }
-
   const choices = toolsWithPolicies.map((tool) => ({
-    title: tool.ipfsCid,
-    value: tool.ipfsCid,
+    title: `${tool.name} (${tool.ipfsCid})`,
+    value: tool,
   }));
 
-  const { ipfsCid } = await prompts({
+  const { tool } = await prompts({
     type: 'select',
-    name: 'ipfsCid',
+    name: 'tool',
     message: 'Select a tool to view policy:',
     choices,
   });
 
-  if (!ipfsCid) {
+  if (!tool) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
       'Tool policy viewing cancelled.'
     );
   }
 
-  return ipfsCid;
+  return tool;
 };
 
-const getToolPolicy = async (fssAdmin: FssAdmin, ipfsCid: string) => {
+const getToolPolicy = async (fssAdmin: FssAdmin, tool: FssTool<any, any>) => {
   logger.loading('Getting tool policy...');
-  const { policy, version } = await fssAdmin.getToolPolicy(ipfsCid);
+  const { policy, version } = await fssAdmin.getToolPolicy(tool.ipfsCid);
 
   logger.info('Tool Policy:');
-  logger.log(`IPFS CID: ${ipfsCid}`);
+  logger.log(`${tool.name} (${tool.ipfsCid})`);
   logger.log(`Version: ${version}`);
   logger.log(`Policy: ${policy}`);
 };
@@ -51,11 +47,7 @@ export const handleGetToolPolicy = async (fssAdmin: FssAdmin) => {
   try {
     const permittedTools = await handleGetTools(fssAdmin);
 
-    if (
-      permittedTools === undefined ||
-      (permittedTools.toolsWithPolicies.length === 0 &&
-        permittedTools.toolsWithoutPolicies.length === 0)
-    ) {
+    if (permittedTools === null) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
         'No tools are currently permitted.'

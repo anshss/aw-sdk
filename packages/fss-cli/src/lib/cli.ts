@@ -1,3 +1,4 @@
+import { promptSelectLitNetwork } from './prompts/select-lit-network';
 import { promptSelectRole, Role } from './prompts/select-role';
 import { Admin } from './roles/admin';
 import { Delegatee } from './roles/delegatee';
@@ -5,6 +6,7 @@ import { logger } from './utils/logger';
 
 export class FssCli {
   public async start() {
+    const selectedLitNetwork = await promptSelectLitNetwork();
     const selectedRole = await promptSelectRole();
     logger.success(`Selected role: ${selectedRole}.`);
 
@@ -13,7 +15,7 @@ export class FssCli {
     switch (selectedRole) {
       case Role.Admin:
         try {
-          admin = await Admin.create();
+          admin = await Admin.create(selectedLitNetwork);
           await Admin.showMenu(admin);
         } finally {
           if (admin !== null) {
