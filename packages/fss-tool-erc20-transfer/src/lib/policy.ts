@@ -4,40 +4,31 @@ import { ethers } from 'ethers';
 
 /**
  * Schema for validating an ERC20 transfer policy.
- * Ensures the policy has the correct structure and valid values.
+ * @type {z.ZodObject}
  */
 const policySchema = z.object({
-  /** The type of policy, must be `ERC20Transfer`. */
-  type: z.literal('ERC20Transfer'),
-
-  /** The version of the policy. */
-  version: z.string(),
-
-  /** The maximum allowed transfer amount. Must be a non-negative integer. */
+  type: z.literal('ERC20Transfer'), // Policy type must be 'ERC20Transfer'
+  version: z.string(), // Version of the policy
   maxAmount: z.string().refine(
     (val) => {
       try {
         const bn = ethers.BigNumber.from(val);
-        return !bn.isNegative();
+        return !bn.isNegative(); // Ensure the amount is non-negative
       } catch {
-        return false;
+        return false; // Invalid format
       }
     },
     { message: 'Invalid amount format. Must be a non-negative integer.' }
   ),
-
-  /** An array of allowed token addresses. */
-  allowedTokens: z.array(BaseEthereumAddressSchema),
-
-  /** An array of allowed recipient addresses. */
-  allowedRecipients: z.array(BaseEthereumAddressSchema),
+  allowedTokens: z.array(BaseEthereumAddressSchema), // Array of allowed token addresses
+  allowedRecipients: z.array(BaseEthereumAddressSchema), // Array of allowed recipient addresses
 });
 
 /**
- * Encodes an ERC20 transfer policy into a format suitable for on-chain storage.
- * @param policy - The ERC20 transfer policy to encode.
- * @returns The encoded policy as a hex string.
- * @throws If the policy does not conform to the schema.
+ * Encodes an ERC20 transfer policy into a packed ABI-encoded string.
+ * @param {ERC20TransferPolicyType} policy - The policy to encode.
+ * @returns {string} ABI-encoded string representing the policy.
+ * @throws {z.ZodError} If the policy does not match the schema.
  */
 function encodePolicy(policy: ERC20TransferPolicyType): string {
   // Validate the policy against the schema
@@ -59,13 +50,13 @@ function encodePolicy(policy: ERC20TransferPolicyType): string {
 }
 
 /**
- * Decodes an ERC20 transfer policy from its on-chain encoded format.
- * @param encodedPolicy - The encoded policy as a hex string.
- * @returns The decoded ERC20 transfer policy.
- * @throws If the encoded policy is invalid or does not conform to the schema.
+ * Decodes an ABI-encoded string into an ERC20 transfer policy.
+ * @param {string} encodedPolicy - The ABI-encoded policy string.
+ * @returns {ERC20TransferPolicyType} The decoded policy object.
+ * @throws {z.ZodError} If the decoded policy does not match the schema.
  */
 function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
-  // Decode the policy using ABI decoding
+  // Decode the ABI-encoded string
   const decoded = ethers.utils.defaultAbiCoder.decode(
     [
       'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
@@ -87,56 +78,24 @@ function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
 }
 
 /**
- * Represents the type of an ERC20 transfer policy, inferred from the schema.
+ * Type representing an ERC20 transfer policy.
+ * @typedef {z.infer<typeof policySchema>} ERC20TransferPolicyType
  */
 export type ERC20TransferPolicyType = z.infer<typeof policySchema>;
 
 /**
  * Utility object for working with ERC20 transfer policies.
- * Includes the schema, encoding, and decoding functions.
+ * @type {object}
+ * @property {ERC20TransferPolicyType} type - Type placeholder for the policy.
+ * @property {string} version - Version of the policy schema.
+ * @property {z.ZodObject} schema - Zod schema for validating policies.
+ * @property {function} encode - Function to encode a policy into an ABI-encoded string.
+ * @property {function} decode - Function to decode an ABI-encoded string into a policy.
  */
 export const ERC20TransferPolicy = {
-  /** The type of the policy. */
-  type: {} as ERC20TransferPolicyType,
-
-  /** The version of the policy. */
-  version: '1.0.0',
-
-  /** The schema for validating ERC20 transfer policies. */
-  schema: policySchema,
-
-  /** Encodes an ERC20 transfer policy into a format suitable for on-chain storage. */
-  encode: encodePolicy,
-
-  /** Decodes an ERC20 transfer policy from its on-chain encoded format. */
-  decode: decodePolicy,
-};
-
-function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
-  const decoded = ethers.utils.defaultAbiCoder.decode(
-    [
-      'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
-    ],
-    encodedPolicy
-  )[0];
-
-  const policy: ERC20TransferPolicyType = {
-    type: 'ERC20Transfer',
-    version: '1.0.0',
-    maxAmount: decoded.maxAmount.toString(),
-    allowedTokens: decoded.allowedTokens,
-    allowedRecipients: decoded.allowedRecipients,
-  };
-
-  return policySchema.parse(policy);
-}
-
-export type ERC20TransferPolicyType = z.infer<typeof policySchema>;
-
-export const ERC20TransferPolicy = {
-  type: {} as ERC20TransferPolicyType,
-  version: '1.0.0',
-  schema: policySchema,
-  encode: encodePolicy,
-  decode: decodePolicy,
+  type: {} as ERC20TransferPolicyType, // Placeholder for the policy type
+  version: '1.0.0', // Version of the policy schema
+  schema: policySchema, // Zod schema for validation
+  encode: encodePolicy, // Function to encode a policy
+  decode: decodePolicy, // Function to decode a policy
 };
