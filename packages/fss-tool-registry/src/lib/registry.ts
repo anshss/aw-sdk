@@ -59,7 +59,7 @@ export function getToolByIpfsCid<T extends FssTool<any, any>>(
 /**
  * List all registered tools for a specific network
  */
-export function listTools<T extends FssTool<any, any>>(
+export function listToolsByNetwork<T extends FssTool<any, any>>(
   network: LitNetwork
 ): Array<T> {
   return Array.from(toolRegistry.values()).map(
