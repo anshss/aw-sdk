@@ -23,7 +23,7 @@ export const handlePermitTool = async (fssAdmin: FssAdmin) => {
 
     await permitTool(
       fssAdmin,
-      await promptSelectToolToPermit(alreadyPermittedTools)
+      await promptSelectToolToPermit(fssAdmin.litNetwork, alreadyPermittedTools)
     );
   } catch (error) {
     if (error instanceof FssCliError) {

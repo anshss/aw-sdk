@@ -1,7 +1,10 @@
 export * from '@lit-protocol/fss-signer';
-export { FssAgent } from '@lit-protocol/fss-agent';
+export * from '@lit-protocol/fss-agent';
 export {
-  getToolByName,
   getToolByIpfsCid,
-  listTools,
+  getToolByName,
+  listAllTools,
+  listToolsByNetwork,
+  type PermittedTools,
 } from '@lit-protocol/fss-tool-registry';
+export type { FssTool } from '@lit-protocol/fss-tool';

@@ -4,7 +4,8 @@ import type { FssTool } from '@lit-protocol/fss-tool';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
 export const promptToolParams = async <T extends Record<string, any>>(
-  tool: FssTool<T, any>
+  tool: FssTool<T, any>,
+  pkpEthAddress?: string
 ) => {
   const params: Record<string, any> = {};
 
@@ -12,6 +13,11 @@ export const promptToolParams = async <T extends Record<string, any>>(
   for (const [paramName, description] of Object.entries(
     tool.parameters.descriptions
   )) {
+    if (paramName === 'pkpEthAddress' && pkpEthAddress !== undefined) {
+      params.pkpEthAddress = pkpEthAddress;
+      continue;
+    }
+
     const { value } = await prompts({
       type: 'text',
       name: 'value',

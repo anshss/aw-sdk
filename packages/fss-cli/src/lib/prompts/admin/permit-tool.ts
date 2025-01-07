@@ -1,27 +1,33 @@
 import prompts from 'prompts';
-import { listTools } from '@lit-protocol/fss-tool-registry';
-import type { RegisteredTool } from '@lit-protocol/fss-signer';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import {
+  listToolsByNetwork,
+  type FssTool,
+  type LitNetwork,
+  type PermittedTools,
+} from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
-export const promptSelectToolToPermit = async (alreadyPermittedTools?: {
-  toolsWithPolicies: RegisteredTool[];
-  toolsWithoutPolicies: string[];
-}) => {
-  const availableTools = listTools();
+export const promptSelectToolToPermit = async (
+  litNetwork: LitNetwork,
+  alreadyPermittedTools: PermittedTools | null
+) => {
+  const availableTools = listToolsByNetwork(litNetwork);
 
   // Create a set of already permitted IPFS CIDs for efficient lookup
   const permittedCids = new Set([
-    ...(alreadyPermittedTools?.toolsWithPolicies.map((tool) => tool.ipfsCid) ||
-      []),
-    ...(alreadyPermittedTools?.toolsWithoutPolicies || []),
+    ...(alreadyPermittedTools?.toolsWithPolicies.map(
+      (tool: FssTool<any, any>) => tool.ipfsCid
+    ) || []),
+    ...(alreadyPermittedTools?.toolsWithoutPolicies.map(
+      (tool: FssTool<any, any>) => tool.ipfsCid
+    ) || []),
   ]);
 
   // Filter out already permitted tools
   const unpermittedTools = availableTools.filter(
-    (tool) => !permittedCids.has(tool.ipfsCid)
+    (tool: FssTool<any, any>) => !permittedCids.has(tool.ipfsCid)
   );
 
   if (unpermittedTools.length === 0) {
@@ -35,7 +41,7 @@ export const promptSelectToolToPermit = async (alreadyPermittedTools?: {
     type: 'select',
     name: 'tool',
     message: 'Select a tool to permit:',
-    choices: unpermittedTools.map((tool) => ({
+    choices: unpermittedTools.map((tool: FssTool<any, any>) => ({
       title: tool.name,
       description: tool.description,
       value: tool,
@@ -49,7 +55,7 @@ export const promptSelectToolToPermit = async (alreadyPermittedTools?: {
     );
   }
 
-  return tool;
+  return tool as FssTool<any, any>;
 };
 
 export const promptConfirmPermit = async (tool: FssTool) => {

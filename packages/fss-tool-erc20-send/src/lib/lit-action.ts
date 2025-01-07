@@ -23,13 +23,13 @@ declare global {
     Contract: any;
   };
 
+  // Injected by build script
+  const LIT_NETWORK: string;
+  const PKP_TOOL_REGISTRY_ADDRESS: string;
+
   // Required Inputs
-  const pkp: {
-    tokenId: string;
-    ethAddress: string;
-    publicKey: string;
-  };
   const params: {
+    pkpEthAddress: string;
     rpcUrl: string;
     chainId: string;
     tokenIn: string;
@@ -40,6 +40,56 @@ declare global {
 
 export default async () => {
   try {
+    // Get PKP info from PubkeyRouter
+    async function getPkpInfo() {
+      console.log('Getting PKP info from PubkeyRouter...');
+
+      // Get PubkeyRouter address for current network
+      const networkConfig =
+        NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG];
+      if (!networkConfig) {
+        throw new Error(`Unsupported Lit network: ${LIT_NETWORK}`);
+      }
+
+      const PUBKEY_ROUTER_ABI = [
+        'function ethAddressToPkpId(address ethAddress) public view returns (uint256)',
+        'function getPubkey(uint256 tokenId) public view returns (bytes memory)',
+      ];
+
+      const pubkeyRouter = new ethers.Contract(
+        networkConfig.pubkeyRouterAddress,
+        PUBKEY_ROUTER_ABI,
+        new ethers.providers.JsonRpcProvider(
+          await Lit.Actions.getRpcUrl({
+            chain: 'yellowstone',
+          })
+        )
+      );
+
+      // Get PKP ID from eth address
+      console.log(`Getting PKP ID for eth address ${params.pkpEthAddress}...`);
+      const pkpTokenId = await pubkeyRouter.ethAddressToPkpId(
+        params.pkpEthAddress
+      );
+      console.log(`Got PKP token ID: ${pkpTokenId}`);
+
+      // TODO Implement this check
+      // if (pkpTokenId.isZero()) {
+      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
+      // }
+
+      // Get public key from PKP ID
+      console.log(`Getting public key for PKP ID ${pkpTokenId}...`);
+      const publicKey = await pubkeyRouter.getPubkey(pkpTokenId);
+      console.log(`Got public key: ${publicKey}`);
+
+      return {
+        tokenId: pkpTokenId.toString(),
+        ethAddress: params.pkpEthAddress,
+        publicKey,
+      };
+    }
+
     // Check if the session signer is a delegatee
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
@@ -357,6 +407,31 @@ export default async () => {
     }
 
     // Main Execution
+    // Network to PubkeyRouter address mapping
+    const NETWORK_CONFIG = {
+      'datil-dev': {
+        pubkeyRouterAddress: '0xbc01f21C58Ca83f25b09338401D53D4c2344D1d9',
+      },
+      'datil-test': {
+        pubkeyRouterAddress: '0x65C3d057aef28175AfaC61a74cc6b27E88405583',
+      },
+      datil: {
+        pubkeyRouterAddress: '0xF182d6bEf16Ba77e69372dD096D8B70Bc3d5B475',
+      },
+    } as const;
+
+    console.log(`Using Lit Network: ${LIT_NETWORK}`);
+    console.log(
+      `Using PKP Tool Registry Address: ${PKP_TOOL_REGISTRY_ADDRESS}`
+    );
+    console.log(
+      `Using Pubkey Router Address: ${
+        NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG]
+          .pubkeyRouterAddress
+      }`
+    );
+
+    const pkp = await getPkpInfo();
     const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
     const tokenInfo = await getTokenInfo(provider);
 
@@ -365,9 +440,8 @@ export default async () => {
       'function isDelegateeOf(uint256 pkpTokenId, address delegatee) external view returns (bool)',
       'function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
     ];
-    const PKP_TOOL_REGISTRY = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
     const pkpToolRegistryContract = new ethers.Contract(
-      PKP_TOOL_REGISTRY,
+      PKP_TOOL_REGISTRY_ADDRESS,
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
         await Lit.Actions.getRpcUrl({
