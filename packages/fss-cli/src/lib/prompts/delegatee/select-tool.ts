@@ -1,21 +1,21 @@
 import prompts from 'prompts';
-import { type RegisteredTool } from '@lit-protocol/fss-signer';
+import { type FssTool } from '@lit-protocol/full-self-signing';
 
 import { FssCliError, FssCliErrorType } from '../../errors';
 
 export const promptSelectTool = async (
-  toolsWithPolicies: RegisteredTool[],
-  toolsWithoutPolicies: string[]
+  toolsWithPolicies: FssTool<any, any>[],
+  toolsWithoutPolicies: FssTool<any, any>[]
 ) => {
   const allTools = [
     ...toolsWithPolicies.map((tool) => ({
-      title: `${tool.ipfsCid} (Version: ${tool.version})`,
-      value: tool.ipfsCid,
+      title: `${tool.name} (${tool.ipfsCid})`,
+      value: tool,
       hasPolicy: true,
     })),
-    ...toolsWithoutPolicies.map((ipfsCid) => ({
-      title: `${ipfsCid} (No Policy)`,
-      value: ipfsCid,
+    ...toolsWithoutPolicies.map((tool) => ({
+      title: `${tool.name} (${tool.ipfsCid})`,
+      value: tool,
       hasPolicy: false,
     })),
   ];
@@ -41,8 +41,5 @@ export const promptSelectTool = async (
     );
   }
 
-  return {
-    ipfsCid: tool,
-    hasPolicy: allTools.find((t) => t.value === tool)?.hasPolicy ?? false,
-  };
+  return tool as FssTool<any, any>;
 };

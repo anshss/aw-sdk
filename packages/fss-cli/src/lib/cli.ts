@@ -25,7 +25,7 @@ export class FssCli {
         break;
       case Role.Delegatee:
         try {
-          delegatee = await Delegatee.create();
+          delegatee = await Delegatee.create(selectedLitNetwork);
           await Delegatee.showMenu(delegatee);
         } finally {
           if (delegatee !== null) {

@@ -14,11 +14,11 @@ import type {
 } from '@lit-protocol/types';
 import { ethers } from 'ethers';
 
-import {
-  DEFAULT_LIT_NETWORK,
+import type {
   DelegatedPkpInfo,
+  LitNetwork,
   RegisteredTool,
-  type AgentConfig,
+  AgentConfig,
 } from './types';
 import {
   isCapacityCreditExpired,
@@ -48,13 +48,17 @@ export class Delegatee {
   private readonly toolPolicyRegistryContract: ethers.Contract;
   private readonly delegateeWallet: ethers.Wallet;
 
+  public readonly litNetwork: LitNetwork;
+
   private constructor(
+    litNetwork: LitNetwork,
     storage: LocalStorage,
     litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
     toolPolicyRegistryContract: ethers.Contract,
     delegateeWallet: ethers.Wallet
   ) {
+    this.litNetwork = litNetwork;
     this.storage = storage;
     this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
@@ -90,11 +94,18 @@ export class Delegatee {
   public static async create(
     delegateePrivateKey?: string,
     {
-      litNetwork = DEFAULT_LIT_NETWORK,
+      litNetwork,
       debug = false,
       toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
     }: AgentConfig = {}
   ) {
+    if (!litNetwork) {
+      throw new FssSignerError(
+        FssSignerErrorType.DELEGATEE_MISSING_LIT_NETWORK,
+        'Lit network not provided'
+      );
+    }
+
     const storage = new LocalStorage(Delegatee.DEFAULT_STORAGE_PATH);
 
     const provider = new ethers.providers.JsonRpcProvider(
@@ -135,6 +146,7 @@ export class Delegatee {
     await Delegatee.getCapacityCredit(litContracts, storage);
 
     return new Delegatee(
+      litNetwork,
       storage,
       litNodeClient,
       litContracts,
