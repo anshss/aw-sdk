@@ -1,5 +1,20 @@
+/**
+ * Represents the types of errors that can occur in the FSS (Function-as-a-Service) tool.
+ * @enum {FssErrorType}
+ * @description This enum is currently empty and can be extended with specific error types as needed.
+ */
 export enum FssErrorType {}
 
+/**
+ * Represents detailed information about an error.
+ * @typedef {Object} ErrorDetails
+ * @property {string} [name] - The name of the error.
+ * @property {string} [message] - The error message.
+ * @property {string} [stack] - The stack trace of the error.
+ * @property {FssErrorType} [type] - The type of the error.
+ * @property {unknown} [details] - Additional details about the error.
+ * @property {unknown} [key: string] - Any additional custom properties.
+ */
 export type ErrorDetails = {
   name?: string;
   message?: string;
@@ -9,9 +24,25 @@ export type ErrorDetails = {
   [key: string]: unknown;
 };
 
+/**
+ * A custom error class for FSS (Function-as-a-Service) tools.
+ * @class FssError
+ * @extends Error
+ * @description This class extends the native `Error` class and adds support for error types, detailed error information, and serialization.
+ */
 export class FssError extends Error {
+  /**
+   * A serialized version of the error details for better logging.
+   * @type {string}
+   */
   public readonly serializedDetails: string;
 
+  /**
+   * Creates a new FssError instance.
+   * @param {FssErrorType} type - The type of the error.
+   * @param {string} message - The error message.
+   * @param {Record<string, ErrorDetails | unknown>} [details] - Additional details about the error.
+   */
   constructor(
     public readonly type: FssErrorType,
     message: string,
@@ -48,7 +79,10 @@ export class FssError extends Error {
       : '';
   }
 
-  // Override toJSON to provide better serialization
+  /**
+   * Converts the error to a JSON-serializable object.
+   * @returns {Object} - A JSON-serializable representation of the error.
+   */
   toJSON() {
     return {
       name: this.name,
