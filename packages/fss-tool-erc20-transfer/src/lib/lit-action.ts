@@ -38,13 +38,22 @@ declare global {
   };
 }
 
+/**
+ * Main function for executing a token transfer using a PKP (Programmable Key Pair).
+ * This function handles the entire process, including PKP info retrieval, policy validation,
+ * gas estimation, transaction creation, signing, and broadcasting.
+ */
 export default async () => {
   try {
-    // Get PKP info from PubkeyRouter
+    /**
+     * Retrieves PKP (Programmable Key Pair) information, including the token ID, Ethereum address, and public key.
+     * @returns An object containing the PKP's token ID, Ethereum address, and public key.
+     * @throws If the PKP cannot be found or if there is an error interacting with the PubkeyRouter contract.
+     */
     async function getPkpInfo() {
       console.log('Getting PKP info from PubkeyRouter...');
 
-      // Get PubkeyRouter address for current network
+      // Get PubkeyRouter address for the current network
       const networkConfig =
         NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG];
       if (!networkConfig) {
@@ -66,16 +75,16 @@ export default async () => {
         )
       );
 
-      // Get PKP ID from eth address
-      console.log(`Getting PKP ID for eth address ${params.pkpEthAddress}...`);
+      // Get PKP ID from Ethereum address
+      console.log(`Getting PKP ID for Ethereum address ${params.pkpEthAddress}...`);
       const pkpTokenId = await pubkeyRouter.ethAddressToPkpId(
         params.pkpEthAddress
       );
       console.log(`Got PKP token ID: ${pkpTokenId}`);
 
-      // TODO Implement this check
+      // TODO: Implement this check
       // if (pkpTokenId.isZero()) {
-      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
+      //   throw new Error(`No PKP found for Ethereum address ${params.pkpEthAddress}`);
       // }
 
       // Get public key from PKP ID
@@ -90,7 +99,11 @@ export default async () => {
       };
     }
 
-    // Check if the session signer is a delegatee
+    /**
+     * Checks if the session signer (Lit Auth address) is a delegatee for the PKP.
+     * @param pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @throws If the session signer is not a delegatee for the PKP.
+     */
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
     ) {
@@ -116,6 +129,12 @@ export default async () => {
       );
     }
 
+    /**
+     * Validates the transaction inputs against the PKP's tool policy.
+     * @param pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @param amount - The amount to transfer.
+     * @throws If the inputs violate the policy (e.g., amount exceeds limit, token or recipient is not allowed).
+     */
     async function validateInputsAgainstPolicy(
       pkpToolRegistryContract: any,
       amount: any
@@ -190,6 +209,12 @@ export default async () => {
       console.log(`Inputs validated against policy`);
     }
 
+    /**
+     * Retrieves token information, including decimals, balance, and the amount to transfer.
+     * @param provider - The Ethereum provider instance.
+     * @returns An object containing the token's decimals, balance, and the parsed amount to transfer.
+     * @throws If the token address is invalid, the contract does not exist, or there is insufficient balance.
+     */
     async function getTokenInfo(provider: any) {
       console.log('Getting token info for:', params.tokenIn);
 
@@ -248,6 +273,10 @@ export default async () => {
       }
     }
 
+    /**
+     * Retrieves gas data, including max fee, priority fee, and nonce.
+     * @returns An object containing the gas data.
+     */
     async function getGasData() {
       console.log(`Getting gas data...`);
 
@@ -281,6 +310,12 @@ export default async () => {
       return JSON.parse(gasData);
     }
 
+    /**
+     * Estimates the gas limit for the transaction.
+     * @param provider - The Ethereum provider instance.
+     * @param amount - The amount to transfer.
+     * @returns The estimated gas limit, with a 20% buffer.
+     */
     async function estimateGasLimit(provider: any, amount: any) {
       console.log(`Estimating gas limit...`);
 
@@ -311,6 +346,13 @@ export default async () => {
       }
     }
 
+    /**
+     * Creates and signs the transaction using the PKP's public key.
+     * @param gasLimit - The gas limit for the transaction.
+     * @param amount - The amount to transfer.
+     * @param gasData - The gas data, including max fee, priority fee, and nonce.
+     * @returns The signed transaction.
+     */
     async function createAndSignTransaction(
       gasLimit: any,
       amount: any,
@@ -360,6 +402,12 @@ export default async () => {
       );
     }
 
+    /**
+     * Broadcasts the signed transaction to the Ethereum network.
+     * @param signedTx - The signed transaction.
+     * @returns The transaction hash.
+     * @throws If the transaction fails to broadcast or is rejected by the network.
+     */
     async function broadcastTransaction(signedTx: string) {
       console.log('Broadcasting transfer...');
       return await Lit.Actions.runOnce(
