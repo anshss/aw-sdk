@@ -1,4 +1,36 @@
 import { z } from 'zod';
+import { LIT_NETWORK } from '@lit-protocol/constants';
+
+export type SupportedLitNetwork =
+  | (typeof LIT_NETWORK)['DatilDev']
+  | (typeof LIT_NETWORK)['DatilTest']
+  | (typeof LIT_NETWORK)['Datil'];
+
+/**
+ * Network-specific configuration for the ERC20Transfer tool
+ */
+export interface NetworkConfig {
+  litNetwork: string;
+  ipfsCid: string;
+}
+
+/**
+ * Network-specific configurations
+ */
+export const NETWORK_CONFIGS: Record<string, NetworkConfig> = {
+  'datil-dev': {
+    litNetwork: 'datil-dev',
+    ipfsCid: '',
+  },
+  'datil-test': {
+    litNetwork: 'datil-test',
+    ipfsCid: '',
+  },
+  datil: {
+    litNetwork: 'datil',
+    ipfsCid: '',
+  },
+};
 
 export const BaseEthereumAddressSchema = z
   .string()

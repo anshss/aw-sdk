@@ -12,7 +12,9 @@
     "paths": {
       "@lit-protocol/fss-signer": ["../fss-signer/src"],
       "@lit-protocol/fss-tool-registry": ["../fss-tool-registry/src"],
-      "@lit-protocol/fss-tool-erc20-send": ["../fss-tool-erc20-send/src"],
+      "@lit-protocol/fss-tool-erc20-transfer": [
+        "../fss-tool-erc20-transfer/src"
+      ],
       "@lit-protocol/full-self-signing": ["../full-self-signing/src"],
       "@lit-protocol/fss-tool": ["../fss-tool/src"]
     }
@@ -26,7 +28,7 @@
       "path": "../fss-tool/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-erc20-send/tsconfig.lib.json"
+      "path": "../fss-tool-erc20-transfer/tsconfig.lib.json"
     },
     {
       "path": "../fss-tool-registry/tsconfig.lib.json"
