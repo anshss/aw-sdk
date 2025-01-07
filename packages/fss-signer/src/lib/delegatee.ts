@@ -36,11 +36,13 @@ import {
   getToolPolicy,
 } from './utils/pkp-tool-registry';
 
+/**
+ * The `Delegatee` class is responsible for managing the Delegatee role in the Lit Protocol.
+ * It handles tasks such as retrieving delegated PKPs, executing tools, and managing capacity credits.
+ */
 export class Delegatee {
   private static readonly DEFAULT_STORAGE_PATH =
     './.fss-signer-delegatee-storage';
-  // TODO: Add min balance check
-  // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 
   private readonly storage: LocalStorage;
   private readonly litNodeClient: LitNodeClientNodeJs;
@@ -50,6 +52,15 @@ export class Delegatee {
 
   public readonly litNetwork: LitNetwork;
 
+  /**
+   * Private constructor for the Delegatee class.
+   * @param litNetwork - The Lit network to use.
+   * @param storage - An instance of `LocalStorage` for storing delegatee information.
+   * @param litNodeClient - An instance of `LitNodeClientNodeJs`.
+   * @param litContracts - An instance of `LitContracts`.
+   * @param toolPolicyRegistryContract - An instance of the tool policy registry contract.
+   * @param delegateeWallet - The wallet used for Delegatee operations.
+   */
   private constructor(
     litNetwork: LitNetwork,
     storage: LocalStorage,
@@ -66,6 +77,14 @@ export class Delegatee {
     this.delegateeWallet = delegateeWallet;
   }
 
+  /**
+   * Retrieves or mints a capacity credit for the Delegatee.
+   * If a capacity credit is already stored and not expired, it is loaded; otherwise, a new capacity credit is minted.
+   *
+   * @param litContracts - An instance of `LitContracts`.
+   * @param storage - An instance of `LocalStorage` for storing capacity credit information.
+   * @returns A promise that resolves to the capacity credit information or `null` if not required.
+   */
   private static async getCapacityCredit(
     litContracts: LitContracts,
     storage: LocalStorage
@@ -91,6 +110,15 @@ export class Delegatee {
     return null;
   }
 
+  /**
+   * Creates an instance of the `Delegatee` class.
+   * Initializes the Lit node client, contracts, and capacity credit.
+   *
+   * @param delegateePrivateKey - Optional. The private key for the Delegatee role.
+   * @param agentConfig - Configuration for the agent, including the Lit network and debug mode.
+   * @returns A promise that resolves to an instance of the `Delegatee` class.
+   * @throws {FssSignerError} If the Lit network is not provided or the private key is missing.
+   */
   public static async create(
     delegateePrivateKey?: string,
     {
@@ -158,6 +186,11 @@ export class Delegatee {
     );
   }
 
+  /**
+   * Retrieves all delegated PKPs (Programmable Key Pairs) for the Delegatee.
+   * @returns A promise that resolves to an array of `DelegatedPkpInfo` objects.
+   * @throws If the tool policy registry contract, delegatee wallet, or Lit contracts are not initialized.
+   */
   public async getDelegatedPkps(): Promise<DelegatedPkpInfo[]> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
@@ -200,8 +233,10 @@ export class Delegatee {
   }
 
   /**
-   * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing arrays of tools with and without policies
+   * Retrieves all registered tools for a specific PKP and categorizes them based on whether they have policies.
+   * @param pkpTokenId - The token ID of the PKP.
+   * @returns An object containing arrays of tools with and without policies.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
     toolsWithPolicies: RegisteredTool[];
@@ -219,9 +254,11 @@ export class Delegatee {
   }
 
   /**
-   * Get the policy for a specific tool
-   * @param ipfsCid IPFS CID of the tool
-   * @returns The policy and version for the tool
+   * Retrieves the policy for a specific tool.
+   * @param pkpTokenId - The token ID of the PKP.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @returns An object containing the policy and version for the tool.
+   * @throws If the tool policy registry contract is not initialized.
    */
   public async getToolPolicy(
     pkpTokenId: string,
@@ -234,6 +271,12 @@ export class Delegatee {
     return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
   }
 
+  /**
+   * Executes a tool using the Lit Protocol.
+   * @param params - The parameters required for executing the tool, excluding `sessionSigs`.
+   * @returns A promise that resolves to the execution response.
+   * @throws If the Lit node client, Lit contracts, or delegatee wallet are not initialized.
+   */
   public async executeTool(
     params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
   ): Promise<ExecuteJsResponse> {
@@ -309,6 +352,9 @@ export class Delegatee {
     }
   }
 
+  /**
+   * Disconnects the Lit node client.
+   */
   public disconnect() {
     this.litNodeClient.disconnect();
   }
