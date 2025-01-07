@@ -30,29 +30,43 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
   );
 
   if (registeredTools.toolsWithPolicies.length > 0) {
-    logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
+    logger.log(`Tools with Policies:`);
     registeredTools.toolsWithPolicies.forEach((registeredTool) => {
       const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-      if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
+
+      if (registryTool === null) {
+        logger.log(`  - Unknown tool: ${registeredTool.ipfsCid}`);
+      } else if (
+        registryTool &&
+        registryTool.network === fssDelegatee.litNetwork
+      ) {
         toolsWithPolicies.push(registryTool.tool);
         logger.log(`  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`);
+        logger.log(`      - ${registryTool.tool.description}`);
       }
     });
   }
 
   if (registeredTools.toolsWithoutPolicies.length > 0) {
-    logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
+    logger.log(`Tools without Policies:`);
     registeredTools.toolsWithoutPolicies.forEach((ipfsCid) => {
       const registryTool = getToolByIpfsCid(ipfsCid);
-      if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
+
+      if (registryTool === null) {
+        logger.log(`  - Unknown tool: ${ipfsCid}`);
+      } else if (
+        registryTool &&
+        registryTool.network === fssDelegatee.litNetwork
+      ) {
         toolsWithoutPolicies.push(registryTool.tool);
         logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
+        logger.log(`      - ${registryTool.tool.description}`);
       }
     });
   }
 
   return {
-    pkpTokenId: selectedPkp,
+    pkpInfo: selectedPkp,
     toolsWithPolicies,
     toolsWithoutPolicies,
   };
@@ -63,27 +77,11 @@ export const handleGetRegisteredTools = async (fssDelegatee: FssDelegatee) => {
     const result = await getRegisteredTools(fssDelegatee);
     if (result === null) return;
 
-    const { pkpTokenId, toolsWithPolicies, toolsWithoutPolicies } = result;
+    const { toolsWithPolicies, toolsWithoutPolicies } = result;
 
     if (toolsWithPolicies.length === 0 && toolsWithoutPolicies.length === 0) {
       logger.info('No tools are registered for this PKP.');
       return;
-    }
-
-    logger.info(`Registered Tools for PKP ${pkpTokenId}:`);
-
-    if (toolsWithPolicies.length > 0) {
-      logger.info('Tools with Policies:');
-      toolsWithPolicies.forEach((tool: FssTool<any, any>, i: number) => {
-        logger.log(`  ${i + 1}. ${tool.name} (${tool.ipfsCid})`);
-      });
-    }
-
-    if (toolsWithoutPolicies.length > 0) {
-      logger.info('Tools without Policies:');
-      toolsWithoutPolicies.forEach((tool: FssTool<any, any>, i: number) => {
-        logger.log(`  ${i + 1}. ${tool.name} (${tool.ipfsCid})`);
-      });
     }
   } catch (error) {
     if (error instanceof FssCliError) {

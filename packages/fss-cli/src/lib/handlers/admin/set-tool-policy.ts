@@ -56,7 +56,10 @@ export const handleSetToolPolicy = async (fssAdmin: FssAdmin) => {
   try {
     const permittedTools = await handleGetTools(fssAdmin);
 
-    if (permittedTools === null) {
+    if (
+      permittedTools === null ||
+      permittedTools.toolsWithoutPolicies.length === 0
+    ) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_SET_TOOL_POLICY_NO_TOOLS,
         'No tools are currently permitted.'

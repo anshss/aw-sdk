@@ -30,9 +30,13 @@ export const handleGetTools = async (
     logger.log('Tools with Policies:');
     permittedTools.toolsWithPolicies.forEach((registeredTool) => {
       const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-      if (registryTool && registryTool.network === fssAdmin.litNetwork) {
+
+      if (registryTool === null) {
+        logger.log(`  - Unknown tool: ${registeredTool.ipfsCid}`);
+      } else if (registryTool && registryTool.network === fssAdmin.litNetwork) {
         toolsWithPolicies.push(registryTool.tool);
         logger.log(`  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`);
+        logger.log(`      - ${registryTool.tool.description}`);
       }
     });
   }
@@ -41,9 +45,13 @@ export const handleGetTools = async (
     logger.log('Tools without Policies:');
     permittedTools.toolsWithoutPolicies.forEach((ipfsCid) => {
       const registryTool = getToolByIpfsCid(ipfsCid);
-      if (registryTool && registryTool.network === fssAdmin.litNetwork) {
+
+      if (registryTool === null) {
+        logger.log(`  - Unknown tool: ${ipfsCid}`);
+      } else if (registryTool && registryTool.network === fssAdmin.litNetwork) {
         toolsWithoutPolicies.push(registryTool.tool);
         logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
+        logger.log(`      - ${registryTool.tool.description}`);
       }
     });
   }

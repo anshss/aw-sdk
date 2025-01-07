@@ -40,14 +40,18 @@ const getToolPolicy = async (fssAdmin: FssAdmin, tool: FssTool<any, any>) => {
   logger.info('Tool Policy:');
   logger.log(`${tool.name} (${tool.ipfsCid})`);
   logger.log(`Version: ${version}`);
-  logger.log(`Policy: ${policy}`);
+  const decodedPolicy = tool.policy.decode(policy);
+  logger.log(`Policy: ${JSON.stringify(decodedPolicy, null, 2)}`);
 };
 
 export const handleGetToolPolicy = async (fssAdmin: FssAdmin) => {
   try {
     const permittedTools = await handleGetTools(fssAdmin);
 
-    if (permittedTools === null) {
+    if (
+      permittedTools === null ||
+      permittedTools?.toolsWithPolicies.length === 0
+    ) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
         'No tools are currently permitted.'

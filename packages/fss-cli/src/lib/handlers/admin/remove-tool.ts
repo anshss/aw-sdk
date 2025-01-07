@@ -23,7 +23,11 @@ export const handleRemoveTool = async (fssAdmin: FssAdmin) => {
   try {
     const permittedTools = await handleGetTools(fssAdmin);
 
-    if (permittedTools === null) {
+    if (
+      permittedTools === null ||
+      (permittedTools.toolsWithPolicies.length === 0 &&
+        permittedTools.toolsWithoutPolicies.length === 0)
+    ) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
         'No tools are currently permitted.'

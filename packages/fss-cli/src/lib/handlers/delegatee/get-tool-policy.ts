@@ -76,7 +76,9 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
         return;
       }
       if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS) {
-        logger.error('No tools available for the selected PKP');
+        logger.error(
+          'No known tools with policies available for the selected PKP'
+        );
         return;
       }
       if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED) {

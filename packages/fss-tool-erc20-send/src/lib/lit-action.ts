@@ -24,9 +24,8 @@ declare global {
   };
 
   // Injected by build script
-  const PUBKEY_ROUTER_ADDRESS: string;
-  const PKP_TOOL_REGISTRY_ADDRESS: string;
   const LIT_NETWORK: string;
+  const PKP_TOOL_REGISTRY_ADDRESS: string;
 
   // Required Inputs
   const params: {
@@ -45,17 +44,24 @@ export default async () => {
     async function getPkpInfo() {
       console.log('Getting PKP info from PubkeyRouter...');
 
+      // Get PubkeyRouter address for current network
+      const networkConfig =
+        NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG];
+      if (!networkConfig) {
+        throw new Error(`Unsupported Lit network: ${LIT_NETWORK}`);
+      }
+
       const PUBKEY_ROUTER_ABI = [
         'function ethAddressToPkpId(address ethAddress) public view returns (uint256)',
         'function getPubkey(uint256 tokenId) public view returns (bytes memory)',
       ];
 
       const pubkeyRouter = new ethers.Contract(
-        PUBKEY_ROUTER_ADDRESS,
+        networkConfig.pubkeyRouterAddress,
         PUBKEY_ROUTER_ABI,
         new ethers.providers.JsonRpcProvider(
           await Lit.Actions.getRpcUrl({
-            chain: LIT_NETWORK,
+            chain: 'yellowstone',
           })
         )
       );
@@ -401,6 +407,30 @@ export default async () => {
     }
 
     // Main Execution
+    // Network to PubkeyRouter address mapping
+    const NETWORK_CONFIG = {
+      'datil-dev': {
+        pubkeyRouterAddress: '0xbc01f21C58Ca83f25b09338401D53D4c2344D1d9',
+      },
+      'datil-test': {
+        pubkeyRouterAddress: '0x65C3d057aef28175AfaC61a74cc6b27E88405583',
+      },
+      datil: {
+        pubkeyRouterAddress: '0xF182d6bEf16Ba77e69372dD096D8B70Bc3d5B475',
+      },
+    } as const;
+
+    console.log(`Using Lit Network: ${LIT_NETWORK}`);
+    console.log(
+      `Using PKP Tool Registry Address: ${PKP_TOOL_REGISTRY_ADDRESS}`
+    );
+    console.log(
+      `Using Pubkey Router Address: ${
+        NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG]
+          .pubkeyRouterAddress
+      }`
+    );
+
     const pkp = await getPkpInfo();
     const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
     const tokenInfo = await getTokenInfo(provider);
@@ -415,7 +445,7 @@ export default async () => {
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
         await Lit.Actions.getRpcUrl({
-          chain: LIT_NETWORK,
+          chain: 'yellowstone',
         })
       )
     );
