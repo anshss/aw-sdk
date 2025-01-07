@@ -1,6 +1,24 @@
+// Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
+
+// Import the FssTool type from the '@lit-protocol/fss-tool' package.
 import type { FssTool } from '@lit-protocol/fss-tool';
 
+/**
+ * Parses and validates parameters from a user's intent for a given tool.
+ * This function uses OpenAI's API to extract parameter values and ensures they conform to the tool's validation rules.
+ *
+ * @template TParams - A generic type representing the tool's parameter structure.
+ * @template TPolicy - A generic type representing the tool's policy structure.
+ * @param openai - An instance of the OpenAI client.
+ * @param openAiModel - The name of the OpenAI model to use for parsing.
+ * @param intent - The user's intent as a string.
+ * @param tool - The tool for which parameters are being parsed.
+ * @returns A Promise that resolves to an object containing:
+ *   - foundParams: A partial object of the parsed parameters.
+ *   - missingParams: An array of parameter names that could not be parsed.
+ *   - validationErrors: An array of validation errors for invalid parameters.
+ */
 export async function parseToolParametersFromIntent<
   TParams extends Record<string, any>,
   TPolicy extends { type: string }
@@ -14,6 +32,7 @@ export async function parseToolParametersFromIntent<
   missingParams: Array<keyof TParams>;
   validationErrors: Array<{ param: string; error: string }>;
 }> {
+  // Use OpenAI's API to parse parameters from the user's intent.
   const completion = await openai.chat.completions.create({
     model: openAiModel,
     messages: [
@@ -65,12 +84,14 @@ export async function parseToolParametersFromIntent<
     response_format: { type: 'json_object' },
   });
 
+  // Parse the result from OpenAI's response.
   const result = JSON.parse(completion.choices[0].message.content || '{}');
 
-  // Validate found parameters
+  // Validate the found parameters using the tool's validation function.
   const foundParams = result.foundParams || {};
   const validationResult = tool.parameters.validate(foundParams);
 
+  // If validation passes, return the found and missing parameters.
   if (validationResult === true) {
     return {
       foundParams,
@@ -80,12 +101,12 @@ export async function parseToolParametersFromIntent<
     };
   }
 
-  // If validation fails, only treat invalid params as missing
+  // If validation fails, filter out invalid parameters and add them to missingParams.
   const invalidParams = new Set(validationResult.map((error) => error.param));
   const filteredParams: Partial<TParams> = {};
   const missingParams = new Set<keyof TParams>(result.missingParams || []);
 
-  // Keep only valid params in foundParams
+  // Keep only valid parameters in foundParams.
   Object.entries(foundParams).forEach(([param, value]) => {
     if (!invalidParams.has(param)) {
       filteredParams[param as keyof TParams] = value as TParams[keyof TParams];
@@ -94,6 +115,7 @@ export async function parseToolParametersFromIntent<
     }
   });
 
+  // Return the filtered parameters, missing parameters, and validation errors.
   return {
     foundParams: filteredParams,
     missingParams: Array.from(missingParams),
