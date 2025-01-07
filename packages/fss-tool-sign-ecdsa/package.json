@@ -1,5 +1,5 @@
 {
-  "name": "@lit-protocol/fss-tool-signing-simple",
+  "name": "@lit-protocol/fss-tool-sign-ecdsa",
   "version": "0.1.1-10",
   "publishConfig": {
     "access": "public"
@@ -24,7 +24,7 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
-    "sourceRoot": "packages/fss-tool-signing-simple/src",
+    "sourceRoot": "packages/fss-tool-sign-ecdsa/src",
     "projectType": "library",
     "targets": {
       "build": {
@@ -33,11 +33,11 @@
           "{options.outputPath}"
         ],
         "options": {
-          "outputPath": "packages/fss-tool-signing-simple/dist",
-          "main": "packages/fss-tool-signing-simple/src/index.ts",
-          "tsConfig": "packages/fss-tool-signing-simple/tsconfig.lib.json",
+          "outputPath": "packages/fss-tool-sign-ecdsa/dist",
+          "main": "packages/fss-tool-sign-ecdsa/src/index.ts",
+          "tsConfig": "packages/fss-tool-sign-ecdsa/tsconfig.lib.json",
           "assets": [
-            "packages/fss-tool-signing-simple/*.md"
+            "packages/fss-tool-sign-ecdsa/*.md"
           ]
         }
       },
@@ -50,11 +50,11 @@
           "commands": [
             "node tools/scripts/build-lit-action.js"
           ],
-          "cwd": "packages/fss-tool-signing-simple",
+          "cwd": "packages/fss-tool-sign-ecdsa",
           "parallel": false
         },
         "outputs": [
-          "{workspaceRoot}/packages/fss-tool-signing-simple/dist/deployed-lit-action.js"
+          "{workspaceRoot}/packages/fss-tool-sign-ecdsa/dist/deployed-lit-action.js"
         ]
       },
       "deploy": {
@@ -66,7 +66,7 @@
           "commands": [
             "node tools/scripts/deploy-lit-action.js"
           ],
-          "cwd": "packages/fss-tool-signing-simple"
+          "cwd": "packages/fss-tool-sign-ecdsa"
         }
       },
       "publish": {
@@ -79,6 +79,6 @@
         }
       }
     },
-    "name": "fss-tool-signing-simple"
+    "name": "fss-tool-sign-ecdsa"
   }
 }

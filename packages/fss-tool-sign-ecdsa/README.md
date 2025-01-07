@@ -1,6 +1,6 @@
-# @lit-protocol/fss-tool-signing-simple
+# @lit-protocol/fss-tool-sign-ecdsa
 
-A Lit AI Agent tool for basic message signing. This package provides a simple way to sign messages with policy-based controls.
+A Lit AI Agent tool for basic message signing. This package provides a simple way to sign messages with policy-based controls and ECDSA.
 
 ## Features
 
@@ -14,7 +14,7 @@ A Lit AI Agent tool for basic message signing. This package provides a simple wa
 ## Installation
 
 ```bash
-pnpm add @lit-protocol/fss-tool-signing-simple
+pnpm add @lit-protocol/fss-tool-sign-ecdsa
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ await agent.init();
 
 // Execute message signing
 const result = await agent.executeTool(
-  'ipfs://Qm...', // Simple Signing tool CID
+  'ipfs://Qm...', // ECDSA Signing tool CID
   {
     message: 'Hello World' // Message to sign
   }
@@ -42,7 +42,7 @@ The tool supports flexible policy configuration to ensure secure signing:
 
 ```typescript
 const policy = {
-  type: 'SigningSimple',
+  type: 'SignEcdsa',
   version: '1.0.0',
   // List of allowed message prefixes
   allowedPrefixes: [
@@ -75,17 +75,17 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 ### Required Parameters
 
-| Parameter  | Type     | Description                                                |
-| ---------- | -------- | ---------------------------------------------------------- |
-| `message`  | `string` | Message to sign                                           |
+| Parameter | Type     | Description     |
+| --------- | -------- | --------------- |
+| `message` | `string` | Message to sign |
 
 ### Policy Parameters
 
-| Parameter        | Type       | Description                                    |
-| --------------- | ---------- | ---------------------------------------------- |
-| `type`          | `string`   | Must be 'SigningSimple'                        |
-| `version`       | `string`   | Policy version (e.g., '1.0.0')                 |
-| `allowedPrefixes`| `string[]`| Array of allowed message prefixes              |
+| Parameter         | Type       | Description                       |
+| ----------------- | ---------- | --------------------------------- |
+| `type`            | `string`   | Must be 'SignEcdsa'               |
+| `version`         | `string`   | Policy version (e.g., '1.0.0')    |
+| `allowedPrefixes` | `string[]` | Array of allowed message prefixes |
 
 ## Deployment
 
@@ -95,7 +95,7 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 2. Deploy your Lit Action to IPFS:
 ```bash
-pnpm nx deploy fss-tool-signing-simple
+pnpm nx deploy fss-tool-sign-ecdsa
 ```
 
 This will pin your Lit Action code to IPFS using Pinata.
@@ -105,13 +105,13 @@ This will pin your Lit Action code to IPFS using Pinata.
 ### Building
 
 ```bash
-pnpm nx build fss-tool-signing-simple
+pnpm nx build fss-tool-sign-ecdsa
 ```
 
 ### Testing
 
 ```bash
-pnpm nx test fss-tool-signing-simple
+pnpm nx test fss-tool-sign-ecdsa
 ```
 
 ## Contributing

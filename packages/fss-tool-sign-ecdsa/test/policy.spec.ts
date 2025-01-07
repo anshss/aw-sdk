@@ -1,22 +1,15 @@
-import {
-  SigningSimplePolicy,
-  type SigningSimplePolicyType
-} from '../src/lib/policy';
+import { SignEcdsaPolicy, type SignEcdsaPolicyType } from '../src/lib/policy';
 
-describe('SigningSimplePolicy', () => {
-  const validPolicy: SigningSimplePolicyType = {
-    type: 'SigningSimple',
+describe('SignEcdsaPolicy', () => {
+  const validPolicy: SignEcdsaPolicyType = {
+    type: 'SignEcdsa',
     version: '1.0.0',
-    allowedPrefixes: [
-      'Hello',
-      'Verify:',
-      'Sign:',
-    ],
+    allowedPrefixes: ['Hello', 'Verify:', 'Sign:'],
   };
 
-  describe('SigningSimplePolicy.schema', () => {
+  describe('SignEcdsaPolicy.schema', () => {
     it('should validate a correct policy', () => {
-      const result = SigningSimplePolicy.schema.safeParse(validPolicy);
+      const result = SignEcdsaPolicy.schema.safeParse(validPolicy);
       expect(result.success).toBe(true);
     });
 
@@ -30,7 +23,7 @@ describe('SigningSimplePolicy', () => {
         ];
 
         validPrefixArrays.forEach((allowedPrefixes) => {
-          const result = SigningSimplePolicy.schema.safeParse({
+          const result = SignEcdsaPolicy.schema.safeParse({
             ...validPolicy,
             allowedPrefixes,
           });
@@ -50,7 +43,7 @@ describe('SigningSimplePolicy', () => {
         ];
 
         invalidPrefixArrays.forEach((allowedPrefixes) => {
-          const result = SigningSimplePolicy.schema.safeParse({
+          const result = SignEcdsaPolicy.schema.safeParse({
             ...validPolicy,
             allowedPrefixes,
           });
@@ -60,41 +53,41 @@ describe('SigningSimplePolicy', () => {
     });
   });
 
-  describe('SigningSimplePolicy.encode', () => {
+  describe('SignEcdsaPolicy.encode', () => {
     it('should encode a valid policy', () => {
-      const encoded = SigningSimplePolicy.encode(validPolicy);
+      const encoded = SignEcdsaPolicy.encode(validPolicy);
       expect(typeof encoded).toBe('string');
       expect(encoded.startsWith('0x')).toBe(true);
     });
 
     it('should throw on invalid policy', () => {
       const invalidPolicy = {
-        type: 'SigningSimple' as const,
+        type: 'SignEcdsa' as const,
         version: '1.0.0',
         allowedPrefixes: ['invalid', null as any], // Invalid array contents
       };
       expect(() => {
-        SigningSimplePolicy.encode(invalidPolicy as SigningSimplePolicyType);
+        SignEcdsaPolicy.encode(invalidPolicy as SignEcdsaPolicyType);
       }).toThrow();
     });
   });
 
-  describe('SigningSimplePolicy.decode', () => {
+  describe('SignEcdsaPolicy.decode', () => {
     it('should decode an encoded policy correctly', () => {
-      const encoded = SigningSimplePolicy.encode(validPolicy);
-      const decoded = SigningSimplePolicy.decode(encoded);
+      const encoded = SignEcdsaPolicy.encode(validPolicy);
+      const decoded = SignEcdsaPolicy.decode(encoded);
       expect(decoded).toEqual(validPolicy);
     });
 
     it('should throw on invalid encoded data', () => {
       const invalidEncoded = '0x1234'; // Invalid encoded data
       expect(() => {
-        SigningSimplePolicy.decode(invalidEncoded);
+        SignEcdsaPolicy.decode(invalidEncoded);
       }).toThrow();
     });
 
     it('should maintain data integrity through encode/decode cycle', () => {
-      const testCases: SigningSimplePolicyType[] = [
+      const testCases: SignEcdsaPolicyType[] = [
         validPolicy,
         {
           ...validPolicy,
@@ -107,10 +100,10 @@ describe('SigningSimplePolicy', () => {
       ];
 
       testCases.forEach((policy) => {
-        const encoded = SigningSimplePolicy.encode(policy);
-        const decoded = SigningSimplePolicy.decode(encoded);
+        const encoded = SignEcdsaPolicy.encode(policy);
+        const decoded = SignEcdsaPolicy.decode(encoded);
         expect(decoded).toEqual(policy);
       });
     });
   });
-}); 
+});

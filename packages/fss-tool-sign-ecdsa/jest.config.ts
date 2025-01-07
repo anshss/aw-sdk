@@ -1,5 +1,5 @@
 export default {
-  displayName: 'fss-tool-signing-simple',
+  displayName: 'fss-tool-sign-ecdsa',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
