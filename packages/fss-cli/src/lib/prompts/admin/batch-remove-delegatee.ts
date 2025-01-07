@@ -1,11 +1,25 @@
+// Import the prompts library for user interaction.
 import prompts from 'prompts';
 
+// Import custom error types and utilities.
 import { FssCliError, FssCliErrorType } from '../../errors';
+
+// Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
 
+/**
+ * Prompts the user to select delegatees for removal from a list of existing delegatees.
+ * This function validates the input, confirms the selection, and handles errors such as
+ * no delegatees being available or the user cancelling the operation.
+ *
+ * @param existingDelegatees - An array of existing delegatee addresses.
+ * @returns An array of selected delegatee addresses for removal.
+ * @throws FssCliError - If no delegatees are available, no delegatees are selected, or the user cancels the operation.
+ */
 export const promptSelectDelegateesToRemove = async (
   existingDelegatees: string[]
 ) => {
+  // If no delegatees are available, throw an error.
   if (existingDelegatees.length === 0) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_BATCH_REMOVE_DELEGATEE_NO_DELEGATEES,
@@ -13,6 +27,7 @@ export const promptSelectDelegateesToRemove = async (
     );
   }
 
+  // Prompt the user to select delegatees for removal.
   const { selectedAddresses } = await prompts({
     type: 'multiselect',
     name: 'selectedAddresses',
@@ -25,6 +40,7 @@ export const promptSelectDelegateesToRemove = async (
     instructions: false,
   });
 
+  // If no delegatees are selected, throw an error.
   if (!selectedAddresses || selectedAddresses.length === 0) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_BATCH_REMOVE_DELEGATEE_CANCELLED,
@@ -32,7 +48,7 @@ export const promptSelectDelegateesToRemove = async (
     );
   }
 
-  // Show selected addresses and ask for confirmation
+  // Display the selected delegatees and ask for confirmation.
   logger.warn('Selected delegatees to remove:');
   selectedAddresses.forEach((addr: string, i: number) => {
     logger.log(`  ${i + 1}. ${addr}`);
@@ -45,6 +61,7 @@ export const promptSelectDelegateesToRemove = async (
     initial: false,
   });
 
+  // If the user does not confirm, throw an error.
   if (!confirmed) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_BATCH_REMOVE_DELEGATEE_CANCELLED,
@@ -52,5 +69,6 @@ export const promptSelectDelegateesToRemove = async (
     );
   }
 
+  // Return the list of selected delegatee addresses for removal.
   return selectedAddresses;
 };
