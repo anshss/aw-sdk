@@ -9,7 +9,7 @@ import { ethers } from 'ethers';
 import {
   AdminConfig,
   AgentConfig,
-  DEFAULT_LIT_NETWORK,
+  LitNetwork,
   PkpInfo,
   RegisteredTool,
 } from './types';
@@ -34,13 +34,17 @@ export class Admin {
   private readonly adminWallet: ethers.Wallet;
   private readonly pkpInfo: PkpInfo;
 
+  public readonly litNetwork: LitNetwork;
+
   private constructor(
+    litNetwork: LitNetwork,
     litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
     toolPolicyRegistryContract: ethers.Contract,
     adminWallet: ethers.Wallet,
     pkpInfo: PkpInfo
   ) {
+    this.litNetwork = litNetwork;
     this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
     this.toolPolicyRegistryContract = toolPolicyRegistryContract;
@@ -67,11 +71,18 @@ export class Admin {
   public static async create(
     adminConfig: AdminConfig,
     {
-      litNetwork = DEFAULT_LIT_NETWORK,
+      litNetwork,
       debug = false,
       toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
     }: AgentConfig = {}
   ) {
+    if (!litNetwork) {
+      throw new FssSignerError(
+        FssSignerErrorType.ADMIN_MISSING_LIT_NETWORK,
+        'Lit network not provided'
+      );
+    }
+
     const storage = new LocalStorage(Admin.DEFAULT_STORAGE_PATH);
 
     const provider = new ethers.providers.JsonRpcProvider(
@@ -117,6 +128,7 @@ export class Admin {
     await litContracts.connect();
 
     return new Admin(
+      litNetwork,
       litNodeClient,
       litContracts,
       getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig, adminWallet),

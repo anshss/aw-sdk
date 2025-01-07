@@ -1,21 +1,20 @@
 import prompts from 'prompts';
-import type { RegisteredTool } from '@lit-protocol/fss-signer';
+import type { PermittedTools, FssTool } from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
-export const promptSelectToolForRemoval = async (alreadyPermittedTools?: {
-  toolsWithPolicies: RegisteredTool[];
-  toolsWithoutPolicies: string[];
-}) => {
+export const promptSelectToolForRemoval = async (
+  alreadyPermittedTools: PermittedTools
+): Promise<FssTool<any, any>> => {
   const choices = [
-    ...(alreadyPermittedTools?.toolsWithPolicies || []).map((tool) => ({
-      title: tool.ipfsCid,
-      value: tool.ipfsCid,
+    ...alreadyPermittedTools.toolsWithPolicies.map((tool) => ({
+      title: `${tool.name} (${tool.ipfsCid})`,
+      value: tool,
     })),
-    ...(alreadyPermittedTools?.toolsWithoutPolicies || []).map((ipfsCid) => ({
-      title: ipfsCid,
-      value: ipfsCid,
+    ...alreadyPermittedTools.toolsWithoutPolicies.map((tool) => ({
+      title: `${tool.name} (${tool.ipfsCid})`,
+      value: tool,
     })),
   ];
 
@@ -26,26 +25,26 @@ export const promptSelectToolForRemoval = async (alreadyPermittedTools?: {
     );
   }
 
-  const { ipfsCid } = await prompts({
+  const { tool } = await prompts({
     type: 'select',
-    name: 'ipfsCid',
+    name: 'tool',
     message: 'Select a tool to remove:',
     choices,
   });
 
-  if (!ipfsCid) {
+  if (!tool) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED,
       'Tool removal cancelled.'
     );
   }
 
-  return ipfsCid;
+  return tool;
 };
 
-export const promptConfirmRemoval = async (ipfsCid: string) => {
+export const promptConfirmRemoval = async (tool: FssTool<any, any>) => {
   logger.log('');
-  logger.log(`IPFS CID: ${ipfsCid}`);
+  logger.log(`${tool.name} (${tool.ipfsCid})`);
   logger.log('');
 
   const { confirmed } = await prompts({

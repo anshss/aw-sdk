@@ -1,4 +1,8 @@
-import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+import {
+  FssTool,
+  type Admin as FssAdmin,
+  type PermittedTools,
+} from '@lit-protocol/full-self-signing';
 import prompts from 'prompts';
 
 import { logger } from '../../utils/logger';
@@ -6,48 +10,45 @@ import { FssCliError, FssCliErrorType } from '../../errors';
 import { handleGetTools } from './get-tools';
 import { promptPolicyDetails } from '../../prompts/admin';
 
-const promptSelectToolForPolicy = async (permittedTools: {
-  toolsWithPolicies: Array<{ ipfsCid: string }>;
-  toolsWithoutPolicies: string[];
-}) => {
+const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
   const choices = [
     ...permittedTools.toolsWithPolicies.map((tool) => ({
-      title: tool.ipfsCid,
+      title: `${tool.name} (${tool.ipfsCid})`,
       description: 'Update existing policy',
-      value: tool.ipfsCid,
+      value: tool,
     })),
-    ...permittedTools.toolsWithoutPolicies.map((ipfsCid) => ({
-      title: ipfsCid,
+    ...permittedTools.toolsWithoutPolicies.map((tool) => ({
+      title: `${tool.name} (${tool.ipfsCid})`,
       description: 'Set new policy',
-      value: ipfsCid,
+      value: tool,
     })),
   ];
 
-  const { ipfsCid } = await prompts({
+  const { tool } = await prompts({
     type: 'select',
-    name: 'ipfsCid',
+    name: 'tool',
     message: 'Select a tool to set the policy for:',
     choices,
   });
 
-  if (!ipfsCid) {
+  if (!tool) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
       'Tool policy setting cancelled.'
     );
   }
 
-  return ipfsCid;
+  return tool as FssTool<any, any>;
 };
 
 const setToolPolicy = async (
   fssAdmin: FssAdmin,
-  ipfsCid: string,
+  tool: FssTool<any, any>,
   policy: string,
   version: string
 ) => {
   logger.loading('Setting tool policy...');
-  await fssAdmin.setToolPolicy(ipfsCid, policy, version);
+  await fssAdmin.setToolPolicy(tool.ipfsCid, policy, version);
   logger.success('Tool policy set successfully.');
 };
 
@@ -56,9 +57,8 @@ export const handleSetToolPolicy = async (fssAdmin: FssAdmin) => {
     const permittedTools = await handleGetTools(fssAdmin);
 
     if (
-      permittedTools === undefined ||
-      (permittedTools.toolsWithPolicies.length === 0 &&
-        permittedTools.toolsWithoutPolicies.length === 0)
+      permittedTools === null ||
+      permittedTools.toolsWithoutPolicies.length === 0
     ) {
       throw new FssCliError(
         FssCliErrorType.ADMIN_SET_TOOL_POLICY_NO_TOOLS,

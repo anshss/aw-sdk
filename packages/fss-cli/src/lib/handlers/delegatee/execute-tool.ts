@@ -1,4 +1,7 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
+import {
+  type FssTool,
+  type Delegatee as FssDelegatee,
+} from '@lit-protocol/full-self-signing';
 import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
 
 import { logger } from '../../utils/logger';
@@ -23,9 +26,36 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
 
     const selectedPkp = await promptSelectPkp(pkps);
 
-    // Get registered tools
-    const { toolsWithPolicies, toolsWithoutPolicies } =
-      await fssDelegatee.getRegisteredToolsForPkp(selectedPkp.tokenId);
+    const toolsWithPolicies: FssTool<any, any>[] = [];
+    const toolsWithoutPolicies: FssTool<any, any>[] = [];
+
+    const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
+      selectedPkp.tokenId
+    );
+
+    if (registeredTools.toolsWithPolicies.length > 0) {
+      logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithPolicies.forEach((registeredTool) => {
+        const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
+        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
+          toolsWithPolicies.push(registryTool.tool);
+          logger.log(
+            `  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`
+          );
+        }
+      });
+    }
+
+    if (registeredTools.toolsWithoutPolicies.length > 0) {
+      logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithoutPolicies.forEach((ipfsCid) => {
+        const registryTool = getToolByIpfsCid(ipfsCid);
+        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
+          toolsWithoutPolicies.push(registryTool.tool);
+          logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
+        }
+      });
+    }
 
     if (toolsWithPolicies.length === 0 && toolsWithoutPolicies.length === 0) {
       throw new FssCliError(
@@ -35,40 +65,34 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
     }
 
     // Select a tool
-    const { ipfsCid: selectedToolIpfsCid } = await promptSelectTool(
+    const selectedTool = await promptSelectTool(
       toolsWithPolicies,
       toolsWithoutPolicies
     );
 
-    // Find the selected tool's policy if it exists
-    const selectedTool = toolsWithPolicies.find(
-      (tool) => tool.ipfsCid === selectedToolIpfsCid
-    );
-
-    // Get the tool from the registry
-    const registryTool = getToolByIpfsCid(selectedToolIpfsCid);
-    if (!registryTool) {
-      throw new Error(`Tool not found in registry: ${selectedToolIpfsCid}`);
-    }
-
     // If the tool has a policy, display it
-    if (selectedTool) {
-      const decodedPolicy = registryTool.policy.decode(selectedTool.policy);
-      logger.info('\nTool Policy:');
+    const toolWithPolicy = toolsWithPolicies.find(
+      (tool) => tool.ipfsCid === selectedTool.ipfsCid
+    );
+    if (toolWithPolicy) {
+      const decodedPolicy = selectedTool.policy.decode(
+        registeredTools.toolsWithPolicies.find(
+          (t) => t.ipfsCid === selectedTool.ipfsCid
+        )?.policy || ''
+      );
+      logger.info('Tool Policy:');
       logger.log(JSON.stringify(decodedPolicy, null, 2));
     }
 
-    // Get parameters from user
-    logger.info('\nEnter Tool Parameters:');
-    const params = await promptToolParams(registryTool);
+    logger.info('Enter Tool Parameters:');
+    const params = await promptToolParams(selectedTool, selectedPkp.ethAddress);
 
     // Execute the tool
     logger.loading('Executing tool...');
 
     const response = await fssDelegatee.executeTool({
-      ipfsId: selectedToolIpfsCid,
+      ipfsId: selectedTool.ipfsCid,
       jsParams: {
-        pkp: { ...selectedPkp },
         params,
       },
     });
