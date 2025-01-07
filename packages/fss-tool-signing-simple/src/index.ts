@@ -1,1 +1,0 @@
-export { SigningSimple } from './lib/tool';

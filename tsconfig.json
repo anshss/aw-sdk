@@ -7,7 +7,7 @@
       "path": "./packages/fss-signer"
     },
     {
-      "path": "./packages/fss-tool-erc20-send"
+      "path": "./packages/fss-tool-erc20-transfer"
     },
     {
       "path": "./packages/fss-cli"
@@ -25,10 +25,10 @@
       "path": "./packages/fss-tool"
     },
     {
-      "path": "./packages/fss-tool-swap-uniswap"
+      "path": "./packages/fss-tool-uniswap-swap"
     },
     {
-      "path": "./packages/fss-tool-signing-simple"
+      "path": "./packages/fss-tool-sign-ecdsa"
     }
   ]
 }

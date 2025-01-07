@@ -11,7 +11,7 @@ The Lit AI Agent project consists of several packages that work together to prov
 - `fss-contracts`: Smart contracts for agent registry and policy management
 - `fss-signer`: Handles authentication and signing of transactions
 - `fss-tool-registry`: Registry for available agent tools and capabilities
-- `fss-tool-erc20-send`: Example tool implementation for sending ERC20 tokens
+- `fss-tool-erc20-transfer`: Example tool implementation for sending ERC20 tokens
 - `fss-tool`: Shared utilities and interfaces for building agent tools
 
 ## Running the Lit Agent CLI Demo
@@ -51,7 +51,7 @@ The Lit AI Agent project consists of several packages that work together to prov
    ? What would you like to do?
    ```
 10. Enter a prompt to get the Lit Agent to send ERC20 tokens to an address:
-    - For now there is only one Lit Agent tool available: [ERC20 Send](./packages/fss-tool-erc20-send)
+    - For now there is only one Lit Agent tool available: [ERC20 Send](./packages/fss-tool-erc20-transfer)
     - You can use the `ERC20 Send` tool to send ERC20 tokens to an address by specifying:
       - The amount of tokens to send
       - The ERC20 contract address
@@ -88,7 +88,7 @@ The Lit AI Agent project consists of several packages that work together to prov
     ```
     ⚠️  Tool Permission Required
 
-    Name: SendERC20
+    Name: ERC20Transfer
     Description: A Lit Action that sends ERC-20 tokens.
     IPFS CID: QmdNViKYxNrF6Rpm5z8afytyLBEpZ1KE1aq7L545EjXdMi
     Parameters:
@@ -106,16 +106,16 @@ The Lit AI Agent project consists of several packages that work together to prov
 13. If the Agent Tool has a policy associated with it, the CLI will prompt you with the option to configure a policy:
     ```
     ⚠️  Tool Policy Configuration
-    Tool: SendERC20
+    Tool: ERC20Transfer
     ? Would you like to configure a policy for this tool? (Y/n)
     ```
     - While this is optional, it's highly recommended to configure a policy for your Agent Tools to ensure they are within the bounds you are comfortable with
     - Press `ENTER` or type `Y` and hit `ENTER` to being the policy configuration process
 14. The CLI will now parse the Agent Tool's policy and prompt you with the option to configure each parameter:
 
-    - For the `SendERC20` tool, the CLI will prompt you with the option to configure:
+    - For the `ERC20Transfer` tool, the CLI will prompt you with the option to configure:
       - `maxAmount` - The maximum amount of tokens the Lit Agent is allowed to send in a single transaction
-        - Specify this is as a decimal or whole number of tokens. The `SendERC20` tool will automatically adjust the amount based on the token's decimals, so that `20` becomes `20000000000000000000` if the token has 18 decimals
+        - Specify this is as a decimal or whole number of tokens. The `ERC20Transfer` tool will automatically adjust the amount based on the token's decimals, so that `20` becomes `20000000000000000000` if the token has 18 decimals
       - `allowedTokens` - A list of ERC20 contract addresses that the Lit Agent is allowed to send
         - First type `Y` and hit `ENTER` to begin this configuration step
           - You can also just press `ENTER` to skip this step
@@ -133,7 +133,7 @@ The Lit AI Agent project consists of several packages that work together to prov
 
       ```bash
       ⚠️  Tool Policy Configuration
-      Tool: SendERC20
+      Tool: ERC20Transfer
       ✔ Would you like to configure a policy for this tool? Yes
       ✔ Enter maxAmount (in ETH): 20
       ✔ Would you like to configure allowedTokens? Yes
@@ -144,7 +144,7 @@ The Lit AI Agent project consists of several packages that work together to prov
       ✔ Enter a value for allowedRecipients (or leave empty to finish):
 
       ℹ️  Policy Summary:
-      type: SendERC20
+      type: ERC20Transfer
       version: 1.0.0
       maxAmount: 20.0 ETH
       allowedTokens: 0x4070c8325e278ca1056e602e08d16d2D5cd79b27
@@ -158,7 +158,7 @@ The Lit AI Agent project consists of several packages that work together to prov
     ℹ️  Registering policy on chain...
     ✅ Policy successfully registered! Transaction hash: 0xb8ab7e8e45ffd6cdaffbf44247c95bfb36ab548474786b1b25da29cfa26657d2
     ```
-16. Next, because an chain RPC URL and chain ID are required for the `SendERC20` tool, the CLI will prompt you with the option to select from a list of default chains, or enter the URL and ID for a new chain:
+16. Next, because an chain RPC URL and chain ID are required for the `ERC20Transfer` tool, the CLI will prompt you with the option to select from a list of default chains, or enter the URL and ID for a new chain:
     ```
     ⚠️  Some parameters are missing. Please provide them:
     ? Select the chain to use: (Use arrow keys)
@@ -169,7 +169,7 @@ The Lit AI Agent project consists of several packages that work together to prov
     ```
     - Because the `DevERC20` contract is deployed on Base Sepolia, you'll want to select `Base Sepolia` for this demo
       - Press `ENTER` or type `Y` and hit `ENTER` to proceed with Base Sepolia
-17. The CLI will now prompt you to confirm the parameters to send to the `SendERC20` tool:
+17. The CLI will now prompt you to confirm the parameters to send to the `ERC20Transfer` tool:
     ```
     ℹ️  Parameters to be used:
     tokenIn: 0x4070c8325e278ca1056e602e08d16d2D5cd79b27

@@ -1,7 +1,7 @@
 import type { FssTool } from '@lit-protocol/fss-tool';
-import { SendERC20 } from '@lit-protocol/fss-tool-erc20-send';
-import { SwapUniswap } from '@lit-protocol/fss-tool-swap-uniswap';
-import { SigningSimple } from '@lit-protocol/fss-tool-signing-simple';
+import { ERC20Transfer } from '@lit-protocol/fss-tool-erc20-transfer';
+import { UniswapSwap } from '@lit-protocol/fss-tool-uniswap-swap';
+import { SignEcdsa } from '@lit-protocol/fss-tool-sign-ecdsa';
 
 export type LitNetwork = 'datil-dev' | 'datil-test' | 'datil';
 
@@ -92,7 +92,7 @@ export function listAllTools<T extends FssTool<any, any>>(): Array<{
   return tools;
 }
 
-// Register the SendERC20 tool
-registerTool('SendERC20', SendERC20);
-registerTool('SwapUniswap', SwapUniswap);
-registerTool('SigningSimple', SigningSimple);
+// Register the ERC20Transfer tool
+registerTool('ERC20Transfer', ERC20Transfer);
+registerTool('UniswapSwap', UniswapSwap);
+registerTool('SignEcdsa', SignEcdsa);

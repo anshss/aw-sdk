@@ -16,7 +16,7 @@ npx nx g @nx/js:lib packages/fss-tool-TOOL_NAME --publishable --importPath=@lit-
 
 ## Copy Required Configuration Files
 
-Copy the following files from an existing tool package (e.g., fss-tool-signing-simple) to your new package:
+Copy the following files from an existing tool package (e.g., fss-tool-sign-ecdsa) to your new package:
 
 1. Configuration files:
    - `tsconfig.lib.json`
