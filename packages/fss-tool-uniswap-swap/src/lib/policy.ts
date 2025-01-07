@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ethers } from 'ethers';
 
 const policySchema = z.object({
-  type: z.literal('SwapUniswap'),
+  type: z.literal('UniswapSwap'),
   version: z.string(),
   maxAmount: z.string().refine(
     (val) => {
@@ -16,35 +16,31 @@ const policySchema = z.object({
     },
     { message: 'Invalid amount format. Must be a non-negative integer.' }
   ),
-  allowedTokens: z.array(BaseEthereumAddressSchema)
+  allowedTokens: z.array(BaseEthereumAddressSchema),
 });
 
-function encodePolicy(policy: SwapUniswapPolicyType): string {
+function encodePolicy(policy: UniswapSwapPolicyType): string {
   policySchema.parse(policy);
 
   return ethers.utils.defaultAbiCoder.encode(
-    [
-      'tuple(uint256 maxAmount, address[] allowedTokens)',
-    ],
+    ['tuple(uint256 maxAmount, address[] allowedTokens)'],
     [
       {
         maxAmount: policy.maxAmount,
-        allowedTokens: policy.allowedTokens
+        allowedTokens: policy.allowedTokens,
       },
     ]
   );
 }
 
-function decodePolicy(encodedPolicy: string): SwapUniswapPolicyType {
+function decodePolicy(encodedPolicy: string): UniswapSwapPolicyType {
   const decoded = ethers.utils.defaultAbiCoder.decode(
-    [
-      'tuple(uint256 maxAmount, address[] allowedTokens)',
-    ],
+    ['tuple(uint256 maxAmount, address[] allowedTokens)'],
     encodedPolicy
   )[0];
 
-  const policy: SwapUniswapPolicyType = {
-    type: 'SwapUniswap',
+  const policy: UniswapSwapPolicyType = {
+    type: 'UniswapSwap',
     version: '1.0.0',
     maxAmount: decoded.maxAmount.toString(),
     allowedTokens: decoded.allowedTokens,
@@ -53,10 +49,10 @@ function decodePolicy(encodedPolicy: string): SwapUniswapPolicyType {
   return policySchema.parse(policy);
 }
 
-export type SwapUniswapPolicyType = z.infer<typeof policySchema>;
+export type UniswapSwapPolicyType = z.infer<typeof policySchema>;
 
-export const SwapUniswapPolicy = {
-  type: {} as SwapUniswapPolicyType,
+export const UniswapSwapPolicy = {
+  type: {} as UniswapSwapPolicyType,
   version: '1.0.0',
   schema: policySchema,
   encode: encodePolicy,

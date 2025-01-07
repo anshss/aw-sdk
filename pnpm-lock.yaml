@@ -212,9 +212,9 @@ importers:
       '@lit-protocol/fss-tool-sign-ecdsa':
         specifier: workspace:*
         version: link:../fss-tool-sign-ecdsa
-      '@lit-protocol/fss-tool-swap-uniswap':
+      '@lit-protocol/fss-tool-uniswap-swap':
         specifier: workspace:*
-        version: link:../fss-tool-swap-uniswap
+        version: link:../fss-tool-uniswap-swap
       ethers:
         specifier: 5.7.2
         version: 5.7.2
@@ -247,7 +247,7 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
 
-  packages/fss-tool-swap-uniswap:
+  packages/fss-tool-uniswap-swap:
     dependencies:
       '@lit-protocol/fss-tool':
         specifier: workspace:*

@@ -1,4 +1,4 @@
-# @lit-protocol/fss-tool-swap-uniswap
+# @lit-protocol/fss-tool-uniswap-swap
 
 A Lit AI Agent tool for performing Uniswap V3 token swaps. This package provides a secure way to swap tokens using Uniswap V3.
 
@@ -15,7 +15,7 @@ A Lit AI Agent tool for performing Uniswap V3 token swaps. This package provides
 ## Installation
 
 ```bash
-pnpm add @lit-protocol/fss-tool-swap-uniswap
+pnpm add @lit-protocol/fss-tool-uniswap-swap
 ```
 
 ## Supported Networks
@@ -61,7 +61,7 @@ The tool supports flexible policy configuration to ensure secure token swaps:
 
 ```typescript
 const policy = {
-  type: 'SwapUniswap',
+  type: 'UniswapSwap',
   version: '1.0.0',
   // Maximum amount in base units (e.g., wei)
   maxAmount: '1000000000000000000',
@@ -98,22 +98,22 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 ### Required Parameters
 
-| Parameter  | Type     | Description                                                |
-| ---------- | -------- | ---------------------------------------------------------- |
-| `tokenIn`  | `string` | Input token contract address (must be valid Ethereum address) |
+| Parameter  | Type     | Description                                                    |
+| ---------- | -------- | -------------------------------------------------------------- |
+| `tokenIn`  | `string` | Input token contract address (must be valid Ethereum address)  |
 | `tokenOut` | `string` | Output token contract address (must be valid Ethereum address) |
-| `amountIn` | `string` | Amount of input token as decimal string (e.g., "1.5")      |
-| `chainId`  | `string` | Chain ID as string ("1", "8453", or "42161")              |
-| `rpcUrl`   | `string` | HTTPS RPC endpoint URL for the blockchain network          |
+| `amountIn` | `string` | Amount of input token as decimal string (e.g., "1.5")          |
+| `chainId`  | `string` | Chain ID as string ("1", "8453", or "42161")                   |
+| `rpcUrl`   | `string` | HTTPS RPC endpoint URL for the blockchain network              |
 
 ### Policy Parameters
 
-| Parameter       | Type       | Description                                    |
-| -------------- | ---------- | ---------------------------------------------- |
-| `type`         | `string`   | Must be 'SwapUniswap'                         |
-| `version`      | `string`   | Policy version (e.g., '1.0.0')                |
-| `maxAmount`    | `string`   | Maximum swap amount in base units              |
-| `allowedTokens`| `string[]` | Array of allowed token contract addresses      |
+| Parameter       | Type       | Description                               |
+| --------------- | ---------- | ----------------------------------------- |
+| `type`          | `string`   | Must be 'UniswapSwap'                     |
+| `version`       | `string`   | Policy version (e.g., '1.0.0')            |
+| `maxAmount`     | `string`   | Maximum swap amount in base units         |
+| `allowedTokens` | `string[]` | Array of allowed token contract addresses |
 
 ## Deployment
 
@@ -123,7 +123,7 @@ The tool is implemented as a Lit Action that follows this execution flow:
 
 2. Deploy your Lit Action to IPFS:
 ```bash
-pnpm nx deploy fss-tool-swap-uniswap
+pnpm nx deploy fss-tool-uniswap-swap
 ```
 
 This will pin your Lit Action code to IPFS using Pinata.
@@ -133,13 +133,13 @@ This will pin your Lit Action code to IPFS using Pinata.
 ### Building
 
 ```bash
-pnpm nx build fss-tool-swap-uniswap
+pnpm nx build fss-tool-uniswap-swap
 ```
 
 ### Testing
 
 ```bash
-pnpm nx test fss-tool-swap-uniswap
+pnpm nx test fss-tool-uniswap-swap
 ```
 
 ## Contributing

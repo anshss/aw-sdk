@@ -1,13 +1,13 @@
 import { ethers } from 'ethers';
 
 import {
-  SwapUniswapPolicy,
-  type SwapUniswapPolicyType
+  UniswapSwapPolicy,
+  type UniswapSwapPolicyType,
 } from '../src/lib/policy';
 
-describe('SwapUniswapPolicy', () => {
-  const validPolicy: SwapUniswapPolicyType = {
-    type: 'SwapUniswap',
+describe('UniswapSwapPolicy', () => {
+  const validPolicy: UniswapSwapPolicyType = {
+    type: 'UniswapSwap',
     version: '1.0.0',
     maxAmount: ethers.utils.parseEther('1.0').toString(), // 1 ETH in wei
     allowedTokens: [
@@ -16,9 +16,9 @@ describe('SwapUniswapPolicy', () => {
     ],
   };
 
-  describe('SwapUniswapPolicy.schema', () => {
+  describe('UniswapSwapPolicy.schema', () => {
     it('should validate a correct policy', () => {
-      const result = SwapUniswapPolicy.schema.safeParse(validPolicy);
+      const result = UniswapSwapPolicy.schema.safeParse(validPolicy);
       expect(result.success).toBe(true);
     });
 
@@ -31,7 +31,7 @@ describe('SwapUniswapPolicy', () => {
         ];
 
         validAmounts.forEach((maxAmount) => {
-          const result = SwapUniswapPolicy.schema.safeParse({
+          const result = UniswapSwapPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -55,7 +55,7 @@ describe('SwapUniswapPolicy', () => {
         ];
 
         invalidAmounts.forEach((maxAmount) => {
-          const result = SwapUniswapPolicy.schema.safeParse({
+          const result = UniswapSwapPolicy.schema.safeParse({
             ...validPolicy,
             maxAmount,
           });
@@ -64,7 +64,7 @@ describe('SwapUniswapPolicy', () => {
       });
 
       it('should reject negative numbers', () => {
-        const result = SwapUniswapPolicy.schema.safeParse({
+        const result = UniswapSwapPolicy.schema.safeParse({
           ...validPolicy,
           maxAmount: '-1000000000000000000',
         });
@@ -81,7 +81,7 @@ describe('SwapUniswapPolicy', () => {
 
     describe('allowedTokens validation', () => {
       it('should accept valid Ethereum addresses', () => {
-        const result = SwapUniswapPolicy.schema.safeParse(validPolicy);
+        const result = UniswapSwapPolicy.schema.safeParse(validPolicy);
         expect(result.success).toBe(true);
       });
 
@@ -93,12 +93,12 @@ describe('SwapUniswapPolicy', () => {
             '0xGGGG567890123456789012345678901234567890', // invalid hex
           ],
         };
-        const result = SwapUniswapPolicy.schema.safeParse(invalidPolicy);
+        const result = UniswapSwapPolicy.schema.safeParse(invalidPolicy);
         expect(result.success).toBe(false);
       });
 
       it('should accept empty array of allowed tokens', () => {
-        const result = SwapUniswapPolicy.schema.safeParse({
+        const result = UniswapSwapPolicy.schema.safeParse({
           ...validPolicy,
           allowedTokens: [],
         });
@@ -113,36 +113,36 @@ describe('SwapUniswapPolicy', () => {
             '0xaBcDeF1234567890123456789012345678901234',
           ],
         };
-        const result = SwapUniswapPolicy.schema.safeParse(mixedCasePolicy);
+        const result = UniswapSwapPolicy.schema.safeParse(mixedCasePolicy);
         expect(result.success).toBe(true);
       });
     });
   });
 
-  describe('SwapUniswapPolicy.encode', () => {
+  describe('UniswapSwapPolicy.encode', () => {
     it('should encode a valid policy', () => {
-      const encoded = SwapUniswapPolicy.encode(validPolicy);
+      const encoded = UniswapSwapPolicy.encode(validPolicy);
       expect(typeof encoded).toBe('string');
       expect(encoded.startsWith('0x')).toBe(true);
     });
 
     it('should throw on invalid policy', () => {
       const invalidPolicy = {
-        type: 'SwapUniswap' as const,
+        type: 'UniswapSwap' as const,
         version: '1.0.0',
         maxAmount: 'invalid',
         allowedTokens: ['0x123'], // Invalid address
       };
       expect(() => {
-        SwapUniswapPolicy.encode(invalidPolicy as SwapUniswapPolicyType);
+        UniswapSwapPolicy.encode(invalidPolicy as UniswapSwapPolicyType);
       }).toThrow();
     });
   });
 
-  describe('SwapUniswapPolicy.decode', () => {
+  describe('UniswapSwapPolicy.decode', () => {
     it('should decode an encoded policy correctly', () => {
-      const encoded = SwapUniswapPolicy.encode(validPolicy);
-      const decoded = SwapUniswapPolicy.decode(encoded);
+      const encoded = UniswapSwapPolicy.encode(validPolicy);
+      const decoded = UniswapSwapPolicy.decode(encoded);
 
       // Compare with normalized addresses
       const normalizedPolicy = {
@@ -158,12 +158,12 @@ describe('SwapUniswapPolicy', () => {
     it('should throw on invalid encoded data', () => {
       const invalidEncoded = '0x1234'; // Invalid encoded data
       expect(() => {
-        SwapUniswapPolicy.decode(invalidEncoded);
+        UniswapSwapPolicy.decode(invalidEncoded);
       }).toThrow();
     });
 
     it('should maintain data integrity through encode/decode cycle', () => {
-      const testCases: SwapUniswapPolicyType[] = [
+      const testCases: UniswapSwapPolicyType[] = [
         validPolicy,
         {
           ...validPolicy,
@@ -177,8 +177,8 @@ describe('SwapUniswapPolicy', () => {
       ];
 
       testCases.forEach((policy) => {
-        const encoded = SwapUniswapPolicy.encode(policy);
-        const decoded = SwapUniswapPolicy.decode(encoded);
+        const encoded = UniswapSwapPolicy.encode(policy);
+        const decoded = UniswapSwapPolicy.decode(encoded);
 
         // Normalize addresses in the original policy for comparison
         const normalizedPolicy = {
@@ -192,4 +192,4 @@ describe('SwapUniswapPolicy', () => {
       });
     });
   });
-}); 
+});

@@ -1,5 +1,5 @@
 export default {
-  displayName: 'fss-tool-swap-uniswap',
+  displayName: 'fss-tool-uniswap-swap',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

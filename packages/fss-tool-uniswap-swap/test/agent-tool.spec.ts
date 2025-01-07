@@ -1,8 +1,8 @@
-import type { SwapUniswapLitActionParameters } from '../src/lib/tool';
-import { SwapUniswap } from '../src/lib/tool';
+import type { UniswapSwapLitActionParameters } from '../src/lib/tool';
+import { UniswapSwap } from '../src/lib/tool';
 
-describe('SwapUniswap', () => {
-  const validParams: SwapUniswapLitActionParameters = {
+describe('UniswapSwap', () => {
+  const validParams: UniswapSwapLitActionParameters = {
     tokenIn: '0x1234567890123456789012345678901234567890',
     tokenOut: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
     amountIn: '1.5',
@@ -10,9 +10,9 @@ describe('SwapUniswap', () => {
     rpcUrl: 'https://eth-mainnet.example.com',
   };
 
-  describe('SwapUniswap.parameters.schema', () => {
+  describe('UniswapSwap.parameters.schema', () => {
     it('should validate correct parameters', () => {
-      const result = SwapUniswap.parameters.schema.safeParse(validParams);
+      const result = UniswapSwap.parameters.schema.safeParse(validParams);
       expect(result.success).toBe(true);
     });
 
@@ -26,7 +26,7 @@ describe('SwapUniswap', () => {
         ];
 
         invalidTokens.forEach((tokenIn) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             tokenIn,
           });
@@ -45,7 +45,7 @@ describe('SwapUniswap', () => {
         ];
 
         invalidTokens.forEach((tokenOut) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             tokenOut,
           });
@@ -59,7 +59,7 @@ describe('SwapUniswap', () => {
         const validAmounts = ['1.5', '100', '0.01', '1000.55555'];
 
         validAmounts.forEach((amountIn) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -77,7 +77,7 @@ describe('SwapUniswap', () => {
         ];
 
         invalidAmounts.forEach((amountIn) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             amountIn,
           });
@@ -91,7 +91,7 @@ describe('SwapUniswap', () => {
         const validChainIds = ['1', '8453', '42161'];
 
         validChainIds.forEach((chainId) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             chainId,
           });
@@ -108,7 +108,7 @@ describe('SwapUniswap', () => {
         ];
 
         invalidChainIds.forEach((chainId) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             chainId,
           });
@@ -126,7 +126,7 @@ describe('SwapUniswap', () => {
         ];
 
         validUrls.forEach((rpcUrl) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             rpcUrl,
           });
@@ -143,7 +143,7 @@ describe('SwapUniswap', () => {
         ];
 
         invalidUrls.forEach((rpcUrl) => {
-          const result = SwapUniswap.parameters.schema.safeParse({
+          const result = UniswapSwap.parameters.schema.safeParse({
             ...validParams,
             rpcUrl,
           });
@@ -153,9 +153,9 @@ describe('SwapUniswap', () => {
     });
   });
 
-  describe('SwapUniswap.parameters.validate', () => {
+  describe('UniswapSwap.parameters.validate', () => {
     it('should return true for valid parameters', () => {
-      expect(SwapUniswap.parameters.validate(validParams)).toBe(true);
+      expect(UniswapSwap.parameters.validate(validParams)).toBe(true);
     });
 
     it('should return array of errors for invalid parameters', () => {
@@ -179,7 +179,7 @@ describe('SwapUniswap', () => {
       ];
 
       invalidParams.forEach((params) => {
-        const result = SwapUniswap.parameters.validate(params);
+        const result = UniswapSwap.parameters.validate(params);
         expect(Array.isArray(result)).toBe(true);
         if (Array.isArray(result)) {
           expect(result.length).toBeGreaterThan(0);
@@ -195,9 +195,9 @@ describe('SwapUniswap', () => {
     });
   });
 
-  describe('SwapUniswap metadata', () => {
+  describe('UniswapSwap metadata', () => {
     it('should have the correct structure', () => {
-      expect(SwapUniswap).toMatchObject({
+      expect(UniswapSwap).toMatchObject({
         name: expect.any(String),
         description: expect.any(String),
         parameters: expect.any(Object),
@@ -205,9 +205,9 @@ describe('SwapUniswap', () => {
     });
 
     it('should have descriptions for all parameters', () => {
-      const params = Object.keys(SwapUniswap.parameters.descriptions);
+      const params = Object.keys(UniswapSwap.parameters.descriptions);
       const required = ['tokenIn', 'tokenOut', 'amountIn', 'chainId', 'rpcUrl'];
       expect(params.sort()).toEqual(required.sort());
     });
   });
-}); 
+});

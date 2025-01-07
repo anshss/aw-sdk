@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FssTool, SupportedLitNetwork } from '@lit-protocol/fss-tool';
 
-import { SwapUniswapPolicy, type SwapUniswapPolicyType } from './policy';
+import { UniswapSwapPolicy, type UniswapSwapPolicyType } from './policy';
 import { NETWORK_CONFIGS, type NetworkConfig } from './networks';
 import { IPFS_CIDS } from './ipfs';
 
@@ -13,7 +13,7 @@ import { IPFS_CIDS } from './ipfs';
  * @property chainId - The ID of the blockchain network
  * @property rpcUrl - The RPC URL of the blockchain network
  */
-export interface SwapUniswapLitActionParameters {
+export interface UniswapSwapLitActionParameters {
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -22,9 +22,9 @@ export interface SwapUniswapLitActionParameters {
 }
 
 /**
- * Zod schema for validating SwapUniswapLitActionParameters
+ * Zod schema for validating UniswapSwapLitActionParameters
  */
-const SwapUniswapLitActionSchema = z.object({
+const UniswapSwapLitActionSchema = z.object({
   tokenIn: z
     .string()
     .regex(
@@ -59,7 +59,7 @@ const SwapUniswapLitActionSchema = z.object({
  * Descriptions of each parameter for the Swap Uniswap Lit Action
  * These descriptions are designed to be consumed by LLMs to understand the required parameters
  */
-const SwapUniswapLitActionParameterDescriptions = {
+const UniswapSwapLitActionParameterDescriptions = {
   tokenIn:
     'The Ethereum contract address of the ERC20 token you want to send. Must be a valid Ethereum address starting with 0x.',
   tokenOut:
@@ -75,10 +75,10 @@ const SwapUniswapLitActionParameterDescriptions = {
 /**
  * Validate parameters and return detailed error messages if invalid
  */
-const validateSwapUniswapParameters = (
+const validateUniswapSwapParameters = (
   params: unknown
 ): true | Array<{ param: string; error: string }> => {
-  const result = SwapUniswapLitActionSchema.safeParse(params);
+  const result = UniswapSwapLitActionSchema.safeParse(params);
   if (result.success) {
     return true;
   }
@@ -95,29 +95,29 @@ const validateSwapUniswapParameters = (
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
-): FssTool<SwapUniswapLitActionParameters, SwapUniswapPolicyType> => ({
-  name: 'SwapUniswap',
+): FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
+  name: 'UniswapSwap',
   description: `A Lit Action that swaps tokens on Uniswap, using the ${config.litNetwork} network for signing.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
-    type: {} as SwapUniswapLitActionParameters,
-    schema: SwapUniswapLitActionSchema,
-    descriptions: SwapUniswapLitActionParameterDescriptions,
-    validate: validateSwapUniswapParameters,
+    type: {} as UniswapSwapLitActionParameters,
+    schema: UniswapSwapLitActionSchema,
+    descriptions: UniswapSwapLitActionParameterDescriptions,
+    validate: validateUniswapSwapParameters,
   },
-  policy: SwapUniswapPolicy,
+  policy: UniswapSwapPolicy,
 });
 
 /**
  * Export network-specific ERC20Transfer tools
  */
-export const SwapUniswap = Object.entries(NETWORK_CONFIGS).reduce(
+export const UniswapSwap = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
     ...acc,
     [network]: createNetworkTool(network as SupportedLitNetwork, config),
   }),
   {} as Record<
     SupportedLitNetwork,
-    FssTool<SwapUniswapLitActionParameters, SwapUniswapPolicyType>
+    FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>
   >
 );

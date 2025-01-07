@@ -25,7 +25,7 @@
       "path": "./packages/fss-tool"
     },
     {
-      "path": "./packages/fss-tool-swap-uniswap"
+      "path": "./packages/fss-tool-uniswap-swap"
     },
     {
       "path": "./packages/fss-tool-sign-ecdsa"
