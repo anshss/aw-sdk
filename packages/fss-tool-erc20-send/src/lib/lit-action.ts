@@ -23,13 +23,14 @@ declare global {
     Contract: any;
   };
 
+  // Injected by build script
+  const PUBKEY_ROUTER_ADDRESS: string;
+  const PKP_TOOL_REGISTRY_ADDRESS: string;
+  const LIT_NETWORK: string;
+
   // Required Inputs
-  const pkp: {
-    tokenId: string;
-    ethAddress: string;
-    publicKey: string;
-  };
   const params: {
+    pkpEthAddress: string;
     rpcUrl: string;
     chainId: string;
     tokenIn: string;
@@ -40,6 +41,49 @@ declare global {
 
 export default async () => {
   try {
+    // Get PKP info from PubkeyRouter
+    async function getPkpInfo() {
+      console.log('Getting PKP info from PubkeyRouter...');
+
+      const PUBKEY_ROUTER_ABI = [
+        'function ethAddressToPkpId(address ethAddress) public view returns (uint256)',
+        'function getPubkey(uint256 tokenId) public view returns (bytes memory)',
+      ];
+
+      const pubkeyRouter = new ethers.Contract(
+        PUBKEY_ROUTER_ADDRESS,
+        PUBKEY_ROUTER_ABI,
+        new ethers.providers.JsonRpcProvider(
+          await Lit.Actions.getRpcUrl({
+            chain: LIT_NETWORK,
+          })
+        )
+      );
+
+      // Get PKP ID from eth address
+      console.log(`Getting PKP ID for eth address ${params.pkpEthAddress}...`);
+      const pkpTokenId = await pubkeyRouter.ethAddressToPkpId(
+        params.pkpEthAddress
+      );
+      console.log(`Got PKP token ID: ${pkpTokenId}`);
+
+      // TODO Implement this check
+      // if (pkpTokenId.isZero()) {
+      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
+      // }
+
+      // Get public key from PKP ID
+      console.log(`Getting public key for PKP ID ${pkpTokenId}...`);
+      const publicKey = await pubkeyRouter.getPubkey(pkpTokenId);
+      console.log(`Got public key: ${publicKey}`);
+
+      return {
+        tokenId: pkpTokenId.toString(),
+        ethAddress: params.pkpEthAddress,
+        publicKey,
+      };
+    }
+
     // Check if the session signer is a delegatee
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
@@ -357,6 +401,7 @@ export default async () => {
     }
 
     // Main Execution
+    const pkp = await getPkpInfo();
     const provider = new ethers.providers.JsonRpcProvider(params.rpcUrl);
     const tokenInfo = await getTokenInfo(provider);
 
@@ -365,13 +410,12 @@ export default async () => {
       'function isDelegateeOf(uint256 pkpTokenId, address delegatee) external view returns (bool)',
       'function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
     ];
-    const PKP_TOOL_REGISTRY = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
     const pkpToolRegistryContract = new ethers.Contract(
-      PKP_TOOL_REGISTRY,
+      PKP_TOOL_REGISTRY_ADDRESS,
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
         await Lit.Actions.getRpcUrl({
-          chain: 'yellowstone',
+          chain: LIT_NETWORK,
         })
       )
     );
