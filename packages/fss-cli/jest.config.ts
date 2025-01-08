@@ -1,5 +1,5 @@
 export default {
-  displayName: 'fss-cli',
+  displayName: 'aw-cli',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

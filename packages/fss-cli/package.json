@@ -1,5 +1,5 @@
 {
-  "name": "@lit-protocol/fss-cli",
+  "name": "@lit-protocol/aw-cli",
   "version": "0.1.1-10",
   "publishConfig": {
     "access": "public"
@@ -36,7 +36,7 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
-    "sourceRoot": "packages/fss-cli/src",
+    "sourceRoot": "packages/aw-cli/src",
     "projectType": "library",
     "targets": {
       "build": {
@@ -45,15 +45,15 @@
           "{options.outputPath}"
         ],
         "options": {
-          "outputPath": "packages/fss-cli/dist",
-          "main": "packages/fss-cli/src/index.ts",
-          "tsConfig": "packages/fss-cli/tsconfig.lib.json",
+          "outputPath": "packages/aw-cli/dist",
+          "main": "packages/aw-cli/src/index.ts",
+          "tsConfig": "packages/aw-cli/tsconfig.lib.json",
           "assets": [
-            "packages/fss-cli/*.md"
+            "packages/aw-cli/*.md"
           ]
         }
       }
     },
-    "name": "fss-cli"
+    "name": "aw-cli"
   }
 }

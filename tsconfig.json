@@ -10,7 +10,7 @@
       "path": "./packages/fss-tool-erc20-transfer"
     },
     {
-      "path": "./packages/fss-cli"
+      "path": "./packages/aw-cli"
     },
     {
       "path": "./packages/fss-tool-registry"
