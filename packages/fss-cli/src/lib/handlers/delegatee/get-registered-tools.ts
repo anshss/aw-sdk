@@ -1,9 +1,4 @@
-// Import the FssTool and FssDelegatee types from the '@lit-protocol/full-self-signing' package.
-import {
-  FssTool,
-  getToolByIpfsCid,
-  type Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -41,11 +36,6 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
   // Prompt the user to select a PKP.
   const selectedPkp = await promptSelectPkp(pkps);
 
-  // Initialize arrays to store tools with and without policies.
-  const toolsWithPolicies: FssTool<any, any>[] = [];
-  const toolsWithoutPolicies: FssTool<any, any>[] = [];
-
-  // Retrieve the list of registered tools for the selected PKP.
   const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
     selectedPkp.tokenId
   );
@@ -53,54 +43,40 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
   // Process tools with policies.
   if (registeredTools.toolsWithPolicies.length > 0) {
     logger.log(`Tools with Policies:`);
-    registeredTools.toolsWithPolicies.forEach((registeredTool) => {
-      // Retrieve the tool details from the registry using its IPFS CID.
-      const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-
-      // If the tool is not found in the registry, log it as an unknown tool.
-      if (registryTool === null) {
-        logger.log(`  - Unknown tool: ${registeredTool.ipfsCid}`);
-      }
-      // If the tool is found and matches the current Lit network, add it to the list.
-      else if (
-        registryTool &&
-        registryTool.network === fssDelegatee.litNetwork
-      ) {
-        toolsWithPolicies.push(registryTool.tool);
-        logger.log(`  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`);
-        logger.log(`      - ${registryTool.tool.description}`);
-      }
+    registeredTools.toolsWithPolicies.forEach((tool) => {
+      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      logger.log(`      - ${tool.description}`);
     });
   }
 
   // Process tools without policies.
   if (registeredTools.toolsWithoutPolicies.length > 0) {
     logger.log(`Tools without Policies:`);
-    registeredTools.toolsWithoutPolicies.forEach((ipfsCid) => {
-      // Retrieve the tool details from the registry using its IPFS CID.
-      const registryTool = getToolByIpfsCid(ipfsCid);
+    registeredTools.toolsWithoutPolicies.forEach((tool) => {
+      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      logger.log(`      - ${tool.description}`);
+    });
+  }
 
-      // If the tool is not found in the registry, log it as an unknown tool.
-      if (registryTool === null) {
-        logger.log(`  - Unknown tool: ${ipfsCid}`);
-      }
-      // If the tool is found and matches the current Lit network, add it to the list.
-      else if (
-        registryTool &&
-        registryTool.network === fssDelegatee.litNetwork
-      ) {
-        toolsWithoutPolicies.push(registryTool.tool);
-        logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
-        logger.log(`      - ${registryTool.tool.description}`);
-      }
+  if (registeredTools.toolsUnknownWithPolicies.length > 0) {
+    logger.log(`Unknown Tools with Policies:`);
+    registeredTools.toolsUnknownWithPolicies.forEach((tool) => {
+      logger.log(`  - Unknown tool: ${tool.ipfsCid}`);
+    });
+  }
+
+  if (registeredTools.toolsUnknownWithoutPolicies.length > 0) {
+    logger.log(`Unknown Tools without Policies:`);
+    registeredTools.toolsUnknownWithoutPolicies.forEach((ipfsCid) => {
+      logger.log(`  - Unknown tool: ${ipfsCid}`);
     });
   }
 
   // Return the selected PKP and categorized tools.
   return {
     pkpInfo: selectedPkp,
-    toolsWithPolicies,
-    toolsWithoutPolicies,
+    toolsWithPolicies: registeredTools.toolsWithPolicies,
+    toolsWithoutPolicies: registeredTools.toolsWithoutPolicies,
   };
 };
 

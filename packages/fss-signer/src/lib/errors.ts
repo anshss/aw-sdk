@@ -14,6 +14,7 @@ export enum FssSignerErrorType {
 
   /** Indicates that the private key was not provided for the Delegatee role. */
   DELEGATEE_MISSING_PRIVATE_KEY = 'DELEGATEE_MISSING_PRIVATE_KEY',
+  DELEGATEE_MISSING_CREDENTIALS = 'DELEGATEE_MISSING_CREDENTIALS',
 
   /** Indicates that multisig functionality for the Admin role is not implemented. */
   ADMIN_MULTISIG_NOT_IMPLEMENTED = 'ADMIN_MULTISIG_NOT_IMPLEMENTED',

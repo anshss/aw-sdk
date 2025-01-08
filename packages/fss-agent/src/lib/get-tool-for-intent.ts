@@ -1,13 +1,6 @@
 // Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
 
-// Import functions and types from the '@lit-protocol/fss-tool-registry' package.
-import {
-  listToolsByNetwork,
-  type LitNetwork,
-} from '@lit-protocol/fss-tool-registry';
-
-// Import the FssTool type from the '@lit-protocol/fss-tool' package.
 import type { FssTool } from '@lit-protocol/fss-tool';
 
 // Import a helper function to generate a prompt for tool matching.
@@ -29,21 +22,18 @@ export async function getToolForIntent(
   openai: OpenAI,
   openAiModel: string,
   userIntent: string,
-  litNetwork: LitNetwork
+  registeredTools: FssTool<any, any>[]
 ): Promise<{
   analysis: any;
   matchedTool: FssTool | null;
 }> {
-  // Retrieve the list of tools available on the specified Lit network.
-  const availableTools = listToolsByNetwork(litNetwork);
 
-  // Use OpenAI's API to analyze the user's intent and recommend a tool.
   const completion = await openai.chat.completions.create({
     model: openAiModel,
     messages: [
       {
         role: 'system',
-        content: getToolMatchingPrompt(availableTools), // Generate a prompt for tool matching.
+        content: getToolMatchingPrompt(registeredTools),
       },
       {
         role: 'user',
@@ -58,8 +48,9 @@ export async function getToolForIntent(
 
   // Find the matched tool based on the recommended CID from the analysis.
   const matchedTool = analysis.recommendedCID
-    ? availableTools.find((tool) => tool.ipfsCid === analysis.recommendedCID) ||
-      null
+    ? registeredTools.find(
+        (tool) => tool.ipfsCid === analysis.recommendedCID
+      ) || null
     : null;
 
   // Return the analysis and the matched tool (or null if no match is found).

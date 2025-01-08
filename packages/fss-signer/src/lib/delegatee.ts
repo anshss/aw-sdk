@@ -12,13 +12,18 @@ import type {
   ExecuteJsResponse,
   JsonExecutionSdkParams,
 } from '@lit-protocol/types';
+import { type FssTool } from '@lit-protocol/fss-tool';
 import { ethers } from 'ethers';
 
 import type {
   DelegatedPkpInfo,
   LitNetwork,
-  RegisteredTool,
+  UnknownRegisteredToolWithPolicy,
   AgentConfig,
+  IntentMatcher,
+  CredentialStore,
+  IntentMatcherResponse,
+  CredentialsFor,
 } from './types';
 import {
   isCapacityCreditExpired,
@@ -36,11 +41,12 @@ import {
   getToolPolicy,
 } from './utils/pkp-tool-registry';
 
+
 /**
  * The `Delegatee` class is responsible for managing the Delegatee role in the Lit Protocol.
  * It handles tasks such as retrieving delegated PKPs, executing tools, and managing capacity credits.
  */
-export class Delegatee {
+export class Delegatee implements CredentialStore {
   private static readonly DEFAULT_STORAGE_PATH =
     './.fss-signer-delegatee-storage';
 
@@ -233,24 +239,40 @@ export class Delegatee {
   }
 
   /**
-   * Retrieves all registered tools for a specific PKP and categorizes them based on whether they have policies.
-   * @param pkpTokenId - The token ID of the PKP.
-   * @returns An object containing arrays of tools with and without policies.
-   * @throws If the tool policy registry contract is not initialized.
+   * Get all registered tools and categorize them based on whether they have policies
+   * @param pkpTokenId The token ID of the PKP to get tools for
+   * @returns Object containing:
+   * - toolsWithPolicies: Array of tools that have policies and match the current network
+   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
   public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: RegisteredTool[];
-    toolsWithoutPolicies: string[];
+    toolsWithPolicies: Array<FssTool<any, any>>;
+    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+    toolsUnknownWithoutPolicies: string[];
   }> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getRegisteredTools(
+    const registeredTools = await getRegisteredTools(
       this.toolPolicyRegistryContract,
       this.litContracts,
       pkpTokenId
     );
+
+    return {
+      toolsWithPolicies: registeredTools.toolsWithPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    };
   }
 
   /**
@@ -271,12 +293,22 @@ export class Delegatee {
     return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
   }
 
-  /**
-   * Executes a tool using the Lit Protocol.
-   * @param params - The parameters required for executing the tool, excluding `sessionSigs`.
-   * @returns A promise that resolves to the execution response.
-   * @throws If the Lit node client, Lit contracts, or delegatee wallet are not initialized.
-   */
+  public async getToolViaIntent(
+    pkpTokenId: string,
+    intent: string,
+    intentMatcher: IntentMatcher
+  ): Promise<IntentMatcherResponse<any>> {
+    // Get registered tools
+    const { toolsWithPolicies, toolsWithoutPolicies } =
+      await this.getRegisteredToolsForPkp(pkpTokenId);
+
+    // Analyze intent and find matching tool
+    return intentMatcher.analyzeIntentAndMatchTool(intent, [
+      ...toolsWithPolicies,
+      ...toolsWithoutPolicies,
+    ]);
+  }
+
   public async executeTool(
     params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
   ): Promise<ExecuteJsResponse> {
@@ -352,9 +384,44 @@ export class Delegatee {
     }
   }
 
-  /**
-   * Disconnects the Lit node client.
-   */
+  public async getCredentials<T>(
+    requiredCredentialNames: readonly string[]
+  ): Promise<{
+    foundCredentials: Partial<CredentialsFor<T>>;
+    missingCredentials: string[];
+  }> {
+    const foundCredentials: Record<string, string> = {};
+    const missingCredentials: string[] = [];
+
+    for (const credentialName of requiredCredentialNames) {
+      const storedCred = this.storage.getItem(credentialName);
+      if (storedCred) {
+        foundCredentials[credentialName] = storedCred;
+      } else {
+        missingCredentials.push(credentialName);
+      }
+    }
+
+    return {
+      foundCredentials: foundCredentials as Partial<CredentialsFor<T>>,
+      missingCredentials,
+    };
+  }
+
+  public async setCredentials<T>(
+    credentials: Partial<CredentialsFor<T>>
+  ): Promise<void> {
+    for (const [key, value] of Object.entries(credentials)) {
+      if (typeof value === 'string') {
+        this.storage.setItem(key, value);
+      } else {
+        throw new Error(
+          `Invalid credential value for ${key}: value must be a string`
+        );
+      }
+    }
+  }
+
   public disconnect() {
     this.litNodeClient.disconnect();
   }

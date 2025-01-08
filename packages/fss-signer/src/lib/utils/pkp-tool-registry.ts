@@ -2,8 +2,13 @@ import { LIT_RPC } from '@lit-protocol/constants';
 import { ethers } from 'ethers';
 import { type LitContracts } from '@lit-protocol/contracts-sdk';
 import bs58 from 'bs58';
+import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
-import { RegisteredTool, ToolPolicyRegistryConfig } from '../types';
+import {
+  UnknownRegisteredToolWithPolicy,
+  ToolPolicyRegistryConfig,
+} from '../types';
 
 export const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
   rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
@@ -49,15 +54,23 @@ export const getPkpToolPolicyRegistryContract = (
 
 /**
  * Get all registered tools and categorize them based on whether they have policies
- * @returns Object containing arrays of tools with and without policies
+ * @returns Object containing arrays of tools with and without policies, and unknown tools
  */
 export const getRegisteredTools = async (
   toolPolicyRegistryContract: ethers.Contract,
   litContracts: LitContracts,
   pkpTokenId: string
 ): Promise<{
-  toolsWithPolicies: RegisteredTool[];
-  toolsWithoutPolicies: string[];
+  toolsWithPolicies: Array<{
+    tool: FssTool<any, any>;
+    network: string;
+  }>;
+  toolsWithoutPolicies: Array<{
+    tool: FssTool<any, any>;
+    network: string;
+  }>;
+  toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+  toolsUnknownWithoutPolicies: string[];
 }> => {
   // Get all permitted tools
   const permittedTools =
@@ -76,20 +89,56 @@ export const getRegisteredTools = async (
   const [ipfsCids, policyData, versions] =
     await toolPolicyRegistryContract.getRegisteredTools(pkpTokenId);
 
-  const toolsWithPolicies = ipfsCids.map((cid: string, i: number) => ({
-    ipfsCid: cid,
-    policy: policyData[i],
-    version: versions[i],
-  }));
+  const toolsWithPolicies: Array<{
+    tool: FssTool<any, any>;
+    network: string;
+  }> = [];
+  const toolsWithoutPolicies: Array<{
+    tool: FssTool<any, any>;
+    network: string;
+  }> = [];
+  const toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[] = [];
+  const toolsUnknownWithoutPolicies: string[] = [];
 
-  // Find tools that are permitted but don't have policies
-  const toolsWithoutPolicies = base58PermittedTools.filter(
-    (tool) => !ipfsCids.includes(tool)
-  );
+  // Process tools with policies
+  ipfsCids.forEach((cid: string, i: number) => {
+    const registryTool = getToolByIpfsCid(cid);
+
+    if (registryTool === null) {
+      toolsUnknownWithPolicies.push({
+        ipfsCid: cid,
+        policy: policyData[i],
+        version: versions[i],
+      });
+    } else {
+      toolsWithPolicies.push({
+        tool: registryTool.tool,
+        network: registryTool.network,
+      });
+    }
+  });
+
+  // Process tools without policies
+  base58PermittedTools
+    .filter((tool) => !ipfsCids.includes(tool))
+    .forEach((ipfsCid) => {
+      const registryTool = getToolByIpfsCid(ipfsCid);
+
+      if (registryTool === null) {
+        toolsUnknownWithoutPolicies.push(ipfsCid);
+      } else {
+        toolsWithoutPolicies.push({
+          tool: registryTool.tool,
+          network: registryTool.network,
+        });
+      }
+    });
 
   return {
     toolsWithPolicies,
     toolsWithoutPolicies,
+    toolsUnknownWithPolicies,
+    toolsUnknownWithoutPolicies,
   };
 };
 

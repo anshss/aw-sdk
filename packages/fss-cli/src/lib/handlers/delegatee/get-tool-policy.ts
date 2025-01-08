@@ -1,11 +1,4 @@
-// Import the FssTool and FssDelegatee types from the '@lit-protocol/full-self-signing' package.
-import {
-  type FssTool,
-  type Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
-
-// Import the getToolByIpfsCid function to retrieve tool details from the registry.
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -52,45 +45,23 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
       );
     }
 
-    // Filter tools with policies that match the current Lit network.
-    const toolsWithPolicies: FssTool<any, any>[] = [];
-    registeredTools.toolsWithPolicies.forEach((registeredTool) => {
-      const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-      if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-        toolsWithPolicies.push(registryTool.tool);
-      }
-    });
+    const selectedTool = await promptSelectTool(
+      registeredTools.toolsWithPolicies,
+      []
+    );
 
-    // Prompt the user to select a tool.
-    const selectedTool = await promptSelectTool(toolsWithPolicies, []);
+    const policy = await fssDelegatee.getToolPolicy(
+      selectedPkp.tokenId,
+      selectedTool.ipfsCid
+    );
 
-    // Retrieve the tool details from the registry to decode the policy.
-    const registryTool = getToolByIpfsCid(selectedTool.ipfsCid);
-    if (!registryTool) {
-      throw new Error(`Tool not found in registry: ${selectedTool.ipfsCid}`);
-    }
-
-    // Find the policy for the selected tool.
-    const toolPolicy = registeredTools.toolsWithPolicies.find(
-      (t) => t.ipfsCid === selectedTool.ipfsCid
-    )?.policy;
-
-    // If no policy is found, throw an error.
-    if (!toolPolicy) {
-      throw new FssCliError(
-        FssCliErrorType.DELEGATEE_GET_TOOL_POLICY_TOOL_NOT_FOUND,
-        'Selected tool not found'
-      );
-    }
-
-    // Decode the policy.
-    const decodedPolicy = registryTool.tool.policy.decode(toolPolicy);
+    const decodedPolicy = selectedTool.policy.decode(policy.policy);
 
     // Log the tool policy details.
     logger.info(
       `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
     );
-    logger.log(`Version: ${selectedTool.policy.version}`);
+    logger.log(`Version: ${policy.version}`);
     logger.log('Policy:');
     logger.log(JSON.stringify(decodedPolicy, null, 2));
   } catch (error) {

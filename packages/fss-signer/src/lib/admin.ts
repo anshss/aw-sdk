@@ -11,7 +11,7 @@ import {
   AgentConfig,
   LitNetwork,
   PkpInfo,
-  RegisteredTool,
+  UnknownRegisteredToolWithPolicy,
 } from './types';
 import {
   DEFAULT_REGISTRY_CONFIG,
@@ -22,6 +22,7 @@ import {
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 import { FssSignerError, FssSignerErrorType } from './errors';
+import { FssTool } from '@lit-protocol/fss-tool';
 
 /**
  * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.
@@ -202,6 +203,8 @@ export class Admin {
       throw new Error('Not properly initialized');
     }
 
+    console.log('FOO', ipfsCid);
+
     return this.litContracts.addPermittedAction({
       ipfsId: ipfsCid,
       authMethodScopes: signingScopes,
@@ -227,23 +230,40 @@ export class Admin {
   }
 
   /**
-   * Retrieves all registered tools and categorizes them based on whether they have policies.
-   * @returns An object containing arrays of tools with and without policies.
-   * @throws If the tool policy registry contract is not initialized.
+
+   * Get all registered tools and categorize them based on whether they have policies
+   * @returns Object containing:
+   * - toolsWithPolicies: Array of tools that have policies and match the current network
+   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
-  public async getRegisteredTools(): Promise<{
-    toolsWithPolicies: RegisteredTool[];
-    toolsWithoutPolicies: string[];
+  public async getRegisteredToolsForPkp(): Promise<{
+    toolsWithPolicies: Array<FssTool<any, any>>;
+    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+    toolsUnknownWithoutPolicies: string[];
   }> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getRegisteredTools(
+    const registeredTools = await getRegisteredTools(
       this.toolPolicyRegistryContract,
       this.litContracts,
       this.pkpInfo.info.tokenId
     );
+
+    return {
+      toolsWithPolicies: registeredTools.toolsWithPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    };
   }
 
   /**

@@ -1,11 +1,5 @@
-// Import the FssTool and FssDelegatee types from the '@lit-protocol/full-self-signing' package.
-import {
-  type FssTool,
-  type Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
 
-// Import the getToolByIpfsCid function to retrieve tool details from the registry.
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -44,72 +38,51 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
     // Prompt the user to select a PKP.
     const selectedPkp = await promptSelectPkp(pkps);
 
-    // Initialize arrays to store tools with and without policies.
-    const toolsWithPolicies: FssTool<any, any>[] = [];
-    const toolsWithoutPolicies: FssTool<any, any>[] = [];
-
-    // Retrieve the list of registered tools for the selected PKP.
     const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
       selectedPkp.tokenId
     );
 
-    // Process tools with policies.
-    if (registeredTools.toolsWithPolicies.length > 0) {
-      logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithPolicies.forEach((registeredTool) => {
-        // Retrieve the tool details from the registry using its IPFS CID.
-        const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-
-        // If the tool is found and matches the current Lit network, add it to the list.
-        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-          toolsWithPolicies.push(registryTool.tool);
-          logger.log(
-            `  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`
-          );
-        }
-      });
-    }
-
-    // Process tools without policies.
-    if (registeredTools.toolsWithoutPolicies.length > 0) {
-      logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithoutPolicies.forEach((ipfsCid) => {
-        // Retrieve the tool details from the registry using its IPFS CID.
-        const registryTool = getToolByIpfsCid(ipfsCid);
-
-        // If the tool is found and matches the current Lit network, add it to the list.
-        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-          toolsWithoutPolicies.push(registryTool.tool);
-          logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
-        }
-      });
-    }
-
-    // If no tools are found for the selected PKP, throw an error.
-    if (toolsWithPolicies.length === 0 && toolsWithoutPolicies.length === 0) {
+    if (
+      registeredTools.toolsWithPolicies.length === 0 &&
+      registeredTools.toolsWithoutPolicies.length === 0
+    ) {
       throw new FssCliError(
         FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
         'No registered tools for this PKP.'
       );
     }
 
-    // Prompt the user to select a tool.
+    if (registeredTools.toolsWithPolicies.length > 0) {
+      logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithPolicies.forEach((tool) => {
+        logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      });
+    }
+
+    // Process tools without policies.
+    if (registeredTools.toolsWithoutPolicies.length > 0) {
+      logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithoutPolicies.forEach((tool) => {
+        logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      });
+    }
+
+    // Select a tool
     const selectedTool = await promptSelectTool(
-      toolsWithPolicies,
-      toolsWithoutPolicies
+      registeredTools.toolsWithPolicies,
+      registeredTools.toolsWithoutPolicies
     );
 
-    // If the selected tool has a policy, display it.
-    const toolWithPolicy = toolsWithPolicies.find(
+    // If the tool has a policy, display it
+    const toolWithPolicy = registeredTools.toolsWithPolicies.find(
       (tool) => tool.ipfsCid === selectedTool.ipfsCid
     );
     if (toolWithPolicy) {
-      // Decode and log the tool's policy.
-      const decodedPolicy = selectedTool.policy.decode(
-        registeredTools.toolsWithPolicies.find(
-          (t) => t.ipfsCid === selectedTool.ipfsCid
-        )?.policy || ''
+      const policy = await fssDelegatee.getToolPolicy(
+        selectedPkp.tokenId,
+        selectedTool.ipfsCid
       );
+      const decodedPolicy = selectedTool.policy.decode(policy.policy);
       logger.info('Tool Policy:');
       logger.log(JSON.stringify(decodedPolicy, null, 2));
     }

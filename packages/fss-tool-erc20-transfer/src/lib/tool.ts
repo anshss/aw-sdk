@@ -118,7 +118,7 @@ const createNetworkTool = (
   config: NetworkConfig
 ): FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType> => ({
   name: 'ERC20Transfer',
-  description: `A Lit Action that sends ERC-20 tokens, using the ${config.litNetwork} network for signing.`,
+  description: `A Lit Action that sends ERC-20 tokens.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
     type: {} as ERC20TransferLitActionParameters,
