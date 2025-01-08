@@ -36,7 +36,7 @@ export const handleGetToolViaIntent = async (
   if (intentMatcherResponse.matchedTool === null) {
     throw new FssCliError(
       FssCliErrorType.DELEGATEE_GET_TOOL_VIA_INTENT_NO_MATCH,
-      'No tool found for intent.'
+      `No tool found for intent, Lit sub agent reasoning: ${intentMatcherResponse.analysis.reasoning}`
     );
   }
 
@@ -45,7 +45,9 @@ export const handleGetToolViaIntent = async (
     `  - ${intentMatcherResponse.matchedTool.name} (${intentMatcherResponse.matchedTool.ipfsCid})`
   );
   logger.log(`      - ${intentMatcherResponse.matchedTool.description}`);
-
+  logger.log(
+    `      - Lit sub agent reasoning: ${intentMatcherResponse.analysis.reasoning}`
+  );
   return {
     selectedPkp,
     intentMatcherResponse,

@@ -8,7 +8,10 @@ export function getToolMatchingPrompt(tools: FssTool<any, any>[]): string {
     )
     .join('\n');
 
-  return `You are a web3 transaction analyzer. Given a user's intent and available tools, determine if there's an appropriate tool that matches exactly what the user wants to do.
+  return `
+        You are a web3 transaction analyzer.
+        Given a user's intent and available tools, determine if there's an appropriate tool that matches exactly what the user wants to do.
+
         Available tools:
         ${toolDescriptions}
         Important:
