@@ -50,7 +50,7 @@
     }
   },
   "release": {
-    "projects": ["packages/*", "!packages/fss-contracts"],
+    "projects": ["packages/*", "!packages/aw-contracts"],
     "version": {
       "preVersionCommand": "pnpm dlx nx run-many -t build",
       "generatorOptions": {
@@ -58,5 +58,5 @@
       }
     }
   },
-  "ignore": ["**/dist/**", "**/node_modules/**", "packages/fss-contracts/**"]
+  "ignore": ["**/dist/**", "**/node_modules/**", "packages/aw-contracts/**"]
 }
