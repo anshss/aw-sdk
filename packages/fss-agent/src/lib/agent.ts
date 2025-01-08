@@ -1,3 +1,4 @@
+// Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
 import type {
   IntentMatcher,
@@ -5,6 +6,7 @@ import type {
 } from '@lit-protocol/fss-signer';
 import type { FssTool } from '@lit-protocol/fss-tool';
 
+// Import helper functions for matching tools and parsing parameters based on intent.
 import { getToolForIntent } from './get-tool-for-intent';
 import { parseToolParametersFromIntent } from './parse-tool-parameters';
 
@@ -37,6 +39,7 @@ export class OpenAiIntentMatcher implements IntentMatcher {
       registeredTools
     );
 
+    // If a tool is matched, parse the parameters from the intent using `parseToolParametersFromIntent`.
     const params = matchedTool
       ? await parseToolParametersFromIntent(
           this.openai,
@@ -44,8 +47,9 @@ export class OpenAiIntentMatcher implements IntentMatcher {
           intent,
           matchedTool
         )
-      : { foundParams: {}, missingParams: [] };
+      : { foundParams: {}, missingParams: [] }; // If no tool is matched, return empty parameters.
 
+    // Return the analysis, matched tool, and parameters.
     return { analysis, matchedTool, params };
   }
 }

@@ -30,13 +30,22 @@ declare global {
   };
 }
 
+/**
+ * Main function for signing a message using a PKP (Programmable Key Pair).
+ * This function handles the entire process, including PKP info retrieval, policy validation,
+ * and message signing.
+ */
 export default async () => {
   try {
-    // Get PKP info from PubkeyRouter
+    /**
+     * Retrieves PKP (Programmable Key Pair) information, including the token ID, Ethereum address, and public key.
+     * @returns An object containing the PKP's token ID, Ethereum address, and public key.
+     * @throws If the PKP cannot be found or if there is an error interacting with the PubkeyRouter contract.
+     */
     async function getPkpInfo() {
       console.log('Getting PKP info from PubkeyRouter...');
 
-      // Get PubkeyRouter address for current network
+      // Get PubkeyRouter address for the current network
       const networkConfig =
         NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG];
       if (!networkConfig) {
@@ -58,16 +67,16 @@ export default async () => {
         )
       );
 
-      // Get PKP ID from eth address
-      console.log(`Getting PKP ID for eth address ${params.pkpEthAddress}...`);
+      // Get PKP ID from Ethereum address
+      console.log(`Getting PKP ID for Ethereum address ${params.pkpEthAddress}...`);
       const pkpTokenId = await pubkeyRouter.ethAddressToPkpId(
         params.pkpEthAddress
       );
       console.log(`Got PKP token ID: ${pkpTokenId}`);
 
-      // TODO Implement this check
+      // TODO: Implement this check
       // if (pkpTokenId.isZero()) {
-      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
+      //   throw new Error(`No PKP found for Ethereum address ${params.pkpEthAddress}`);
       // }
 
       // Get public key from PKP ID
@@ -82,6 +91,11 @@ export default async () => {
       };
     }
 
+    /**
+     * Checks if the session signer (Lit Auth address) is a delegatee for the PKP.
+     * @param pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @throws If the session signer is not a delegatee for the PKP.
+     */
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
     ) {
@@ -107,6 +121,11 @@ export default async () => {
       );
     }
 
+    /**
+     * Validates the message against the PKP's tool policy.
+     * @param pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @throws If the message violates the policy (e.g., does not start with an allowed prefix).
+     */
     async function validateInputsAgainstPolicy(pkpToolRegistryContract: any) {
       console.log(`Validating inputs against policy...`);
 
@@ -148,6 +167,11 @@ export default async () => {
       console.log(`Inputs validated against policy`);
     }
 
+    /**
+     * Signs the message using the PKP's public key.
+     * @param message - The message to sign.
+     * @returns The signature of the message.
+     */
     async function signMessage(message: string) {
       const pkForLit = pkp.publicKey.startsWith('0x')
         ? pkp.publicKey.slice(2)

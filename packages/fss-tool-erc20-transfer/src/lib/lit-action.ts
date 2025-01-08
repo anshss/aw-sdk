@@ -38,9 +38,16 @@ declare global {
   };
 }
 
+/**
+ * Main function to execute the Lit Action.
+ * Handles PKP info retrieval, input validation, gas estimation, transaction creation, and broadcasting.
+ */
 export default async () => {
   try {
-    // Get PKP info from PubkeyRouter
+    /**
+     * Retrieves PKP information from the PubkeyRouter contract.
+     * @returns {Promise<{ tokenId: string, ethAddress: string, publicKey: string }>} PKP information.
+     */
     async function getPkpInfo() {
       console.log('Getting PKP info from PubkeyRouter...');
 
@@ -73,11 +80,6 @@ export default async () => {
       );
       console.log(`Got PKP token ID: ${pkpTokenId}`);
 
-      // TODO Implement this check
-      // if (pkpTokenId.isZero()) {
-      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
-      // }
-
       // Get public key from PKP ID
       console.log(`Getting public key for PKP ID ${pkpTokenId}...`);
       const publicKey = await pubkeyRouter.getPubkey(pkpTokenId);
@@ -90,7 +92,10 @@ export default async () => {
       };
     }
 
-    // Check if the session signer is a delegatee
+    /**
+     * Checks if the session signer is a delegatee for the PKP.
+     * @param {any} pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     */
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
     ) {
@@ -116,6 +121,11 @@ export default async () => {
       );
     }
 
+    /**
+     * Validates inputs against the policy defined in the PKP Tool Registry.
+     * @param {any} pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @param {any} amount - The amount to validate.
+     */
     async function validateInputsAgainstPolicy(
       pkpToolRegistryContract: any,
       amount: any
@@ -190,6 +200,11 @@ export default async () => {
       console.log(`Inputs validated against policy`);
     }
 
+    /**
+     * Retrieves token information (decimals, balance, and parsed amount).
+     * @param {any} provider - The Ethereum provider.
+     * @returns {Promise<{ decimals: number, balance: any, amount: any }>} Token information.
+     */
     async function getTokenInfo(provider: any) {
       console.log('Getting token info for:', params.tokenIn);
 
@@ -248,6 +263,10 @@ export default async () => {
       }
     }
 
+    /**
+     * Retrieves gas data (maxFeePerGas, maxPriorityFeePerGas, and nonce).
+     * @returns {Promise<{ maxFeePerGas: string, maxPriorityFeePerGas: string, nonce: number }>} Gas data.
+     */
     async function getGasData() {
       console.log(`Getting gas data...`);
 
@@ -281,6 +300,12 @@ export default async () => {
       return JSON.parse(gasData);
     }
 
+    /**
+     * Estimates the gas limit for the transaction.
+     * @param {any} provider - The Ethereum provider.
+     * @param {any} amount - The amount to transfer.
+     * @returns {Promise<any>} Estimated gas limit.
+     */
     async function estimateGasLimit(provider: any, amount: any) {
       console.log(`Estimating gas limit...`);
 
@@ -311,6 +336,13 @@ export default async () => {
       }
     }
 
+    /**
+     * Creates and signs the transaction.
+     * @param {any} gasLimit - The gas limit for the transaction.
+     * @param {any} amount - The amount to transfer.
+     * @param {any} gasData - Gas data (maxFeePerGas, maxPriorityFeePerGas, nonce).
+     * @returns {Promise<string>} The signed transaction.
+     */
     async function createAndSignTransaction(
       gasLimit: any,
       amount: any,
@@ -360,6 +392,11 @@ export default async () => {
       );
     }
 
+    /**
+     * Broadcasts the signed transaction to the network.
+     * @param {string} signedTx - The signed transaction.
+     * @returns {Promise<string>} The transaction hash.
+     */
     async function broadcastTransaction(signedTx: string) {
       console.log('Broadcasting transfer...');
       return await Lit.Actions.runOnce(

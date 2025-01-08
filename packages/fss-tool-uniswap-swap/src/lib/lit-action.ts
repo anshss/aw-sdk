@@ -40,17 +40,23 @@ declare global {
 
 type JsonRpcProvider = ReturnType<typeof ethers.providers.JsonRpcProvider>;
 
+/**
+ * Main function to execute a Uniswap V3 swap using Lit Actions.
+ * Handles PKP info retrieval, input validation, token approval, and swap execution.
+ */
 export default async () => {
   try {
     let UNISWAP_V3_QUOTER: string;
     let UNISWAP_V3_ROUTER: string;
+
+    // Set Uniswap V3 contract addresses based on the chain ID
     switch (params.chainId) {
-      case '8453':
+      case '8453': // Base Mainnet
         UNISWAP_V3_QUOTER = '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a';
         UNISWAP_V3_ROUTER = '0x2626664c2603336E57B271c5C0b26F421741e481';
         break;
-      case '1':
-      case '42161':
+      case '1': // Ethereum Mainnet
+      case '42161': // Arbitrum
         UNISWAP_V3_QUOTER = '0x61fFE014bA17989E743c5F6cB21bF9697530B21e';
         UNISWAP_V3_ROUTER = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
         break;
@@ -58,7 +64,10 @@ export default async () => {
         throw new Error(`Unsupported chain ID: ${params.chainId}`);
     }
 
-    // Get PKP info from PubkeyRouter
+    /**
+     * Retrieves PKP information from the PubkeyRouter contract.
+     * @returns {Promise<{ tokenId: string, ethAddress: string, publicKey: string }>} PKP information.
+     */
     async function getPkpInfo() {
       console.log('Getting PKP info from PubkeyRouter...');
 
@@ -91,11 +100,6 @@ export default async () => {
       );
       console.log(`Got PKP token ID: ${pkpTokenId}`);
 
-      // TODO Implement this check
-      // if (pkpTokenId.isZero()) {
-      //   throw new Error(`No PKP found for eth address ${params.pkpEthAddress}`);
-      // }
-
       // Get public key from PKP ID
       console.log(`Getting public key for PKP ID ${pkpTokenId}...`);
       const publicKey = await pubkeyRouter.getPubkey(pkpTokenId);
@@ -108,7 +112,10 @@ export default async () => {
       };
     }
 
-    // Check if the session signer is a delegatee
+    /**
+     * Checks if the session signer is a delegatee for the PKP.
+     * @param {any} pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     */
     async function checkLitAuthAddressIsDelegatee(
       pkpToolRegistryContract: any
     ) {
@@ -134,6 +141,11 @@ export default async () => {
       );
     }
 
+    /**
+     * Validates inputs against the policy defined in the PKP Tool Registry.
+     * @param {any} pkpToolRegistryContract - The PKP Tool Registry contract instance.
+     * @param {any} amount - The amount to validate.
+     */
     async function validateInputsAgainstPolicy(
       pkpToolRegistryContract: any,
       amount: any
@@ -206,6 +218,11 @@ export default async () => {
       console.log(`Inputs validated against policy`);
     }
 
+    /**
+     * Retrieves token information (decimals, balance, and parsed amount).
+     * @param {JsonRpcProvider} provider - The Ethereum provider.
+     * @returns {Promise<{ tokenIn: { decimals: number, balance: any, amount: any, contract: any }, tokenOut: { decimals: number, balance: any, contract: any } }>} Token information.
+     */
     async function getTokenInfo(provider: JsonRpcProvider) {
       console.log('Gathering token info...');
       ethers.utils.getAddress(params.tokenIn);
@@ -273,6 +290,13 @@ export default async () => {
       };
     }
 
+    /**
+     * Retrieves the best quote for a Uniswap V3 swap.
+     * @param {JsonRpcProvider} provider - The Ethereum provider.
+     * @param {any} amount - The amount of tokens to swap.
+     * @param {number} decimalsOut - The decimals of the output token.
+     * @returns {Promise<{ bestQuote: any, bestFee: number, amountOutMin: any }>} The best quote and fee tier.
+     */
     async function getBestQuote(
       provider: JsonRpcProvider,
       amount: any,
@@ -283,7 +307,7 @@ export default async () => {
         'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
       ]);
 
-      const FEE_TIERS = [3000, 500];
+      const FEE_TIERS = [3000, 500]; // Supported fee tiers (0.3% and 0.05%)
       let bestQuote = null;
       let bestFee = null;
 
@@ -353,6 +377,11 @@ export default async () => {
       return { bestQuote, bestFee, amountOutMin };
     }
 
+    /**
+     * Retrieves gas data (maxFeePerGas, maxPriorityFeePerGas, and nonce).
+     * @param {JsonRpcProvider} provider - The Ethereum provider.
+     * @returns {Promise<{ maxFeePerGas: string, maxPriorityFeePerGas: string, nonce: number }>} Gas data.
+     */
     async function getGasData(provider: JsonRpcProvider) {
       console.log(`Getting gas data...`);
 
@@ -385,6 +414,15 @@ export default async () => {
       return JSON.parse(gasData);
     }
 
+    /**
+     * Estimates the gas limit for a transaction.
+     * @param {JsonRpcProvider} provider - The Ethereum provider.
+     * @param {any} tokenInContract - The token contract instance.
+     * @param {any} amount - The amount of tokens to swap.
+     * @param {boolean} isApproval - Whether the transaction is an approval or a swap.
+     * @param {Object} [swapParams] - Swap parameters (fee and amountOutMin).
+     * @returns {Promise<any>} The estimated gas limit.
+     */
     async function estimateGasLimit(
       provider: JsonRpcProvider,
       tokenInContract: any,
@@ -445,6 +483,12 @@ export default async () => {
       }
     }
 
+    /**
+     * Signs a transaction using the PKP's public key.
+     * @param {any} tx - The transaction to sign.
+     * @param {string} sigName - The name of the signature.
+     * @returns {Promise<string>} The signed transaction.
+     */
     async function signTx(tx: any, sigName: string) {
       console.log(`Signing TX: ${sigName}`);
       const pkForLit = pkp.publicKey.startsWith('0x')
@@ -469,6 +513,15 @@ export default async () => {
       );
     }
 
+    /**
+     * Creates a transaction for approval or swap.
+     * @param {any} gasLimit - The gas limit for the transaction.
+     * @param {any} amount - The amount of tokens to swap.
+     * @param {any} gasData - Gas data (maxFeePerGas, maxPriorityFeePerGas, nonce).
+     * @param {boolean} isApproval - Whether the transaction is an approval or a swap.
+     * @param {Object} [swapParams] - Swap parameters (fee and amountOutMin).
+     * @returns {any} The transaction object.
+     */
     async function createTransaction(
       gasLimit: any,
       amount: any,
@@ -522,6 +575,11 @@ export default async () => {
       };
     }
 
+    /**
+     * Broadcasts a signed transaction to the network.
+     * @param {string} signedTx - The signed transaction.
+     * @returns {Promise<string>} The transaction hash.
+     */
     async function broadcastTransaction(signedTx: string) {
       console.log('Broadcasting transaction...');
       const txHash = await Lit.Actions.runOnce(

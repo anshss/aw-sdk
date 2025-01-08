@@ -10,13 +10,13 @@ import { ERC20TransferPolicy, type ERC20TransferPolicyType } from './policy';
 import { IPFS_CIDS } from './ipfs';
 
 /**
- * Parameters required for the ERC20 Send Lit Action
- * @property pkpEthAddress - The Ethereum address of the PKP
- * @property tokenIn - The ERC20 token contract address to send
- * @property recipientAddress - The Ethereum address to receive the tokens
- * @property amountIn - The amount of tokens to send as a string (will be parsed based on token decimals)
- * @property chainId - The ID of the blockchain network
- * @property rpcUrl - The RPC URL of the blockchain network
+ * Parameters required for the ERC20 Send Lit Action.
+ * @property {string} pkpEthAddress - The Ethereum address of the PKP.
+ * @property {string} tokenIn - The ERC20 token contract address to send.
+ * @property {string} recipientAddress - The Ethereum address to receive the tokens.
+ * @property {string} amountIn - The amount of tokens to send as a string (will be parsed based on token decimals).
+ * @property {string} chainId - The ID of the blockchain network.
+ * @property {string} rpcUrl - The RPC URL of the blockchain network.
  */
 interface ERC20TransferLitActionParameters {
   pkpEthAddress: string;
@@ -28,7 +28,8 @@ interface ERC20TransferLitActionParameters {
 }
 
 /**
- * Zod schema for validating ERC20TransferLitActionParameters
+ * Zod schema for validating ERC20TransferLitActionParameters.
+ * @type {z.ZodObject}
  */
 const ERC20TransferLitActionSchema = z.object({
   pkpEthAddress: z
@@ -68,8 +69,9 @@ const ERC20TransferLitActionSchema = z.object({
 });
 
 /**
- * Descriptions of each parameter for the ERC20 Send Lit Action
- * These descriptions are designed to be consumed by LLMs to understand the required parameters
+ * Descriptions of each parameter for the ERC20 Send Lit Action.
+ * These descriptions are designed to be consumed by LLMs to understand the required parameters.
+ * @type {Record<string, string>}
  */
 const ERC20TransferLitActionParameterDescriptions = {
   pkpEthAddress:
@@ -87,7 +89,9 @@ const ERC20TransferLitActionParameterDescriptions = {
 } as const;
 
 /**
- * Validate parameters and return detailed error messages if invalid
+ * Validates the provided parameters against the ERC20TransferLitActionSchema.
+ * @param {unknown} params - The parameters to validate.
+ * @returns {true | Array<{ param: string; error: string }>} - Returns `true` if valid, otherwise an array of errors.
  */
 const validateERC20TransferParameters = (
   params: unknown
@@ -104,7 +108,10 @@ const validateERC20TransferParameters = (
 };
 
 /**
- * Create a network-specific ERC20Transfer tool
+ * Creates a network-specific ERC20Transfer tool.
+ * @param {SupportedLitNetwork} network - The Lit network to use.
+ * @param {NetworkConfig} config - The configuration for the network.
+ * @returns {FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>} - The configured FssTool instance.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
@@ -123,7 +130,8 @@ const createNetworkTool = (
 });
 
 /**
- * Export network-specific ERC20Transfer tools
+ * A collection of network-specific ERC20Transfer tools.
+ * @type {Record<SupportedLitNetwork, FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>>}
  */
 export const ERC20Transfer = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({

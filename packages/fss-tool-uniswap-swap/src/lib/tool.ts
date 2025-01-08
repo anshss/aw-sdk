@@ -10,12 +10,12 @@ import { UniswapSwapPolicy, type UniswapSwapPolicyType } from './policy';
 import { IPFS_CIDS } from './ipfs';
 
 /**
- * Parameters required for the Swap Uniswap Lit Action
- * @property tokenIn - The ERC20 token contract address to send
- * @property tokenOut - The ERC20 token contract address to receive
- * @property amountIn - The amount of tokens to send as a string (will be parsed based on token decimals)
- * @property chainId - The ID of the blockchain network
- * @property rpcUrl - The RPC URL of the blockchain network
+ * Parameters required for the Swap Uniswap Lit Action.
+ * @property {string} tokenIn - The ERC20 token contract address to send.
+ * @property {string} tokenOut - The ERC20 token contract address to receive.
+ * @property {string} amountIn - The amount of tokens to send as a string (will be parsed based on token decimals).
+ * @property {string} chainId - The ID of the blockchain network.
+ * @property {string} rpcUrl - The RPC URL of the blockchain network.
  */
 export interface UniswapSwapLitActionParameters {
   tokenIn: string;
@@ -26,7 +26,8 @@ export interface UniswapSwapLitActionParameters {
 }
 
 /**
- * Zod schema for validating UniswapSwapLitActionParameters
+ * Zod schema for validating UniswapSwapLitActionParameters.
+ * @type {z.ZodObject}
  */
 const UniswapSwapLitActionSchema = z.object({
   tokenIn: z
@@ -60,8 +61,9 @@ const UniswapSwapLitActionSchema = z.object({
 });
 
 /**
- * Descriptions of each parameter for the Swap Uniswap Lit Action
- * These descriptions are designed to be consumed by LLMs to understand the required parameters
+ * Descriptions of each parameter for the Swap Uniswap Lit Action.
+ * These descriptions are designed to be consumed by LLMs to understand the required parameters.
+ * @type {Record<string, string>}
  */
 const UniswapSwapLitActionParameterDescriptions = {
   tokenIn:
@@ -77,7 +79,9 @@ const UniswapSwapLitActionParameterDescriptions = {
 } as const;
 
 /**
- * Validate parameters and return detailed error messages if invalid
+ * Validates the provided parameters against the UniswapSwapLitActionSchema.
+ * @param {unknown} params - The parameters to validate.
+ * @returns {true | Array<{ param: string; error: string }>} - Returns `true` if valid, otherwise an array of errors.
  */
 const validateUniswapSwapParameters = (
   params: unknown
@@ -94,7 +98,10 @@ const validateUniswapSwapParameters = (
 };
 
 /**
- * Create a network-specific ERC20Transfer tool
+ * Creates a network-specific UniswapSwap tool.
+ * @param {SupportedLitNetwork} network - The Lit network to use.
+ * @param {NetworkConfig} config - The configuration for the network.
+ * @returns {FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>} - The configured FssTool instance.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
@@ -113,7 +120,8 @@ const createNetworkTool = (
 });
 
 /**
- * Export network-specific ERC20Transfer tools
+ * A collection of network-specific UniswapSwap tools.
+ * @type {Record<SupportedLitNetwork, FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>>}
  */
 export const UniswapSwap = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({

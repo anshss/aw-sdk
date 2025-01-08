@@ -1,4 +1,7 @@
+// Import the prompts library for user interaction.
 import prompts from 'prompts';
+
+// Import types and utilities from the '@lit-protocol/full-self-signing' package.
 import {
   listToolsByNetwork,
   type FssTool,
@@ -6,16 +9,30 @@ import {
   type PermittedTools,
 } from '@lit-protocol/full-self-signing';
 
+// Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
+
+// Import custom error types and utilities.
 import { FssCliError, FssCliErrorType } from '../../errors';
 
+/**
+ * Prompts the user to select a tool to permit, filtering out already permitted tools.
+ * This function retrieves the list of available tools for the specified Lit network,
+ * filters out tools that are already permitted, and prompts the user to select a tool.
+ *
+ * @param litNetwork - The Lit network for which to retrieve available tools.
+ * @param alreadyPermittedTools - An object containing tools that are already permitted.
+ * @returns The selected tool to permit.
+ * @throws FssCliError - If no unpermitted tools are found or the user cancels the selection.
+ */
 export const promptSelectToolToPermit = async (
   litNetwork: LitNetwork,
   alreadyPermittedTools: PermittedTools | null
 ) => {
+  // Retrieve the list of available tools for the specified Lit network.
   const availableTools = listToolsByNetwork(litNetwork);
 
-  // Create a set of already permitted IPFS CIDs for efficient lookup
+  // Create a set of IPFS CIDs for already permitted tools for efficient lookup.
   const permittedCids = new Set([
     ...(alreadyPermittedTools?.toolsWithPolicies.map(
       (tool: FssTool<any, any>) => tool.ipfsCid
@@ -25,11 +42,12 @@ export const promptSelectToolToPermit = async (
     ) || []),
   ]);
 
-  // Filter out already permitted tools
+  // Filter out tools that are already permitted.
   const unpermittedTools = availableTools.filter(
     (tool: FssTool<any, any>) => !permittedCids.has(tool.ipfsCid)
   );
 
+  // If no unpermitted tools are found, throw an error.
   if (unpermittedTools.length === 0) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_PERMIT_TOOL_NO_UNPERMITTED_TOOLS,
@@ -37,6 +55,7 @@ export const promptSelectToolToPermit = async (
     );
   }
 
+  // Prompt the user to select a tool to permit.
   const { tool } = await prompts({
     type: 'select',
     name: 'tool',
@@ -48,6 +67,7 @@ export const promptSelectToolToPermit = async (
     })),
   });
 
+  // If the user cancels the selection, throw an error.
   if (!tool) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_PERMIT_TOOL_CANCELLED,
@@ -55,16 +75,27 @@ export const promptSelectToolToPermit = async (
     );
   }
 
+  // Return the selected tool.
   return tool as FssTool<any, any>;
 };
 
+/**
+ * Prompts the user to confirm the tool permitting action.
+ * This function displays details of the selected tool and asks the user to confirm the action.
+ *
+ * @param tool - The tool to permit.
+ * @returns A boolean indicating whether the user confirmed the action.
+ * @throws FssCliError - If the user cancels the confirmation.
+ */
 export const promptConfirmPermit = async (tool: FssTool) => {
+  // Display details of the selected tool.
   logger.log('');
   logger.log(`Name: ${tool.name}`);
   logger.log(`Description: ${tool.description}`);
   logger.log(`IPFS CID: ${tool.ipfsCid}`);
   logger.log('');
 
+  // Prompt the user to confirm the tool permitting action.
   const { confirmed } = await prompts({
     type: 'confirm',
     name: 'confirmed',
@@ -72,6 +103,7 @@ export const promptConfirmPermit = async (tool: FssTool) => {
     initial: true,
   });
 
+  // If the user does not confirm, throw an error.
   if (!confirmed) {
     throw new FssCliError(
       FssCliErrorType.ADMIN_PERMIT_TOOL_CANCELLED,
@@ -79,5 +111,6 @@ export const promptConfirmPermit = async (tool: FssTool) => {
     );
   }
 
+  // Return the confirmation status.
   return confirmed;
 };

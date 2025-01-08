@@ -1,16 +1,33 @@
+// Import the FssAdmin, FssTool, and PermittedTools types from the '@lit-protocol/full-self-signing' package.
 import {
   type Admin as FssAdmin,
   type PermittedTools,
 } from '@lit-protocol/full-self-signing';
 
+// Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
 
+/**
+ * Retrieves and displays the list of permitted tools in the Full Self-Signing (FSS) system.
+ * This function categorizes tools into those with policies and those without policies,
+ * and filters them based on the current Lit network.
+ *
+ * @param fssAdmin - An instance of the FssAdmin class.
+ * @returns A Promise that resolves to a `PermittedTools` object containing:
+ *   - toolsWithPolicies: An array of tools with policies.
+ *   - toolsWithoutPolicies: An array of tools without policies.
+ *   If no tools are found, the function returns `null`.
+ */
 export const handleGetTools = async (
   fssAdmin: FssAdmin
 ): Promise<PermittedTools | null> => {
+  // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting permitted tools');
+
   const registeredTools = await fssAdmin.getRegisteredToolsForPkp();
 
+
+  // If no tools are found, log an informational message and return `null`.
   if (
     registeredTools.toolsWithPolicies.length === 0 &&
     registeredTools.toolsWithoutPolicies.length === 0
@@ -18,6 +35,7 @@ export const handleGetTools = async (
     logger.info('No tools are currently permitted.');
     return null;
   }
+
 
   logger.info('Currently Permitted Tools:');
 
@@ -60,4 +78,5 @@ export const handleGetTools = async (
   }
 
   return registeredTools;
+
 };
