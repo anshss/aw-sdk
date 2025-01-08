@@ -16,7 +16,6 @@ export const handleExecuteToolViaIntent = async (
     intentMatcher
   );
 
-  logger.info('Enter Missing Tool Parameters:');
   const params = await promptToolParams(
     intentMatcherResponse.matchedTool,
     selectedPkp.ethAddress,
