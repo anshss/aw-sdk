@@ -1,9 +1,10 @@
 import {
   Delegatee as FssDelegatee,
+  FssSignerError,
+  FssSignerErrorType,
   IntentMatcher,
   LitNetwork,
 } from '@lit-protocol/full-self-signing';
-import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
 
 import { logger } from '../utils/logger';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../handlers/delegatee';
 import { handleGetIntentMatcher } from '../handlers/delegatee/get-intent-matcher';
 import { handleGetToolViaIntent } from '../handlers/delegatee/get-tool-via-intent';
+import { handleExecuteToolViaIntent } from '../handlers/delegatee/execute-tool-via-intent';
 
 export class Delegatee {
   private fssDelegatee: FssDelegatee;
@@ -95,6 +97,19 @@ export class Delegatee {
         }
 
         await handleGetToolViaIntent(
+          delegatee.fssDelegatee,
+          delegatee.intentMatcher as IntentMatcher
+        );
+        break;
+      case 'executeToolViaIntent':
+        if (delegatee.intentMatcher === null) {
+          const intentMatcher = await handleGetIntentMatcher(
+            delegatee.fssDelegatee
+          );
+          delegatee.setIntentMatcher(intentMatcher);
+        }
+
+        await handleExecuteToolViaIntent(
           delegatee.fssDelegatee,
           delegatee.intentMatcher as IntentMatcher
         );
