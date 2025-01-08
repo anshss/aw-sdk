@@ -4,7 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../fss-tool"
+      "path": "../fss-tool-sign-ecdsa"
+    },
+    {
+      "path": "../fss-tool-uniswap-swap"
     },
     {
       "path": "../fss-tool-erc20-transfer"
@@ -13,7 +16,13 @@
       "path": "../fss-tool-registry"
     },
     {
+      "path": "../fss-tool"
+    },
+    {
       "path": "../fss-signer"
+    },
+    {
+      "path": "../fss-agent"
     },
     {
       "path": "./tsconfig.lib.json"

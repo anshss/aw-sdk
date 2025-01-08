@@ -9,6 +9,22 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": [],
+  "references": [
+    {
+      "path": "../fss-tool-sign-ecdsa/tsconfig.lib.json"
+    },
+    {
+      "path": "../fss-tool-uniswap-swap/tsconfig.lib.json"
+    },
+    {
+      "path": "../fss-tool-erc20-transfer/tsconfig.lib.json"
+    },
+    {
+      "path": "../fss-tool-registry/tsconfig.lib.json"
+    },
+    {
+      "path": "../fss-tool/tsconfig.lib.json"
+    }
+  ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
