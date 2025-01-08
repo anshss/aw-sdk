@@ -76,6 +76,9 @@ export class Delegatee {
       case 'getToolPolicy':
         await handleGetToolPolicy(delegatee.fssDelegatee);
         break;
+      case 'getToolViaIntent':
+        // await handleGetToolViaIntent(delegatee.fssDelegatee);
+        break;
       case 'executeTool':
         await handleExecuteTool(delegatee.fssDelegatee);
         break;

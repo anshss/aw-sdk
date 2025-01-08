@@ -11,7 +11,7 @@ import {
   AgentConfig,
   LitNetwork,
   PkpInfo,
-  RegisteredTool,
+  UnknownRegisteredToolWithPolicy,
 } from './types';
 import {
   DEFAULT_REGISTRY_CONFIG,
@@ -22,6 +22,7 @@ import {
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 import { FssSignerError, FssSignerErrorType } from './errors';
+import { FssTool } from '@lit-protocol/fss-tool';
 
 export class Admin {
   private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
@@ -178,21 +179,38 @@ export class Admin {
 
   /**
    * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing arrays of tools with and without policies
+   * @returns Object containing:
+   * - toolsWithPolicies: Array of tools that have policies and match the current network
+   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
-  public async getRegisteredTools(): Promise<{
-    toolsWithPolicies: RegisteredTool[];
-    toolsWithoutPolicies: string[];
+  public async getRegisteredToolsForPkp(): Promise<{
+    toolsWithPolicies: Array<FssTool<any, any>>;
+    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+    toolsUnknownWithoutPolicies: string[];
   }> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getRegisteredTools(
+    const registeredTools = await getRegisteredTools(
       this.toolPolicyRegistryContract,
       this.litContracts,
       this.pkpInfo.info.tokenId
     );
+
+    return {
+      toolsWithPolicies: registeredTools.toolsWithPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    };
   }
 
   /**

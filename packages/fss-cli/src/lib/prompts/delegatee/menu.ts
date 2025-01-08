@@ -11,6 +11,7 @@ export const promptDelegateeMenu = async () => {
       { title: 'Get Delegated PKPs', value: 'getDelegatedPkps' },
       { title: 'Get Registered Tools', value: 'getRegisteredTools' },
       { title: 'Get Tool Policy', value: 'getToolPolicy' },
+      { title: 'Get Tool Via Intent', value: 'getToolViaIntent' },
       { title: 'Execute Tool', value: 'executeTool' },
     ],
   });

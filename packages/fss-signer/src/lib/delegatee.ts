@@ -12,12 +12,13 @@ import type {
   ExecuteJsResponse,
   JsonExecutionSdkParams,
 } from '@lit-protocol/types';
+import { type FssTool } from '@lit-protocol/fss-tool';
 import { ethers } from 'ethers';
 
 import type {
   DelegatedPkpInfo,
   LitNetwork,
-  RegisteredTool,
+  UnknownRegisteredToolWithPolicy,
   AgentConfig,
 } from './types';
 import {
@@ -201,21 +202,39 @@ export class Delegatee {
 
   /**
    * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing arrays of tools with and without policies
+   * @param pkpTokenId The token ID of the PKP to get tools for
+   * @returns Object containing:
+   * - toolsWithPolicies: Array of tools that have policies and match the current network
+   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
   public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: RegisteredTool[];
-    toolsWithoutPolicies: string[];
+    toolsWithPolicies: Array<FssTool<any, any>>;
+    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+    toolsUnknownWithoutPolicies: string[];
   }> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getRegisteredTools(
+    const registeredTools = await getRegisteredTools(
       this.toolPolicyRegistryContract,
       this.litContracts,
       pkpTokenId
     );
+
+    return {
+      toolsWithPolicies: registeredTools.toolsWithPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    };
   }
 
   /**
@@ -233,6 +252,10 @@ export class Delegatee {
 
     return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
   }
+
+  // public async getToolViaIntent(pkpTokenId: string) {
+  //   const tools = await this.getRegisteredToolsForPkp(pkpTokenId);
+  // }
 
   public async executeTool(
     params: Omit<JsonExecutionSdkParams, 'sessionSigs'>

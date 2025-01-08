@@ -59,7 +59,7 @@ export interface CapacityCreditMintOptions {
   daysUntilUTCMidnightExpiration?: number;
 }
 
-export interface RegisteredTool {
+export interface UnknownRegisteredToolWithPolicy {
   ipfsCid: string;
   policy: string;
   version: string;
