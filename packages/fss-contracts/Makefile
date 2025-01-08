@@ -10,12 +10,23 @@ deploy-tool-registry: ## Deploy the PKP Tool Policy Registry contract
 		echo "Error: PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL is not set in .env"; \
 		exit 1; \
 	fi
-	@if [ -z "$(PKP_NFT_CONTRACT_ADDRESS)" ]; then \
-		echo "Error: PKP_NFT_CONTRACT_ADDRESS is not set in .env"; \
+	@if [ -z "$(DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS)" ]; then \
+		echo "Error: DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS is not set in .env"; \
+		exit 1; \
+	fi
+	@if [ -z "$(DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS)" ]; then \
+		echo "Error: DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS is not set in .env"; \
+		exit 1; \
+	fi
+	@if [ -z "$(DATIL_PKP_NFT_CONTRACT_ADDRESS)" ]; then \
+		echo "Error: DATIL_PKP_NFT_CONTRACT_ADDRESS is not set in .env"; \
 		exit 1; \
 	fi
 	@echo "Deploying PKP Tool Policy Registry to $(PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL)..."
-	@echo "Using PKP NFT contract: $(PKP_NFT_CONTRACT_ADDRESS)"
+	@echo "Using PKP NFT contracts:"
+	@echo "  Datil Dev:  $(DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS)"
+	@echo "  Datil Test: $(DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS)"
+	@echo "  Datil:      $(DATIL_PKP_NFT_CONTRACT_ADDRESS)"
 	@forge script -vvv script/DeployPKPToolPolicyRegistry.s.sol:DeployPKPToolPolicyRegistry \
 		--rpc-url $(PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL) \
 		--broadcast \

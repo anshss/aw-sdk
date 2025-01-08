@@ -102,11 +102,7 @@ export class Admin {
    */
   public static async create(
     adminConfig: AdminConfig,
-    {
-      litNetwork,
-      debug = false,
-      toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
-    }: AgentConfig = {}
+    { litNetwork, debug = false }: AgentConfig = {}
   ) {
     if (!litNetwork) {
       throw new FssSignerError(
@@ -116,6 +112,8 @@ export class Admin {
     }
 
     const storage = new LocalStorage(Admin.DEFAULT_STORAGE_PATH);
+
+    const toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG[litNetwork];
 
     const provider = new ethers.providers.JsonRpcProvider(
       toolPolicyRegistryConfig.rpcUrl

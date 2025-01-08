@@ -10,10 +10,21 @@ import {
   ToolPolicyRegistryConfig,
 } from '../types';
 
-export const DEFAULT_REGISTRY_CONFIG: ToolPolicyRegistryConfig = {
-  rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-  contractAddress: '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F',
-} as const;
+export const DEFAULT_REGISTRY_CONFIG: Record<string, ToolPolicyRegistryConfig> =
+  {
+    'datil-dev': {
+      rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
+      contractAddress: '0xdE8807799579eef5b9A84A0b4164D28E804da571',
+    },
+    'datil-test': {
+      rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
+      contractAddress: '0x0b099F7e2520aCC52A361D1cB83fa43660C9a038',
+    },
+    datil: {
+      rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
+      contractAddress: '0xDeb70dCBC7432fEFEdaE900AFF11Dcc5169CfcBB',
+    },
+  } as const;
 
 const PKP_TOOL_POLICY_REGISTRY_ABI = [
   // View Functions

@@ -33,9 +33,6 @@ export interface AgentConfig {
 
   /** Whether to enable debug mode for additional logging. */
   debug?: boolean;
-
-  /** Configuration for the Tool Policy Registry contract. */
-  toolPolicyRegistryConfig?: ToolPolicyRegistryConfig;
 }
 
 /**
@@ -143,7 +140,6 @@ export interface CapacityCreditMintOptions {
 }
 
 export interface UnknownRegisteredToolWithPolicy {
-
   ipfsCid: string;
 
   /** The policy associated with the tool. */
