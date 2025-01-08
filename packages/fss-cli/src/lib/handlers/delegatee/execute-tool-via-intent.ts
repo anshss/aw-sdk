@@ -17,7 +17,7 @@ export const handleExecuteToolViaIntent = async (
   );
 
   const params = await promptToolParams(
-    intentMatcherResponse.matchedTool,
+    intentMatcherResponse.matchedTool!,
     selectedPkp.ethAddress,
     {
       missingParams: intentMatcherResponse.params.missingParams,
@@ -28,7 +28,7 @@ export const handleExecuteToolViaIntent = async (
   logger.loading('Executing tool...');
 
   const response = await fssDelegatee.executeTool({
-    ipfsId: intentMatcherResponse.matchedTool.ipfsCid,
+    ipfsId: intentMatcherResponse.matchedTool!.ipfsCid,
     jsParams: {
       params,
     },

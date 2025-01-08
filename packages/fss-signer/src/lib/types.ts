@@ -74,7 +74,7 @@ export interface DelegatedPkpInfo {
 
 export interface IntentMatcherResponse<TParams extends Record<string, any>> {
   analysis: any;
-  matchedTool: FssTool;
+  matchedTool: FssTool | null;
   params: {
     foundParams: Partial<TParams>;
     missingParams: Array<keyof TParams>;

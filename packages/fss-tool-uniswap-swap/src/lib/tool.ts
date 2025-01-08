@@ -101,7 +101,7 @@ const createNetworkTool = (
   config: NetworkConfig
 ): FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
   name: 'UniswapSwap',
-  description: `A Lit Action that swaps tokens on Uniswap, using the ${config.litNetwork} network for signing.`,
+  description: `A Lit Action that swaps tokens on Uniswap.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
     type: {} as UniswapSwapLitActionParameters,

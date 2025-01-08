@@ -57,7 +57,7 @@ const createNetworkTool = (
   config: NetworkConfig
 ): FssTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType> => ({
   name: 'SignEcdsa',
-  description: `A Lit Action that signs a message with an allowlist of message prefixes, using the ${config.litNetwork} network for signing.`,
+  description: `A Lit Action that signs a message with an allowlist of message prefixes.`,
   ipfsCid: IPFS_CIDS[network],
   parameters: {
     type: {} as SignEcdsaLitActionParameters,
