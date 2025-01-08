@@ -1,8 +1,4 @@
-import {
-  type FssTool,
-  type Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import { promptSelectPkp, promptSelectTool } from '../../prompts/delegatee';
@@ -33,40 +29,22 @@ export const handleGetToolPolicy = async (fssDelegatee: FssDelegatee) => {
       );
     }
 
-    const toolsWithPolicies: FssTool<any, any>[] = [];
-    registeredTools.toolsWithPolicies.forEach((registeredTool) => {
-      const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-      if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-        toolsWithPolicies.push(registryTool.tool);
-      }
-    });
+    const selectedTool = await promptSelectTool(
+      registeredTools.toolsWithPolicies,
+      []
+    );
 
-    const selectedTool = await promptSelectTool(toolsWithPolicies, []);
+    const policy = await fssDelegatee.getToolPolicy(
+      selectedPkp.tokenId,
+      selectedTool.ipfsCid
+    );
 
-    // Get the tool from the registry to decode the policy
-    const registryTool = getToolByIpfsCid(selectedTool.ipfsCid);
-    if (!registryTool) {
-      throw new Error(`Tool not found in registry: ${selectedTool.ipfsCid}`);
-    }
-
-    // Decode the policy
-    const toolPolicy = registeredTools.toolsWithPolicies.find(
-      (t) => t.ipfsCid === selectedTool.ipfsCid
-    )?.policy;
-
-    if (!toolPolicy) {
-      throw new FssCliError(
-        FssCliErrorType.DELEGATEE_GET_TOOL_POLICY_TOOL_NOT_FOUND,
-        'Selected tool not found'
-      );
-    }
-
-    const decodedPolicy = registryTool.tool.policy.decode(toolPolicy);
+    const decodedPolicy = selectedTool.policy.decode(policy.policy);
 
     logger.info(
       `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
     );
-    logger.log(`Version: ${selectedTool.policy.version}`);
+    logger.log(`Version: ${policy.version}`);
     logger.log('Policy:');
     logger.log(JSON.stringify(decodedPolicy, null, 2));
   } catch (error) {

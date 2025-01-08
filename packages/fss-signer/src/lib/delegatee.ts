@@ -12,13 +12,18 @@ import type {
   ExecuteJsResponse,
   JsonExecutionSdkParams,
 } from '@lit-protocol/types';
+import { type FssTool } from '@lit-protocol/fss-tool';
 import { ethers } from 'ethers';
 
 import type {
   DelegatedPkpInfo,
   LitNetwork,
-  RegisteredTool,
+  UnknownRegisteredToolWithPolicy,
   AgentConfig,
+  IntentMatcher,
+  CredentialStore,
+  IntentMatcherResponse,
+  CredentialsFor,
 } from './types';
 import {
   isCapacityCreditExpired,
@@ -36,7 +41,7 @@ import {
   getToolPolicy,
 } from './utils/pkp-tool-registry';
 
-export class Delegatee {
+export class Delegatee implements CredentialStore {
   private static readonly DEFAULT_STORAGE_PATH =
     './.fss-signer-delegatee-storage';
   // TODO: Add min balance check
@@ -201,21 +206,39 @@ export class Delegatee {
 
   /**
    * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing arrays of tools with and without policies
+   * @param pkpTokenId The token ID of the PKP to get tools for
+   * @returns Object containing:
+   * - toolsWithPolicies: Array of tools that have policies and match the current network
+   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
   public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: RegisteredTool[];
-    toolsWithoutPolicies: string[];
+    toolsWithPolicies: Array<FssTool<any, any>>;
+    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+    toolsUnknownWithoutPolicies: string[];
   }> {
     if (!this.toolPolicyRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getRegisteredTools(
+    const registeredTools = await getRegisteredTools(
       this.toolPolicyRegistryContract,
       this.litContracts,
       pkpTokenId
     );
+
+    return {
+      toolsWithPolicies: registeredTools.toolsWithPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+        .filter((tool) => tool.network === this.litNetwork)
+        .map((t) => t.tool),
+      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    };
   }
 
   /**
@@ -232,6 +255,22 @@ export class Delegatee {
     }
 
     return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
+  }
+
+  public async getToolViaIntent(
+    pkpTokenId: string,
+    intent: string,
+    intentMatcher: IntentMatcher
+  ): Promise<IntentMatcherResponse<any>> {
+    // Get registered tools
+    const { toolsWithPolicies, toolsWithoutPolicies } =
+      await this.getRegisteredToolsForPkp(pkpTokenId);
+
+    // Analyze intent and find matching tool
+    return intentMatcher.analyzeIntentAndMatchTool(intent, [
+      ...toolsWithPolicies,
+      ...toolsWithoutPolicies,
+    ]);
   }
 
   public async executeTool(
@@ -306,6 +345,44 @@ export class Delegatee {
         throw new Error(`Failed to execute tool: ${error.message}`);
       }
       throw error;
+    }
+  }
+
+  public async getCredentials<T>(
+    requiredCredentialNames: readonly string[]
+  ): Promise<{
+    foundCredentials: Partial<CredentialsFor<T>>;
+    missingCredentials: string[];
+  }> {
+    const foundCredentials: Record<string, string> = {};
+    const missingCredentials: string[] = [];
+
+    for (const credentialName of requiredCredentialNames) {
+      const storedCred = this.storage.getItem(credentialName);
+      if (storedCred) {
+        foundCredentials[credentialName] = storedCred;
+      } else {
+        missingCredentials.push(credentialName);
+      }
+    }
+
+    return {
+      foundCredentials: foundCredentials as Partial<CredentialsFor<T>>,
+      missingCredentials,
+    };
+  }
+
+  public async setCredentials<T>(
+    credentials: Partial<CredentialsFor<T>>
+  ): Promise<void> {
+    for (const [key, value] of Object.entries(credentials)) {
+      if (typeof value === 'string') {
+        this.storage.setItem(key, value);
+      } else {
+        throw new Error(
+          `Invalid credential value for ${key}: value must be a string`
+        );
+      }
     }
   }
 

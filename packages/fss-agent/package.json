@@ -7,6 +7,9 @@
     "openai": "^4.77.0",
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "@lit-protocol/fss-signer": "workspace:*"
+  },
   "type": "commonjs",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",

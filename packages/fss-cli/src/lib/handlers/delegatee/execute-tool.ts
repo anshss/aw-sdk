@@ -1,8 +1,4 @@
-import {
-  type FssTool,
-  type Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
 
 import { logger } from '../../utils/logger';
 import {
@@ -26,60 +22,50 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
 
     const selectedPkp = await promptSelectPkp(pkps);
 
-    const toolsWithPolicies: FssTool<any, any>[] = [];
-    const toolsWithoutPolicies: FssTool<any, any>[] = [];
-
     const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
       selectedPkp.tokenId
     );
 
-    if (registeredTools.toolsWithPolicies.length > 0) {
-      logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithPolicies.forEach((registeredTool) => {
-        const registryTool = getToolByIpfsCid(registeredTool.ipfsCid);
-        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-          toolsWithPolicies.push(registryTool.tool);
-          logger.log(
-            `  - ${registryTool.tool.name} (${registeredTool.ipfsCid})`
-          );
-        }
-      });
-    }
-
-    if (registeredTools.toolsWithoutPolicies.length > 0) {
-      logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithoutPolicies.forEach((ipfsCid) => {
-        const registryTool = getToolByIpfsCid(ipfsCid);
-        if (registryTool && registryTool.network === fssDelegatee.litNetwork) {
-          toolsWithoutPolicies.push(registryTool.tool);
-          logger.log(`  - ${registryTool.tool.name} (${ipfsCid})`);
-        }
-      });
-    }
-
-    if (toolsWithPolicies.length === 0 && toolsWithoutPolicies.length === 0) {
+    if (
+      registeredTools.toolsWithPolicies.length === 0 &&
+      registeredTools.toolsWithoutPolicies.length === 0
+    ) {
       throw new FssCliError(
         FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
         'No registered tools for this PKP.'
       );
     }
 
+    if (registeredTools.toolsWithPolicies.length > 0) {
+      logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithPolicies.forEach((tool) => {
+        logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      });
+    }
+
+    if (registeredTools.toolsWithoutPolicies.length > 0) {
+      logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
+      registeredTools.toolsWithoutPolicies.forEach((tool) => {
+        logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+      });
+    }
+
     // Select a tool
     const selectedTool = await promptSelectTool(
-      toolsWithPolicies,
-      toolsWithoutPolicies
+      registeredTools.toolsWithPolicies,
+      registeredTools.toolsWithoutPolicies
     );
 
     // If the tool has a policy, display it
-    const toolWithPolicy = toolsWithPolicies.find(
+    const toolWithPolicy = registeredTools.toolsWithPolicies.find(
       (tool) => tool.ipfsCid === selectedTool.ipfsCid
     );
     if (toolWithPolicy) {
-      const decodedPolicy = selectedTool.policy.decode(
-        registeredTools.toolsWithPolicies.find(
-          (t) => t.ipfsCid === selectedTool.ipfsCid
-        )?.policy || ''
+      const policy = await fssDelegatee.getToolPolicy(
+        selectedPkp.tokenId,
+        selectedTool.ipfsCid
       );
+      const decodedPolicy = selectedTool.policy.decode(policy.policy);
       logger.info('Tool Policy:');
       logger.log(JSON.stringify(decodedPolicy, null, 2));
     }

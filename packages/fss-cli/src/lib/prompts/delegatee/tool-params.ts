@@ -5,14 +5,21 @@ import { FssCliError, FssCliErrorType } from '../../errors';
 
 export const promptToolParams = async <T extends Record<string, any>>(
   tool: FssTool<T, any>,
-  pkpEthAddress?: string
+  pkpEthAddress?: string,
+  options?: {
+    missingParams?: Array<keyof T>;
+    foundParams?: Partial<T>;
+  }
 ) => {
-  const params: Record<string, any> = {};
+  const params: Record<string, any> = { ...options?.foundParams };
+  const paramsToPrompt = options?.missingParams
+    ? Object.entries(tool.parameters.descriptions).filter(([paramName]) =>
+        options.missingParams?.includes(paramName as keyof T)
+      )
+    : Object.entries(tool.parameters.descriptions);
 
   // Get each parameter from the user
-  for (const [paramName, description] of Object.entries(
-    tool.parameters.descriptions
-  )) {
+  for (const [paramName, description] of paramsToPrompt) {
     if (paramName === 'pkpEthAddress' && pkpEthAddress !== undefined) {
       params.pkpEthAddress = pkpEthAddress;
       continue;
