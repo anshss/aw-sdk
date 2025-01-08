@@ -151,7 +151,7 @@ export default async () => {
       console.log(`Decoding policy...`);
       const decodedPolicy = ethers.utils.defaultAbiCoder.decode(
         [
-          'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
+          'tuple(uint8 erc20Decimals, uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
         ],
         policyData
       )[0];
