@@ -10,9 +10,6 @@
       "path": "./packages/fss-tool-erc20-transfer"
     },
     {
-      "path": "./packages/aw-cli"
-    },
-    {
       "path": "./packages/fss-tool-registry"
     },
     {
@@ -29,6 +26,9 @@
     },
     {
       "path": "./packages/fss-tool-sign-ecdsa"
+    },
+    {
+      "path": "./packages/aw-cli"
     }
   ]
 }
