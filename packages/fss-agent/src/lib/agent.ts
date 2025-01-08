@@ -10,7 +10,7 @@ import { parseToolParametersFromIntent } from './parse-tool-parameters';
 
 export class OpenAiIntentMatcher implements IntentMatcher {
   public static readonly name = 'OpenAI Intent Matcher';
-  public static readonly requiredCredentialNames = ['openai_api_key'] as const;
+  public static readonly requiredCredentialNames = ['openAiApiKey'] as const;
 
   private openai: OpenAI;
   private model: string;

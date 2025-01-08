@@ -17,10 +17,10 @@ export const handleGetIntentMatcher = async (
   if (missingCredentials.length > 0) {
     const apiKey = await promptGetOpenAiApiKey();
     await fssDelegatee.setCredentials<typeof OpenAiIntentMatcher>({
-      openai_api_key: apiKey,
+      openAiApiKey: apiKey,
     });
     return new OpenAiIntentMatcher(apiKey);
   }
 
-  return new OpenAiIntentMatcher(foundCredentials.openai_api_key!);
+  return new OpenAiIntentMatcher(foundCredentials.openAiApiKey!);
 };
