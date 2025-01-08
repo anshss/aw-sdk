@@ -19,7 +19,7 @@
       "path": "./packages/full-self-signing"
     },
     {
-      "path": "./packages/fss-agent"
+      "path": "./packages/aw-subagent-openai"
     },
     {
       "path": "./packages/fss-tool"

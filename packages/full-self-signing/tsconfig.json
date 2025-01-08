@@ -22,7 +22,7 @@
       "path": "../fss-signer"
     },
     {
-      "path": "../fss-agent"
+      "path": "../aw-subagent-openai"
     },
     {
       "path": "./tsconfig.lib.json"

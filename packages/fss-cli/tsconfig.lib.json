@@ -22,7 +22,7 @@
   "include": ["src/**/*.ts", "src/lib/prompts"],
   "references": [
     {
-      "path": "../fss-agent/tsconfig.lib.json"
+      "path": "../aw-subagent-openai/tsconfig.lib.json"
     },
     {
       "path": "../full-self-signing/tsconfig.lib.json"

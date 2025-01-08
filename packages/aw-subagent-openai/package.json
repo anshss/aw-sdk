@@ -1,5 +1,5 @@
 {
-  "name": "@lit-protocol/fss-agent",
+  "name": "@lit-protocol/aw-subagent-openai",
   "version": "0.0.1",
   "dependencies": {
     "@lit-protocol/fss-tool": "workspace:*",
@@ -18,8 +18,8 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
-    "sourceRoot": "packages/fss-agent/src",
+    "sourceRoot": "packages/aw-subagent-openai/src",
     "projectType": "library",
-    "name": "fss-agent"
+    "name": "aw-subagent-openai"
   }
 }

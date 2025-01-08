@@ -34,7 +34,7 @@
       "path": "../fss-signer/tsconfig.lib.json"
     },
     {
-      "path": "../fss-agent/tsconfig.lib.json"
+      "path": "../aw-subagent-openai/tsconfig.lib.json"
     }
   ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

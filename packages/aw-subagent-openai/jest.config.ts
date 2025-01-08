@@ -1,5 +1,5 @@
 export default {
-  displayName: 'fss-agent',
+  displayName: 'aw-subagent-openai',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
