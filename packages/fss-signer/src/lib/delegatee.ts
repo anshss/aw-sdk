@@ -41,7 +41,6 @@ import {
   getToolPolicy,
 } from './utils/pkp-tool-registry';
 
-
 /**
  * The `Delegatee` class is responsible for managing the Delegatee role in the Lit Protocol.
  * It handles tasks such as retrieving delegated PKPs, executing tools, and managing capacity credits.
@@ -127,11 +126,7 @@ export class Delegatee implements CredentialStore {
    */
   public static async create(
     delegateePrivateKey?: string,
-    {
-      litNetwork,
-      debug = false,
-      toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG,
-    }: AgentConfig = {}
+    { litNetwork, debug = false }: AgentConfig = {}
   ) {
     if (!litNetwork) {
       throw new FssSignerError(
@@ -141,6 +136,8 @@ export class Delegatee implements CredentialStore {
     }
 
     const storage = new LocalStorage(Delegatee.DEFAULT_STORAGE_PATH);
+
+    const toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG[litNetwork];
 
     const provider = new ethers.providers.JsonRpcProvider(
       toolPolicyRegistryConfig.rpcUrl
