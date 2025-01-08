@@ -1,33 +1,46 @@
 import { OpenAI } from 'openai';
+import type {
+  IntentMatcher,
+  IntentMatcherResponse,
+} from '@lit-protocol/fss-signer';
+import type { FssTool } from '@lit-protocol/fss-tool';
 
 import { getToolForIntent } from './get-tool-for-intent';
 import { parseToolParametersFromIntent } from './parse-tool-parameters';
-import { type LitNetwork } from '@lit-protocol/fss-tool-registry';
 
-export class FssAgent {
+export class OpenAiIntentMatcher implements IntentMatcher {
+  public static readonly name = 'OpenAI Intent Matcher';
+  public static readonly requiredCredentialNames = ['openai_api_key'] as const;
+
   private openai: OpenAI;
-  private openAiModel: string;
+  private model: string;
 
-  constructor(openAiApiKey: string, openAiModel = 'gpt-4o-mini') {
-    this.openai = new OpenAI({ apiKey: openAiApiKey });
-    this.openAiModel = openAiModel;
+  constructor(apiKey: string, model = 'gpt-4o-mini') {
+    this.openai = new OpenAI({ apiKey: apiKey });
+    this.model = model;
   }
 
-  public async analyzeIntentAndMatchAction(
+  public async analyzeIntentAndMatchTool(
     intent: string,
-    litNetwork: LitNetwork
-  ) {
+    registeredTools: FssTool<any, any>[]
+  ): Promise<IntentMatcherResponse<any>> {
+    if (!this.openai) {
+      throw new Error(
+        'OpenAI client not initialized. Please set credentials first.'
+      );
+    }
+
     const { analysis, matchedTool } = await getToolForIntent(
       this.openai,
-      this.openAiModel,
+      this.model,
       intent,
-      litNetwork
+      registeredTools
     );
 
     const params = matchedTool
       ? await parseToolParametersFromIntent(
           this.openai,
-          this.openAiModel,
+          this.model,
           intent,
           matchedTool
         )

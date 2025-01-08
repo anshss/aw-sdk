@@ -159,6 +159,8 @@ export class Admin {
       throw new Error('Not properly initialized');
     }
 
+    console.log('FOO', ipfsCid);
+
     return this.litContracts.addPermittedAction({
       ipfsId: ipfsCid,
       authMethodScopes: signingScopes,

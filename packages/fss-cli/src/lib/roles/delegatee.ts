@@ -1,5 +1,6 @@
 import {
   Delegatee as FssDelegatee,
+  IntentMatcher,
   LitNetwork,
 } from '@lit-protocol/full-self-signing';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
@@ -16,9 +17,13 @@ import {
   handleGetToolPolicy,
   handleExecuteTool,
 } from '../handlers/delegatee';
+import { handleGetIntentMatcher } from '../handlers/delegatee/get-intent-matcher';
+import { handleGetToolViaIntent } from '../handlers/delegatee/get-tool-via-intent';
 
 export class Delegatee {
   private fssDelegatee: FssDelegatee;
+
+  public intentMatcher: IntentMatcher | null = null;
 
   private constructor(fssDelegatee: FssDelegatee) {
     this.fssDelegatee = fssDelegatee;
@@ -57,10 +62,15 @@ export class Delegatee {
     return fssDelegatee;
   }
 
-  public static async create(litNetwork: LitNetwork) {
+  public static async create(
+    litNetwork: LitNetwork,
+    intentMatcher: IntentMatcher | null = null
+  ) {
     logger.info('Initializing Delegatee role...');
     const fssDelegatee = await Delegatee.createFssDelegatee(litNetwork);
-    return new Delegatee(fssDelegatee);
+    const delegatee = new Delegatee(fssDelegatee);
+    delegatee.intentMatcher = intentMatcher;
+    return delegatee;
   }
 
   public static async showMenu(delegatee: Delegatee) {
@@ -77,7 +87,17 @@ export class Delegatee {
         await handleGetToolPolicy(delegatee.fssDelegatee);
         break;
       case 'getToolViaIntent':
-        // await handleGetToolViaIntent(delegatee.fssDelegatee);
+        if (delegatee.intentMatcher === null) {
+          const intentMatcher = await handleGetIntentMatcher(
+            delegatee.fssDelegatee
+          );
+          delegatee.setIntentMatcher(intentMatcher);
+        }
+
+        await handleGetToolViaIntent(
+          delegatee.fssDelegatee,
+          delegatee.intentMatcher as IntentMatcher
+        );
         break;
       case 'executeTool':
         await handleExecuteTool(delegatee.fssDelegatee);
@@ -88,6 +108,10 @@ export class Delegatee {
     }
 
     await Delegatee.showMenu(delegatee);
+  }
+
+  public setIntentMatcher(intentMatcher: IntentMatcher) {
+    this.intentMatcher = intentMatcher;
   }
 
   public disconnect() {
