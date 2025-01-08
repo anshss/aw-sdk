@@ -8,7 +8,8 @@
     "lint": "npx nx run-many -t lint",
     "test": "npx nx run-many -t test -- --passWithNoTests",
     "deploy:tools": "npx nx deploy fss-tool-uniswap-swap && npx nx deploy fss-tool-sign-ecdsa && npx nx deploy fss-tool-erc20-transfer",
-    "start:cli": "pnpm build && pnpm deploy:tools &&node packages/fss-cli/dist/src/index.js"
+    "start:cli": "pnpm build && pnpm deploy:tools && NO_DEPRECATION=* node packages/fss-cli/dist/src/index.js",
+    "start:cli:no-build": "NO_DEPRECATION=* node packages/fss-cli/dist/src/index.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

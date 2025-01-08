@@ -9,6 +9,20 @@ import { ethers } from 'ethers';
 const policySchema = z.object({
   type: z.literal('ERC20Transfer'), // Policy type must be 'ERC20Transfer'
   version: z.string(), // Version of the policy
+  erc20Decimals: z.string().refine(
+    (val) => {
+      try {
+        const bn = ethers.BigNumber.from(val);
+        return !bn.isNegative() && bn.lte(255); // Ensure the amount is non-negative and does not exceed uint8
+      } catch {
+        return false; // Invalid format
+      }
+    },
+    {
+      message:
+        'Invalid amount format. Must be a non-negative integer and not exceed 255.',
+    }
+  ), // Number of decimals for the ERC20 token
   maxAmount: z.string().refine(
     (val) => {
       try {
@@ -37,11 +51,14 @@ function encodePolicy(policy: ERC20TransferPolicyType): string {
   // Encode the policy using ABI encoding
   return ethers.utils.defaultAbiCoder.encode(
     [
-      'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
+      'tuple(uint8 erc20Decimals, uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
     ],
     [
       {
-        maxAmount: policy.maxAmount,
+        erc20Decimals: policy.erc20Decimals,
+        maxAmount: ethers.utils
+          .parseUnits(policy.maxAmount, policy.erc20Decimals)
+          .toString(),
         allowedTokens: policy.allowedTokens,
         allowedRecipients: policy.allowedRecipients,
       },
@@ -59,7 +76,7 @@ function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
   // Decode the ABI-encoded string
   const decoded = ethers.utils.defaultAbiCoder.decode(
     [
-      'tuple(uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
+      'tuple(uint8 erc20Decimals, uint256 maxAmount, address[] allowedTokens, address[] allowedRecipients)',
     ],
     encodedPolicy
   )[0];
@@ -68,6 +85,7 @@ function decodePolicy(encodedPolicy: string): ERC20TransferPolicyType {
   const policy: ERC20TransferPolicyType = {
     type: 'ERC20Transfer',
     version: '1.0.0',
+    erc20Decimals: decoded.erc20Decimals.toString(),
     maxAmount: decoded.maxAmount.toString(),
     allowedTokens: decoded.allowedTokens,
     allowedRecipients: decoded.allowedRecipients,
