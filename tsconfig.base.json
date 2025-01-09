@@ -32,14 +32,14 @@
     "verbatimModuleSyntax": false,
     "baseUrl": ".",
     "paths": {
+      "@lit-protocol/agent-wallet": ["./packages/agent-wallet/src"],
       "@lit-protocol/aw-cli": ["./packages/aw-cli/src"],
       "@lit-protocol/aw-signer": ["./packages/aw-signer/src"],
       "@lit-protocol/aw-tool": ["./packages/aw-tool/src"],
       "@lit-protocol/aw-tool-erc20-transfer": [
         "./packages/aw-tool-erc20-transfer/src"
       ],
-      "@lit-protocol/aw-tool-registry": ["./packages/aw-tool-registry/src"],
-      "@lit-protocol/agent-wallet": ["./packages/agent-wallet/src"]
+      "@lit-protocol/aw-tool-registry": ["./packages/aw-tool-registry/src"]
     }
   }
 }

@@ -1,11 +1,11 @@
 {
   "name": "@lit-protocol/aw-cli",
-  "version": "0.1.1-10",
+  "version": "0.1.0-7",
   "publishConfig": {
     "access": "public"
   },
   "bin": {
-    "lit-agent": "./dist/src/index.js"
+    "lit-agent-wallet": "./dist/src/index.js"
   },
   "dependencies": {
     "@lit-protocol/agent-wallet": "workspace:*",
