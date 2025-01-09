@@ -1,6 +1,6 @@
 packages:
   - 'packages/*'
-  - '!packages/fss-contracts'
+  - '!packages/aw-contracts'
 
 catalog:
   '@lit-protocol/lit-node-client-nodejs': 7.0.2

@@ -1,0 +1,25 @@
+{
+  "name": "@lit-protocol/aw-subagent-openai",
+  "version": "0.0.1",
+  "dependencies": {
+    "@lit-protocol/aw-tool": "workspace:*",
+    "@lit-protocol/aw-tool-registry": "workspace:*",
+    "openai": "^4.77.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@lit-protocol/aw-signer": "workspace:*"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "nx": {
+    "sourceRoot": "packages/aw-subagent-openai/src",
+    "projectType": "library",
+    "name": "aw-subagent-openai"
+  }
+}

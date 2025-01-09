@@ -1,0 +1,51 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["node"],
+    "paths": {
+      "@lit-protocol/aw-signer": ["../aw-signer/src"],
+      "@lit-protocol/aw-tool-registry": ["../aw-tool-registry/src"],
+      "@lit-protocol/aw-tool-erc20-transfer": ["../aw-tool-erc20-transfer/src"],
+      "@lit-protocol/agent-wallet": ["../agent-wallet/src"],
+      "@lit-protocol/aw-tool": ["../aw-tool/src"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/lib/prompts"],
+  "references": [
+    {
+      "path": "../aw-subagent-openai/tsconfig.lib.json"
+    },
+    {
+      "path": "../agent-wallet/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-tool-sign-ecdsa/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-tool-uniswap-swap/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-tool-erc20-transfer/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-tool-registry/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-tool/tsconfig.lib.json"
+    },
+    {
+      "path": "../aw-signer/tsconfig.lib.json"
+    },
+    {
+      "path": "../.."
+    }
+  ],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}

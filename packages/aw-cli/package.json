@@ -1,0 +1,59 @@
+{
+  "name": "@lit-protocol/aw-cli",
+  "version": "0.1.1-10",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "lit-agent": "./dist/src/index.js"
+  },
+  "dependencies": {
+    "@lit-protocol/agent-wallet": "workspace:*",
+    "@lit-protocol/aw-signer": "workspace:*",
+    "@lit-protocol/aw-tool": "workspace:*",
+    "@lit-protocol/aw-tool-registry": "workspace:*",
+    "ethers": "5.7.2",
+    "prompts": "^2.4.2",
+    "tslib": "^2.3.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9"
+  },
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typings": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "require": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "nx": {
+    "sourceRoot": "packages/aw-cli/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "packages/aw-cli/dist",
+          "main": "packages/aw-cli/src/index.ts",
+          "tsConfig": "packages/aw-cli/tsconfig.lib.json",
+          "assets": [
+            "packages/aw-cli/*.md"
+          ]
+        }
+      }
+    },
+    "name": "aw-cli"
+  }
+}

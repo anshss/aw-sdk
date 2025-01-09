@@ -4,31 +4,31 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/fss-signer"
+      "path": "./packages/aw-signer"
     },
     {
-      "path": "./packages/fss-tool-erc20-transfer"
+      "path": "./packages/aw-tool-erc20-transfer"
     },
     {
-      "path": "./packages/fss-cli"
+      "path": "./packages/aw-tool-registry"
     },
     {
-      "path": "./packages/fss-tool-registry"
+      "path": "./packages/agent-wallet"
     },
     {
-      "path": "./packages/full-self-signing"
+      "path": "./packages/aw-subagent-openai"
     },
     {
-      "path": "./packages/fss-agent"
+      "path": "./packages/aw-tool"
     },
     {
-      "path": "./packages/fss-tool"
+      "path": "./packages/aw-tool-uniswap-swap"
     },
     {
-      "path": "./packages/fss-tool-uniswap-swap"
+      "path": "./packages/aw-tool-sign-ecdsa"
     },
     {
-      "path": "./packages/fss-tool-sign-ecdsa"
+      "path": "./packages/aw-cli"
     }
   ]
 }

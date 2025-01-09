@@ -1,0 +1,54 @@
+{
+  "name": "@lit-protocol/agent-wallet",
+  "version": "0.1.1-10",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@lit-protocol/constants": "7.0.2",
+    "@lit-protocol/aw-subagent-openai": "workspace:*",
+    "@lit-protocol/aw-signer": "workspace:*",
+    "@lit-protocol/aw-tool": "workspace:*",
+    "@lit-protocol/aw-tool-registry": "workspace:*",
+    "bs58": "^6.0.0",
+    "ethers": "5.7.2",
+    "openai": "^4.77.0",
+    "tslib": "^2.3.0"
+  },
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "typings": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "require": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "nx": {
+    "sourceRoot": "packages/agent-wallet/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "packages/agent-wallet/dist",
+          "main": "packages/agent-wallet/src/index.ts",
+          "tsConfig": "packages/agent-wallet/tsconfig.lib.json",
+          "assets": [
+            "packages/agent-wallet/*.md"
+          ]
+        }
+      }
+    },
+    "name": "agent-wallet"
+  }
+}
