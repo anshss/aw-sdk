@@ -68,16 +68,13 @@ export default async () => {
       );
 
       // Get PKP ID from Ethereum address
-      console.log(`Getting PKP ID for Ethereum address ${params.pkpEthAddress}...`);
+      console.log(
+        `Getting PKP ID for Ethereum address ${params.pkpEthAddress}...`
+      );
       const pkpTokenId = await pubkeyRouter.ethAddressToPkpId(
         params.pkpEthAddress
       );
       console.log(`Got PKP token ID: ${pkpTokenId}`);
-
-      // TODO: Implement this check
-      // if (pkpTokenId.isZero()) {
-      //   throw new Error(`No PKP found for Ethereum address ${params.pkpEthAddress}`);
-      // }
 
       // Get public key from PKP ID
       console.log(`Getting public key for PKP ID ${pkpTokenId}...`);
@@ -219,9 +216,8 @@ export default async () => {
       'function isDelegateeOf(uint256 pkpTokenId, address delegatee) external view returns (bool)',
       'function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external view returns (bytes memory policy, string memory version)',
     ];
-    const PKP_TOOL_REGISTRY = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
     const pkpToolRegistryContract = new ethers.Contract(
-      PKP_TOOL_REGISTRY,
+      PKP_TOOL_REGISTRY_ADDRESS,
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
         await Lit.Actions.getRpcUrl({

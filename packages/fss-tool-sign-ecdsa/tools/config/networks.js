@@ -17,3 +17,4 @@ module.exports = {
     litNetwork: 'datil',
     outputFile: 'deployed-lit-action-datil.js',
   },
+};
