@@ -2,8 +2,8 @@ import { LIT_RPC } from '@lit-protocol/constants';
 import { ethers } from 'ethers';
 import { type LitContracts } from '@lit-protocol/contracts-sdk';
 import bs58 from 'bs58';
-import { getToolByIpfsCid } from '@lit-protocol/fss-tool-registry';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import { getToolByIpfsCid } from '@lit-protocol/aw-tool-registry';
+import type { FssTool } from '@lit-protocol/aw-tool';
 
 import {
   UnknownRegisteredToolWithPolicy,

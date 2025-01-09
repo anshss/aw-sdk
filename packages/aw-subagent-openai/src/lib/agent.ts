@@ -4,7 +4,7 @@ import type {
   IntentMatcher,
   IntentMatcherResponse,
 } from '@lit-protocol/aw-signer';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import type { FssTool } from '@lit-protocol/aw-tool';
 
 // Import helper functions for matching tools and parsing parameters based on intent.
 import { getToolForIntent } from './get-tool-for-intent';

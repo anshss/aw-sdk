@@ -13,19 +13,19 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../fss-tool-sign-ecdsa/tsconfig.lib.json"
+      "path": "../aw-tool-sign-ecdsa/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-uniswap-swap/tsconfig.lib.json"
+      "path": "../aw-tool-uniswap-swap/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-erc20-transfer/tsconfig.lib.json"
+      "path": "../aw-tool-erc20-transfer/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-registry/tsconfig.lib.json"
+      "path": "../aw-tool-registry/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool/tsconfig.lib.json"
+      "path": "../aw-tool/tsconfig.lib.json"
     },
     {
       "path": "../aw-signer/tsconfig.lib.json"

@@ -1,5 +1,5 @@
 import { LIT_NETWORK } from '@lit-protocol/constants';
-import { type FssTool } from '@lit-protocol/fss-tool';
+import { type FssTool } from '@lit-protocol/aw-tool';
 import type { ethers } from 'ethers';
 
 /**

@@ -12,7 +12,7 @@ import type {
   ExecuteJsResponse,
   JsonExecutionSdkParams,
 } from '@lit-protocol/types';
-import { type FssTool } from '@lit-protocol/fss-tool';
+import { type FssTool } from '@lit-protocol/aw-tool';
 import { ethers } from 'ethers';
 
 import type {

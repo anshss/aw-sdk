@@ -80,12 +80,12 @@ importers:
       '@lit-protocol/aw-signer':
         specifier: workspace:*
         version: link:../aw-signer
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
-      '@lit-protocol/fss-tool-registry':
+        version: link:../aw-tool
+      '@lit-protocol/aw-tool-registry':
         specifier: workspace:*
-        version: link:../fss-tool-registry
+        version: link:../aw-tool-registry
       '@lit-protocol/full-self-signing':
         specifier: workspace:*
         version: link:../full-self-signing
@@ -111,18 +111,18 @@ importers:
       '@lit-protocol/auth-helpers':
         specifier: 7.0.2
         version: 7.0.2(typescript@5.6.3)
+      '@lit-protocol/aw-tool':
+        specifier: workspace:*
+        version: link:../aw-tool
+      '@lit-protocol/aw-tool-registry':
+        specifier: workspace:*
+        version: link:../aw-tool-registry
       '@lit-protocol/constants':
         specifier: 7.0.2
         version: 7.0.2(typescript@5.6.3)
       '@lit-protocol/contracts-sdk':
         specifier: 7.0.2
         version: 7.0.2(date-and-time@2.4.3)(multiformats@9.9.0)(typescript@5.6.3)
-      '@lit-protocol/fss-tool':
-        specifier: workspace:*
-        version: link:../fss-tool
-      '@lit-protocol/fss-tool-registry':
-        specifier: workspace:*
-        version: link:../fss-tool-registry
       '@lit-protocol/lit-node-client-nodejs':
         specifier: 7.0.2
         version: 7.0.2(typescript@5.6.3)
@@ -154,12 +154,12 @@ importers:
 
   packages/aw-subagent-openai:
     dependencies:
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
-      '@lit-protocol/fss-tool-registry':
+        version: link:../aw-tool
+      '@lit-protocol/aw-tool-registry':
         specifier: workspace:*
-        version: link:../fss-tool-registry
+        version: link:../aw-tool-registry
       openai:
         specifier: ^4.77.0
         version: 4.77.4(zod@3.24.1)
@@ -171,7 +171,7 @@ importers:
         specifier: workspace:*
         version: link:../aw-signer
 
-  packages/fss-tool:
+  packages/aw-tool:
     dependencies:
       '@lit-protocol/constants':
         specifier: 7.0.2
@@ -183,11 +183,11 @@ importers:
         specifier: ^3.24.1
         version: 3.24.1
 
-  packages/fss-tool-erc20-transfer:
+  packages/aw-tool-erc20-transfer:
     dependencies:
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
+        version: link:../aw-tool
       ethers:
         specifier: ^5.7.2
         version: 5.7.2
@@ -208,20 +208,20 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
 
-  packages/fss-tool-registry:
+  packages/aw-tool-registry:
     dependencies:
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
-      '@lit-protocol/fss-tool-erc20-transfer':
+        version: link:../aw-tool
+      '@lit-protocol/aw-tool-erc20-transfer':
         specifier: workspace:*
-        version: link:../fss-tool-erc20-transfer
-      '@lit-protocol/fss-tool-sign-ecdsa':
+        version: link:../aw-tool-erc20-transfer
+      '@lit-protocol/aw-tool-sign-ecdsa':
         specifier: workspace:*
-        version: link:../fss-tool-sign-ecdsa
-      '@lit-protocol/fss-tool-uniswap-swap':
+        version: link:../aw-tool-sign-ecdsa
+      '@lit-protocol/aw-tool-uniswap-swap':
         specifier: workspace:*
-        version: link:../fss-tool-uniswap-swap
+        version: link:../aw-tool-uniswap-swap
       ethers:
         specifier: 5.7.2
         version: 5.7.2
@@ -229,11 +229,11 @@ importers:
         specifier: ^2.3.0
         version: 2.8.1
 
-  packages/fss-tool-sign-ecdsa:
+  packages/aw-tool-sign-ecdsa:
     dependencies:
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
+        version: link:../aw-tool
       ethers:
         specifier: ^5.7.2
         version: 5.7.2
@@ -254,11 +254,11 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
 
-  packages/fss-tool-uniswap-swap:
+  packages/aw-tool-uniswap-swap:
     dependencies:
-      '@lit-protocol/fss-tool':
+      '@lit-protocol/aw-tool':
         specifier: workspace:*
-        version: link:../fss-tool
+        version: link:../aw-tool
       ethers:
         specifier: ^5.7.2
         version: 5.7.2
@@ -287,15 +287,15 @@ importers:
       '@lit-protocol/aw-subagent-openai':
         specifier: workspace:*
         version: link:../aw-subagent-openai
+      '@lit-protocol/aw-tool':
+        specifier: workspace:*
+        version: link:../aw-tool
+      '@lit-protocol/aw-tool-registry':
+        specifier: workspace:*
+        version: link:../aw-tool-registry
       '@lit-protocol/constants':
         specifier: 7.0.2
         version: 7.0.2(typescript@5.6.3)
-      '@lit-protocol/fss-tool':
-        specifier: workspace:*
-        version: link:../fss-tool
-      '@lit-protocol/fss-tool-registry':
-        specifier: workspace:*
-        version: link:../fss-tool-registry
       bs58:
         specifier: ^6.0.0
         version: 6.0.0

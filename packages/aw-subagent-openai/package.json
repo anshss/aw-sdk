@@ -2,8 +2,8 @@
   "name": "@lit-protocol/aw-subagent-openai",
   "version": "0.0.1",
   "dependencies": {
-    "@lit-protocol/fss-tool": "workspace:*",
-    "@lit-protocol/fss-tool-registry": "workspace:*",
+    "@lit-protocol/aw-tool": "workspace:*",
+    "@lit-protocol/aw-tool-registry": "workspace:*",
     "openai": "^4.77.0",
     "tslib": "^2.3.0"
   },

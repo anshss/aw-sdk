@@ -6,5 +6,5 @@ export {
   listAllTools,
   listToolsByNetwork,
   type PermittedTools,
-} from '@lit-protocol/fss-tool-registry';
-export type { FssTool } from '@lit-protocol/fss-tool';
+} from '@lit-protocol/aw-tool-registry';
+export type { FssTool } from '@lit-protocol/aw-tool';

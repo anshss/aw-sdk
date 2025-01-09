@@ -1,8 +1,8 @@
 // Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
 
-// Import the FssTool type from the '@lit-protocol/fss-tool' package.
-import type { FssTool } from '@lit-protocol/fss-tool';
+// Import the FssTool type from the '@lit-protocol/aw-tool' package.
+import type { FssTool } from '@lit-protocol/aw-tool';
 
 /**
  * Parses and validates parameters from a user's intent for a given tool.

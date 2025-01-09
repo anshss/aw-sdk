@@ -4,19 +4,19 @@
   "include": [],
   "references": [
     {
-      "path": "../fss-tool-sign-ecdsa"
+      "path": "../aw-tool-sign-ecdsa"
     },
     {
-      "path": "../fss-tool-uniswap-swap"
+      "path": "../aw-tool-uniswap-swap"
     },
     {
-      "path": "../fss-tool-erc20-transfer"
+      "path": "../aw-tool-erc20-transfer"
     },
     {
-      "path": "../fss-tool-registry"
+      "path": "../aw-tool-registry"
     },
     {
-      "path": "../fss-tool"
+      "path": "../aw-tool"
     },
     {
       "path": "../aw-signer"

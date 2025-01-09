@@ -6,6 +6,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
@@ -18,9 +20,6 @@
     },
     {
       "path": "../aw-tool-erc20-transfer/tsconfig.lib.json"
-    },
-    {
-      "path": "../aw-tool-registry/tsconfig.lib.json"
     },
     {
       "path": "../aw-tool/tsconfig.lib.json"

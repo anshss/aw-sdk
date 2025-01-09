@@ -11,12 +11,10 @@
     "types": ["node"],
     "paths": {
       "@lit-protocol/aw-signer": ["../aw-signer/src"],
-      "@lit-protocol/fss-tool-registry": ["../fss-tool-registry/src"],
-      "@lit-protocol/fss-tool-erc20-transfer": [
-        "../fss-tool-erc20-transfer/src"
-      ],
+      "@lit-protocol/aw-tool-registry": ["../aw-tool-registry/src"],
+      "@lit-protocol/aw-tool-erc20-transfer": ["../aw-tool-erc20-transfer/src"],
       "@lit-protocol/full-self-signing": ["../full-self-signing/src"],
-      "@lit-protocol/fss-tool": ["../fss-tool/src"]
+      "@lit-protocol/aw-tool": ["../aw-tool/src"]
     }
   },
   "include": ["src/**/*.ts", "src/lib/prompts"],
@@ -28,19 +26,19 @@
       "path": "../full-self-signing/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-sign-ecdsa/tsconfig.lib.json"
+      "path": "../aw-tool-sign-ecdsa/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-uniswap-swap/tsconfig.lib.json"
+      "path": "../aw-tool-uniswap-swap/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-erc20-transfer/tsconfig.lib.json"
+      "path": "../aw-tool-erc20-transfer/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool-registry/tsconfig.lib.json"
+      "path": "../aw-tool-registry/tsconfig.lib.json"
     },
     {
-      "path": "../fss-tool/tsconfig.lib.json"
+      "path": "../aw-tool/tsconfig.lib.json"
     },
     {
       "path": "../aw-signer/tsconfig.lib.json"

@@ -1,5 +1,5 @@
-// Import the FssTool type from the '@lit-protocol/fss-tool' package.
-import type { FssTool } from '@lit-protocol/fss-tool';
+// Import the FssTool type from the '@lit-protocol/aw-tool' package.
+import type { FssTool } from '@lit-protocol/aw-tool';
 
 /**
  * Generates a prompt for OpenAI to analyze a user's intent and match it to an appropriate tool.
@@ -9,7 +9,6 @@ import type { FssTool } from '@lit-protocol/fss-tool';
  * @returns A string containing the generated prompt.
  */
 export function getToolMatchingPrompt(tools: FssTool<any, any>[]): string {
-
   const toolDescriptions = tools
     .map(
       (tool) =>

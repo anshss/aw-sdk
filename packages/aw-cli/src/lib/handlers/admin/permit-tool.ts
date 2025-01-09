@@ -13,8 +13,8 @@ import { logger } from '../../utils/logger';
 // Import custom error types and utilities.
 import { FssCliError, FssCliErrorType } from '../../errors';
 
-// Import the FssTool type from the '@lit-protocol/fss-tool' package.
-import { FssTool } from '@lit-protocol/fss-tool';
+// Import the FssTool type from the '@lit-protocol/aw-tool' package.
+import { FssTool } from '@lit-protocol/aw-tool';
 
 // Import the handleGetTools function to retrieve permitted tools.
 import { handleGetTools } from './get-tools';

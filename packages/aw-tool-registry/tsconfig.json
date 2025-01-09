@@ -4,12 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../aw-subagent-openai"
-    },
-    {
-      "path": "../full-self-signing"
-    },
-    {
       "path": "../aw-tool-sign-ecdsa"
     },
     {
@@ -19,16 +13,7 @@
       "path": "../aw-tool-erc20-transfer"
     },
     {
-      "path": "../aw-tool-registry"
-    },
-    {
       "path": "../aw-tool"
-    },
-    {
-      "path": "../aw-signer"
-    },
-    {
-      "path": "../.."
     },
     {
       "path": "./tsconfig.lib.json"

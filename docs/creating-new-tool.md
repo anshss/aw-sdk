@@ -6,7 +6,7 @@ This guide will walk you through the process of creating a new FSS tool package 
 
 1. Generate the package scaffold using Nx:
 ```bash
-npx nx g @nx/js:lib packages/fss-tool-TOOL_NAME --publishable --importPath=@lit-protocol/fss-tool-TOOL_NAME
+npx nx g @nx/js:lib packages/aw-tool-TOOL_NAME --publishable --importPath=@lit-protocol/aw-tool-TOOL_NAME
 ```
 
 2. When prompted for project configuration options, select:
@@ -16,7 +16,7 @@ npx nx g @nx/js:lib packages/fss-tool-TOOL_NAME --publishable --importPath=@lit-
 
 ## Copy Required Configuration Files
 
-Copy the following files from an existing tool package (e.g., fss-tool-sign-ecdsa) to your new package:
+Copy the following files from an existing tool package (e.g., aw-tool-sign-ecdsa) to your new package:
 
 1. Configuration files:
    - `tsconfig.lib.json`
@@ -68,7 +68,7 @@ src/
 
 ## Register Your Tool
 
-In the `fss-tool-registry` package:
+In the `aw-tool-registry` package:
 1. Import your tool in `registry.ts` and call `registerTool` with your tool name and class
 2. Add your tool package as a dependency in `package.json` using the workspace syntax
 
@@ -80,7 +80,7 @@ In the `fss-tool-registry` package:
 
 2. Deploy your Lit Action to IPFS:
 ```bash
-pnpm nx deploy fss-tool-TOOL_NAME
+pnpm nx deploy aw-tool-TOOL_NAME
 ```
 
 This will pin your Lit Action code to IPFS using Pinata. 

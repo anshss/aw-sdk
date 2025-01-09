@@ -1,5 +1,5 @@
 import prompts from 'prompts';
-import type { FssTool } from '@lit-protocol/fss-tool';
+import type { FssTool } from '@lit-protocol/aw-tool';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
 /**

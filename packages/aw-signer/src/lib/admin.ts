@@ -22,7 +22,7 @@ import {
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
 import { FssSignerError, FssSignerErrorType } from './errors';
-import { FssTool } from '@lit-protocol/fss-tool';
+import { FssTool } from '@lit-protocol/aw-tool';
 
 /**
  * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.

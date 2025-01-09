@@ -34,11 +34,11 @@
     "paths": {
       "@lit-protocol/aw-cli": ["./packages/aw-cli/src"],
       "@lit-protocol/aw-signer": ["./packages/aw-signer/src"],
-      "@lit-protocol/fss-tool": ["./packages/fss-tool/src"],
-      "@lit-protocol/fss-tool-erc20-transfer": [
-        "./packages/fss-tool-erc20-transfer/src"
+      "@lit-protocol/aw-tool": ["./packages/aw-tool/src"],
+      "@lit-protocol/aw-tool-erc20-transfer": [
+        "./packages/aw-tool-erc20-transfer/src"
       ],
-      "@lit-protocol/fss-tool-registry": ["./packages/fss-tool-registry/src"],
+      "@lit-protocol/aw-tool-registry": ["./packages/aw-tool-registry/src"],
       "@lit-protocol/full-self-signing": ["./packages/full-self-signing/src"]
     }
   }

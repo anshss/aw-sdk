@@ -10,8 +10,8 @@
   "dependencies": {
     "@lit-protocol/full-self-signing": "workspace:*",
     "@lit-protocol/aw-signer": "workspace:*",
-    "@lit-protocol/fss-tool": "workspace:*",
-    "@lit-protocol/fss-tool-registry": "workspace:*",
+    "@lit-protocol/aw-tool": "workspace:*",
+    "@lit-protocol/aw-tool-registry": "workspace:*",
     "ethers": "5.7.2",
     "prompts": "^2.4.2",
     "tslib": "^2.3.0",
