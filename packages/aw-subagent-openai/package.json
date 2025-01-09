@@ -1,6 +1,6 @@
 {
   "name": "@lit-protocol/aw-subagent-openai",
-  "version": "0.0.1",
+  "version": "0.0.0-0",
   "dependencies": {
     "@lit-protocol/aw-tool": "workspace:*",
     "@lit-protocol/aw-tool-registry": "workspace:*",
