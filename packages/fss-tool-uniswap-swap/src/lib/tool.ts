@@ -18,6 +18,7 @@ import { IPFS_CIDS } from './ipfs';
  * @property {string} rpcUrl - The RPC URL of the blockchain network.
  */
 export interface UniswapSwapLitActionParameters {
+  pkpEthAddress: string;
   tokenIn: string;
   tokenOut: string;
   amountIn: string;
@@ -30,6 +31,12 @@ export interface UniswapSwapLitActionParameters {
  * @type {z.ZodObject}
  */
 const UniswapSwapLitActionSchema = z.object({
+  pkpEthAddress: z
+    .string()
+    .regex(
+      /^0x[a-fA-F0-9]{40}$/,
+      'Must be a valid Ethereum address (0x followed by 40 hexadecimal characters)'
+    ),
   tokenIn: z
     .string()
     .regex(
@@ -66,6 +73,8 @@ const UniswapSwapLitActionSchema = z.object({
  * @type {Record<string, string>}
  */
 const UniswapSwapLitActionParameterDescriptions = {
+  pkpEthAddress:
+    'The Ethereum address of the PKP that will be used to sign the transaction.',
   tokenIn:
     'The Ethereum contract address of the ERC20 token you want to send. Must be a valid Ethereum address starting with 0x.',
   tokenOut:

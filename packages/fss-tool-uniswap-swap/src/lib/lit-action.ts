@@ -641,9 +641,8 @@ export default async () => {
       'function isDelegateeOf(uint256,address) external view returns (bool)',
       'function getToolPolicy(uint256,string) external view returns (bytes memory, string memory)',
     ];
-    const PKP_TOOL_REGISTRY_ADDR = '0xb8000069FeD07794c23Fc1622F02fe54788Dae3F';
     const pkpToolRegistry = new ethers.Contract(
-      PKP_TOOL_REGISTRY_ADDR,
+      PKP_TOOL_REGISTRY_ADDRESS,
       PKP_TOOL_REGISTRY_ABI,
       new ethers.providers.JsonRpcProvider(
         await Lit.Actions.getRpcUrl({ chain: 'yellowstone' })
