@@ -16,5 +16,5 @@ module.exports = {
     pkpToolRegistryAddress: '0xDeb70dCBC7432fEFEdaE900AFF11Dcc5169CfcBB',
     litNetwork: 'datil',
     outputFile: 'deployed-lit-action-datil.js',
-  }
+  },
 };

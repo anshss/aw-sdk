@@ -11,9 +11,11 @@ import { IPFS_CIDS } from './ipfs';
 
 /**
  * Parameters required for the Signing ECDSA Lit Action.
+ * @property {string} pkpEthAddress - The Ethereum address of the PKP.
  * @property message - The message to sign.
  */
 export interface SignEcdsaLitActionParameters {
+  pkpEthAddress: string;
   message: string;
 }
 
@@ -22,6 +24,12 @@ export interface SignEcdsaLitActionParameters {
  * Ensures that the message is a valid string.
  */
 const SignEcdsaLitActionSchema = z.object({
+  pkpEthAddress: z
+    .string()
+    .regex(
+      /^0x[a-fA-F0-9]{40}$/,
+      'Must be a valid Ethereum address (0x followed by 40 hexadecimal characters)'
+    ),
   message: z.string(),
 });
 
@@ -30,6 +38,8 @@ const SignEcdsaLitActionSchema = z.object({
  * These descriptions are designed to be consumed by LLMs (Language Learning Models) to understand the required parameters.
  */
 const SignEcdsaLitActionParameterDescriptions = {
+  pkpEthAddress:
+    'The Ethereum address of the PKP that will be used to sign the message.',
   message: 'The message you want to sign.',
 } as const;
 
