@@ -1,6 +1,9 @@
 {
   "name": "@lit-protocol/aw-tool",
-  "version": "0.1.0-1",
+  "version": "0.1.0-2",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@lit-protocol/constants": "7.0.2",
     "tslib": "^2.3.0",
