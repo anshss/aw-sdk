@@ -19,7 +19,7 @@
       "path": "../fss-tool"
     },
     {
-      "path": "../fss-signer"
+      "path": "../aw-signer"
     },
     {
       "path": "../aw-subagent-openai"

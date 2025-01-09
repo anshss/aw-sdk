@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'fss-signer',
+  displayName: 'aw-signer',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\.[tj]s$': [
@@ -12,5 +12,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   testEnvironment: 'node',
-  coverageDirectory: '../../coverage/packages/fss-signer',
+  coverageDirectory: '../../coverage/packages/aw-signer',
 };

@@ -47,7 +47,7 @@ import {
  */
 export class Delegatee implements CredentialStore {
   private static readonly DEFAULT_STORAGE_PATH =
-    './.fss-signer-delegatee-storage';
+    './.aw-signer-delegatee-storage';
 
   private readonly storage: LocalStorage;
   private readonly litNodeClient: LitNodeClientNodeJs;

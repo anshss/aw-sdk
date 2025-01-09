@@ -31,7 +31,7 @@
       "path": "../fss-tool/tsconfig.lib.json"
     },
     {
-      "path": "../fss-signer/tsconfig.lib.json"
+      "path": "../aw-signer/tsconfig.lib.json"
     },
     {
       "path": "../aw-subagent-openai/tsconfig.lib.json"

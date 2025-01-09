@@ -7,7 +7,7 @@
   "dependencies": {
     "@lit-protocol/constants": "7.0.2",
     "@lit-protocol/aw-subagent-openai": "workspace:*",
-    "@lit-protocol/fss-signer": "workspace:*",
+    "@lit-protocol/aw-signer": "workspace:*",
     "@lit-protocol/fss-tool": "workspace:*",
     "@lit-protocol/fss-tool-registry": "workspace:*",
     "bs58": "^6.0.0",

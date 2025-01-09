@@ -28,7 +28,7 @@
       "path": "../fss-tool/tsconfig.lib.json"
     },
     {
-      "path": "../fss-signer/tsconfig.lib.json"
+      "path": "../aw-signer/tsconfig.lib.json"
     }
   ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

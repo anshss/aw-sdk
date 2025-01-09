@@ -33,7 +33,7 @@
     "baseUrl": ".",
     "paths": {
       "@lit-protocol/aw-cli": ["./packages/aw-cli/src"],
-      "@lit-protocol/fss-signer": ["./packages/fss-signer/src"],
+      "@lit-protocol/aw-signer": ["./packages/aw-signer/src"],
       "@lit-protocol/fss-tool": ["./packages/fss-tool/src"],
       "@lit-protocol/fss-tool-erc20-transfer": [
         "./packages/fss-tool-erc20-transfer/src"

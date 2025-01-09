@@ -4,7 +4,7 @@
   "files": [],
   "references": [
     {
-      "path": "./packages/fss-signer"
+      "path": "./packages/aw-signer"
     },
     {
       "path": "./packages/fss-tool-erc20-transfer"

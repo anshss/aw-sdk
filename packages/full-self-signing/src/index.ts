@@ -1,4 +1,4 @@
-export * from '@lit-protocol/fss-signer';
+export * from '@lit-protocol/aw-signer';
 export * from '@lit-protocol/aw-subagent-openai';
 export {
   getToolByIpfsCid,

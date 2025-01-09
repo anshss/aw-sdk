@@ -48,5 +48,5 @@ Thumbs.db
 
 test-output
 
-.fss-signer-admin-storage
-.fss-signer-delegatee-storage
+.aw-signer-admin-storage
+.aw-signer-delegatee-storage

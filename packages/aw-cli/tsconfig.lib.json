@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "types": ["node"],
     "paths": {
-      "@lit-protocol/fss-signer": ["../fss-signer/src"],
+      "@lit-protocol/aw-signer": ["../aw-signer/src"],
       "@lit-protocol/fss-tool-registry": ["../fss-tool-registry/src"],
       "@lit-protocol/fss-tool-erc20-transfer": [
         "../fss-tool-erc20-transfer/src"
@@ -43,7 +43,7 @@
       "path": "../fss-tool/tsconfig.lib.json"
     },
     {
-      "path": "../fss-signer/tsconfig.lib.json"
+      "path": "../aw-signer/tsconfig.lib.json"
     },
     {
       "path": "../.."

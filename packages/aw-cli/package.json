@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@lit-protocol/full-self-signing": "workspace:*",
-    "@lit-protocol/fss-signer": "workspace:*",
+    "@lit-protocol/aw-signer": "workspace:*",
     "@lit-protocol/fss-tool": "workspace:*",
     "@lit-protocol/fss-tool-registry": "workspace:*",
     "ethers": "5.7.2",

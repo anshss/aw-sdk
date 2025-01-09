@@ -29,7 +29,7 @@ import { FssTool } from '@lit-protocol/fss-tool';
  * It handles tasks such as transferring ownership, permitting tools, managing policies, and managing delegatees.
  */
 export class Admin {
-  private static readonly DEFAULT_STORAGE_PATH = './.fss-signer-admin-storage';
+  private static readonly DEFAULT_STORAGE_PATH = './.aw-signer-admin-storage';
   // TODO: Add min balance check
   // private static readonly MIN_BALANCE = ethers.utils.parseEther('0.001');
 

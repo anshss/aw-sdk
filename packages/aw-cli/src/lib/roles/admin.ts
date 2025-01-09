@@ -2,7 +2,7 @@ import {
   Admin as FssAdmin,
   type LitNetwork,
 } from '@lit-protocol/full-self-signing';
-import { FssSignerError, FssSignerErrorType } from '@lit-protocol/fss-signer';
+import { FssSignerError, FssSignerErrorType } from '@lit-protocol/aw-signer';
 
 import { logger } from '../utils/logger';
 import {

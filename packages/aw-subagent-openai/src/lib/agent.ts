@@ -3,7 +3,7 @@ import { OpenAI } from 'openai';
 import type {
   IntentMatcher,
   IntentMatcherResponse,
-} from '@lit-protocol/fss-signer';
+} from '@lit-protocol/aw-signer';
 import type { FssTool } from '@lit-protocol/fss-tool';
 
 // Import helper functions for matching tools and parsing parameters based on intent.
