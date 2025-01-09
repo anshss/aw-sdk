@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  type FssTool,
+  type AwTool,
   type SupportedLitNetwork,
   NETWORK_CONFIGS,
   NetworkConfig,
@@ -111,12 +111,12 @@ const validateERC20TransferParameters = (
  * Creates a network-specific ERC20Transfer tool.
  * @param {SupportedLitNetwork} network - The Lit network to use.
  * @param {NetworkConfig} config - The configuration for the network.
- * @returns {FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>} - The configured FssTool instance.
+ * @returns {AwTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>} - The configured AwTool instance.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
-): FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType> => ({
+): AwTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType> => ({
   name: 'ERC20Transfer',
   description: `A Lit Action that sends ERC-20 tokens.`,
   ipfsCid: IPFS_CIDS[network],
@@ -131,7 +131,7 @@ const createNetworkTool = (
 
 /**
  * A collection of network-specific ERC20Transfer tools.
- * @type {Record<SupportedLitNetwork, FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>>}
+ * @type {Record<SupportedLitNetwork, AwTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>>}
  */
 export const ERC20Transfer = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
@@ -140,6 +140,6 @@ export const ERC20Transfer = Object.entries(NETWORK_CONFIGS).reduce(
   }),
   {} as Record<
     SupportedLitNetwork,
-    FssTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>
+    AwTool<ERC20TransferLitActionParameters, ERC20TransferPolicyType>
   >
 );

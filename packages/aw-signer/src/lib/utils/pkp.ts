@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 
 import type { LocalStorage } from './storage';
 import { PkpInfo } from '../types';
-import { FssSignerError, FssSignerErrorType } from '../errors';
+import { AwSignerError, AwSignerErrorType } from '../errors';
 
 export function loadPkpFromStorage(storage: LocalStorage): PkpInfo | null {
   try {
@@ -12,8 +12,8 @@ export function loadPkpFromStorage(storage: LocalStorage): PkpInfo | null {
       return JSON.parse(pkp) as PkpInfo;
     }
   } catch (error) {
-    throw new FssSignerError(
-      FssSignerErrorType.STORAGE_FAILED_TO_GET_ITEM,
+    throw new AwSignerError(
+      AwSignerErrorType.STORAGE_FAILED_TO_GET_ITEM,
       'Failed to retrieve PKP from storage',
       {
         details: error,
@@ -33,8 +33,8 @@ export async function mintPkp(
 ): Promise<PkpInfo> {
   const mintCost = await litContracts.pkpNftContract.read.mintCost();
   if (mintCost.gt(await wallet.getBalance())) {
-    throw new FssSignerError(
-      FssSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT,
+    throw new AwSignerError(
+      AwSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT,
       `${await wallet.getAddress()} has insufficient balance to mint PKP: ${ethers.utils.formatEther(
         await wallet.getBalance()
       )} < ${ethers.utils.formatEther(mintCost)}`

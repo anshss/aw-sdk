@@ -1,6 +1,6 @@
 import prompts from 'prompts';
-import type { FssTool } from '@lit-protocol/aw-tool';
-import { FssCliError, FssCliErrorType } from '../../errors';
+import type { AwTool } from '@lit-protocol/aw-tool';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Prompts the user to input parameters required for executing a tool.
@@ -9,14 +9,14 @@ import { FssCliError, FssCliErrorType } from '../../errors';
  * After collecting all parameters, the function validates them using the tool's validation logic.
  *
  * @template T - A generic type representing the structure of the tool's parameters.
- * @param tool - The `FssTool` object for which parameters are being collected.
+ * @param tool - The `AwTool` object for which parameters are being collected.
  * @param pkpEthAddress - Optional. The Ethereum address of the PKP (Programmable Key Pair) to be used as the `pkpEthAddress` parameter.
  * @returns A promise that resolves to an object containing the collected and validated parameters.
- * @throws {FssCliError} If the user cancels input for any parameter, an error of type `DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED` is thrown.
- * @throws {FssCliError} If the collected parameters fail validation, an error of type `DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID` is thrown, including details of the validation errors.
+ * @throws {AwCliError} If the user cancels input for any parameter, an error of type `DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED` is thrown.
+ * @throws {AwCliError} If the collected parameters fail validation, an error of type `DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID` is thrown, including details of the validation errors.
  */
 export const promptToolParams = async <T extends Record<string, any>>(
-  tool: FssTool<T, any>,
+  tool: AwTool<T, any>,
   pkpEthAddress?: string,
   options?: {
     missingParams?: Array<keyof T>;
@@ -46,8 +46,8 @@ export const promptToolParams = async <T extends Record<string, any>>(
 
     // If the user cancels the input, throw an error.
     if (value === undefined) {
-      throw new FssCliError(
-        FssCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED,
+      throw new AwCliError(
+        AwCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED,
         'Parameter input cancelled'
       );
     }
@@ -63,8 +63,8 @@ export const promptToolParams = async <T extends Record<string, any>>(
     const errors = validationResult
       .map(({ param, error }) => `${param}: ${error}`)
       .join('\n');
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID,
       `Invalid parameters:\n${errors}`
     );
   }

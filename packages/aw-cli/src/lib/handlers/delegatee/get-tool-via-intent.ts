@@ -1,5 +1,5 @@
 import {
-  Delegatee as FssDelegatee,
+  Delegatee as AwDelegatee,
   IntentMatcher,
 } from '@lit-protocol/agent-wallet';
 
@@ -8,17 +8,17 @@ import {
   promptSelectPkp,
   promptToolMatchingIntent,
 } from '../../prompts/delegatee';
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 export const handleGetToolViaIntent = async (
-  fssDelegatee: FssDelegatee,
+  awDelegatee: AwDelegatee,
   intentMatcher: IntentMatcher
 ) => {
-  const pkps = await fssDelegatee.getDelegatedPkps();
+  const pkps = await awDelegatee.getDelegatedPkps();
 
   if (pkps.length === 0) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_GET_TOOL_VIA_INTENT_NO_TOOLS,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_GET_TOOL_VIA_INTENT_NO_TOOLS,
       'No PKPs are currently delegated to you.'
     );
   }
@@ -27,15 +27,15 @@ export const handleGetToolViaIntent = async (
   const intent = await promptToolMatchingIntent();
 
   logger.loading('Finding tool for intent...');
-  const intentMatcherResponse = await fssDelegatee.getToolViaIntent(
+  const intentMatcherResponse = await awDelegatee.getToolViaIntent(
     selectedPkp.tokenId,
     intent,
     intentMatcher
   );
 
   if (intentMatcherResponse.matchedTool === null) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_GET_TOOL_VIA_INTENT_NO_MATCH,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_GET_TOOL_VIA_INTENT_NO_MATCH,
       `No tool found for intent, Lit sub agent reasoning: ${intentMatcherResponse.analysis.reasoning}`
     );
   }

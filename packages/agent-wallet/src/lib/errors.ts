@@ -1,9 +1,9 @@
 /**
- * Represents the types of errors that can occur in the FSS (Function-as-a-Service) tool.
- * @enum {FssErrorType}
+ * Represents the types of errors that can occur in the AW tool.
+ * @enum {AwErrorType}
  * @description This enum is currently empty and can be extended with specific error types as needed.
  */
-export enum FssErrorType {}
+export enum AwErrorType {}
 
 /**
  * Represents detailed information about an error.
@@ -11,7 +11,7 @@ export enum FssErrorType {}
  * @property {string} [name] - The name of the error.
  * @property {string} [message] - The error message.
  * @property {string} [stack] - The stack trace of the error.
- * @property {FssErrorType} [type] - The type of the error.
+ * @property {AwErrorType} [type] - The type of the error.
  * @property {unknown} [details] - Additional details about the error.
  * @property {unknown} [key: string] - Any additional custom properties.
  */
@@ -19,18 +19,18 @@ export type ErrorDetails = {
   name?: string;
   message?: string;
   stack?: string;
-  type?: FssErrorType;
+  type?: AwErrorType;
   details?: unknown;
   [key: string]: unknown;
 };
 
 /**
- * A custom error class for FSS (Function-as-a-Service) tools.
- * @class FssError
+ * A custom error class for AW tools.
+ * @class AwError
  * @extends Error
  * @description This class extends the native `Error` class and adds support for error types, detailed error information, and serialization.
  */
-export class FssError extends Error {
+export class AwError extends Error {
   /**
    * A serialized version of the error details for better logging.
    * @type {string}
@@ -38,18 +38,18 @@ export class FssError extends Error {
   public readonly serializedDetails: string;
 
   /**
-   * Creates a new FssError instance.
-   * @param {FssErrorType} type - The type of the error.
+   * Creates a new AwError instance.
+   * @param {AwErrorType} type - The type of the error.
    * @param {string} message - The error message.
    * @param {Record<string, ErrorDetails | unknown>} [details] - Additional details about the error.
    */
   constructor(
-    public readonly type: FssErrorType,
+    public readonly type: AwErrorType,
     message: string,
     public readonly details?: Record<string, ErrorDetails | unknown>
   ) {
     super(message);
-    this.name = 'FssError';
+    this.name = 'AwError';
 
     // Store a serialized version of details for better error logging
     this.serializedDetails = details
@@ -62,7 +62,7 @@ export class FssError extends Error {
                 name: value.name,
                 message: value.message,
                 stack: value.stack,
-                ...(value instanceof FssError
+                ...(value instanceof AwError
                   ? {
                       type: value.type,
                       details: value.serializedDetails

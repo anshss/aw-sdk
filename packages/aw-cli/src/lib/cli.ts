@@ -4,7 +4,7 @@ import { Admin } from './roles/admin';
 import { Delegatee } from './roles/delegatee';
 import { logger } from './utils/logger';
 
-export class FssCli {
+export class AwCli {
   public async start() {
     const selectedLitNetwork = await promptSelectLitNetwork();
     const selectedRole = await promptSelectRole();

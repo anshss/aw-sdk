@@ -7,4 +7,4 @@ export {
   listToolsByNetwork,
   type PermittedTools,
 } from '@lit-protocol/aw-tool-registry';
-export type { FssTool } from '@lit-protocol/aw-tool';
+export type { AwTool } from '@lit-protocol/aw-tool';

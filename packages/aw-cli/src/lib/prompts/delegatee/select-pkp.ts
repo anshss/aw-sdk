@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import { type DelegatedPkpInfo } from '@lit-protocol/agent-wallet';
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Prompts the user to select a PKP (Programmable Key Pair) from a list of delegated PKPs.
@@ -8,7 +8,7 @@ import { FssCliError, FssCliErrorType } from '../../errors';
  *
  * @param pkps - An array of `DelegatedPkpInfo` objects representing the available PKPs.
  * @returns A promise that resolves to the selected PKP as a `DelegatedPkpInfo` object.
- * @throws {FssCliError} If the user cancels the selection or no PKP is selected, an error of type `DELEGATEE_SELECT_PKP_CANCELLED` is thrown.
+ * @throws {AwCliError} If the user cancels the selection or no PKP is selected, an error of type `DELEGATEE_SELECT_PKP_CANCELLED` is thrown.
  */
 export const promptSelectPkp = async (pkps: DelegatedPkpInfo[]) => {
   // Prompt the user to select a PKP from the provided list.
@@ -24,8 +24,8 @@ export const promptSelectPkp = async (pkps: DelegatedPkpInfo[]) => {
 
   // If no PKP is selected, throw an error.
   if (!selectedPkp.pkp) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED,
       'No PKP selected'
     );
   }

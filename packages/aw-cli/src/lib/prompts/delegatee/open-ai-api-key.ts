@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 export const promptGetOpenAiApiKey = async (): Promise<string> => {
   const { apiKey } = await prompts({
@@ -10,8 +10,8 @@ export const promptGetOpenAiApiKey = async (): Promise<string> => {
   });
 
   if (!apiKey) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_GET_INTENT_MATCHER_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_GET_INTENT_MATCHER_CANCELLED,
       'OpenAI API key input cancelled'
     );
   }

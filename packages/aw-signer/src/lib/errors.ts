@@ -1,8 +1,8 @@
 /**
- * Enum representing the types of errors that can occur in the FssSigner module.
+ * Enum representing the types of errors that can occur in the AwSigner module.
  * Each error type corresponds to a specific failure scenario.
  */
-export enum FssSignerErrorType {
+export enum AwSignerErrorType {
   /** Indicates that the Lit network was not provided for the Admin role. */
   ADMIN_MISSING_LIT_NETWORK = 'ADMIN_MISSING_LIT_NETWORK',
 
@@ -43,8 +43,8 @@ export type ErrorDetails = {
   /** The stack trace of the error. */
   stack?: string;
 
-  /** The type of the error, if it is an `FssSignerError`. */
-  type?: FssSignerErrorType;
+  /** The type of the error, if it is an `AwSignerError`. */
+  type?: AwSignerErrorType;
 
   /** Additional details about the error. */
   details?: unknown;
@@ -54,10 +54,10 @@ export type ErrorDetails = {
 };
 
 /**
- * Custom error class for the FssSigner module.
+ * Custom error class for the AwSigner module.
  * Extends the built-in `Error` class to include additional metadata such as error type and serialized details.
  */
-export class FssSignerError extends Error {
+export class AwSignerError extends Error {
   /**
    * A serialized string representation of the error details.
    * This is useful for logging and debugging.
@@ -65,19 +65,19 @@ export class FssSignerError extends Error {
   public readonly serializedDetails: string;
 
   /**
-   * Creates an instance of `FssSignerError`.
+   * Creates an instance of `AwSignerError`.
    *
-   * @param type - The type of the error, as defined in `FssSignerErrorType`.
+   * @param type - The type of the error, as defined in `AwSignerErrorType`.
    * @param message - A human-readable error message.
    * @param details - Optional additional details about the error, such as nested errors or custom properties.
    */
   constructor(
-    public readonly type: FssSignerErrorType,
+    public readonly type: AwSignerErrorType,
     message: string,
     public readonly details?: Record<string, ErrorDetails | unknown>
   ) {
     super(message);
-    this.name = 'FssSignerError';
+    this.name = 'AwSignerError';
 
     // Serialize the details for better error logging
     this.serializedDetails = details
@@ -90,7 +90,7 @@ export class FssSignerError extends Error {
                 name: value.name,
                 message: value.message,
                 stack: value.stack,
-                ...(value instanceof FssSignerError
+                ...(value instanceof AwSignerError
                   ? {
                       type: value.type,
                       details: value.serializedDetails

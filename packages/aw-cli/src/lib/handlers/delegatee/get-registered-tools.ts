@@ -1,4 +1,4 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/agent-wallet';
+import { type Delegatee as AwDelegatee } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -7,25 +7,25 @@ import { logger } from '../../utils/logger';
 import { promptSelectPkp } from '../../prompts/delegatee';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Retrieves and categorizes tools registered for a selected PKP (Programmable Key Pair).
  * This function logs the progress of the operation and handles cases where no PKPs or tools are found.
  *
- * @param fssDelegatee - An instance of the FssDelegatee class.
+ * @param awDelegatee - An instance of the AwDelegatee class.
  * @returns An object containing:
  *   - pkpInfo: The selected PKP.
  *   - toolsWithPolicies: An array of tools with policies.
  *   - toolsWithoutPolicies: An array of tools without policies.
  *   If no PKPs are delegated, the function returns `null`.
  */
-const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
+const getRegisteredTools = async (awDelegatee: AwDelegatee) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting registered tools...');
 
   // Retrieve the list of PKPs delegated to the user.
-  const pkps = await fssDelegatee.getDelegatedPkps();
+  const pkps = await awDelegatee.getDelegatedPkps();
 
   // If no PKPs are delegated, log an error message and return `null`.
   if (pkps.length === 0) {
@@ -36,7 +36,7 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
   // Prompt the user to select a PKP.
   const selectedPkp = await promptSelectPkp(pkps);
 
-  const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
+  const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
     selectedPkp.tokenId
   );
 
@@ -85,12 +85,12 @@ const getRegisteredTools = async (fssDelegatee: FssDelegatee) => {
  * This function retrieves the list of delegated PKPs, prompts the user to select a PKP,
  * retrieves the registered tools, and handles any errors that occur during the process.
  *
- * @param fssDelegatee - An instance of the FssDelegatee class.
+ * @param awDelegatee - An instance of the AwDelegatee class.
  */
-export const handleGetRegisteredTools = async (fssDelegatee: FssDelegatee) => {
+export const handleGetRegisteredTools = async (awDelegatee: AwDelegatee) => {
   try {
     // Retrieve the registered tools for the selected PKP.
-    const result = await getRegisteredTools(fssDelegatee);
+    const result = await getRegisteredTools(awDelegatee);
 
     // If no PKPs are delegated, exit.
     if (result === null) return;
@@ -105,8 +105,8 @@ export const handleGetRegisteredTools = async (fssDelegatee: FssDelegatee) => {
     }
   } catch (error) {
     // Handle specific errors related to tool retrieval.
-    if (error instanceof FssCliError) {
-      if (error.type === FssCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
+    if (error instanceof AwCliError) {
+      if (error.type === AwCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
         // Log an error message if the user cancels the PKP selection.
         logger.error('No PKP selected');
         return;

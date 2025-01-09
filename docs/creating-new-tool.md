@@ -1,6 +1,6 @@
-# Creating a New FSS Tool Package
+# Creating a New Agent Wallet Tool Package
 
-This guide will walk you through the process of creating a new FSS tool package for the Lit Full Self Signing (FSS) system.
+This guide will walk you through the process of creating a new Agent Wallet tool package for the Lit Agent Wallet system.
 
 ## Initial Setup
 

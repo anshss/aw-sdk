@@ -2,7 +2,7 @@
 import prompts from 'prompts';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -14,15 +14,15 @@ import { logger } from '../../utils/logger';
  *
  * @param existingDelegatees - An array of existing delegatee addresses.
  * @returns The selected delegatee address for removal.
- * @throws FssCliError - If no delegatees are available, no delegatee is selected, or the user cancels the operation.
+ * @throws AwCliError - If no delegatees are available, no delegatee is selected, or the user cancels the operation.
  */
 export const promptSelectDelegateeToRemove = async (
   existingDelegatees: string[]
 ) => {
   // If no delegatees are available, throw an error.
   if (existingDelegatees.length === 0) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_REMOVE_DELEGATEE_NO_DELEGATEES,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_DELEGATEE_NO_DELEGATEES,
       'No delegatees found to remove.'
     );
   }
@@ -40,8 +40,8 @@ export const promptSelectDelegateeToRemove = async (
 
   // If no delegatee is selected, throw an error.
   if (!address) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
       'Delegatee removal cancelled.'
     );
   }
@@ -58,8 +58,8 @@ export const promptSelectDelegateeToRemove = async (
 
   // If the user does not confirm, throw an error.
   if (!confirmed) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
       'Delegatee removal cancelled.'
     );
   }

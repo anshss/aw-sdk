@@ -2,13 +2,13 @@
 import prompts from 'prompts';
 
 // Import types from the '@lit-protocol/agent-wallet' package.
-import type { PermittedTools, FssTool } from '@lit-protocol/agent-wallet';
+import type { PermittedTools, AwTool } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Prompts the user to select a tool to remove from a list of permitted tools.
@@ -17,11 +17,11 @@ import { FssCliError, FssCliErrorType } from '../../errors';
  *
  * @param alreadyPermittedTools - An object containing tools that are already permitted.
  * @returns The selected tool to remove.
- * @throws FssCliError - If no permitted tools are found or the user cancels the selection.
+ * @throws AwCliError - If no permitted tools are found or the user cancels the selection.
  */
 export const promptSelectToolForRemoval = async (
   alreadyPermittedTools: PermittedTools
-): Promise<FssTool<any, any>> => {
+): Promise<AwTool<any, any>> => {
   // Combine tools with and without policies into a single list of choices.
   const choices = [
     ...alreadyPermittedTools.toolsWithPolicies.map((tool) => ({
@@ -36,8 +36,8 @@ export const promptSelectToolForRemoval = async (
 
   // If no permitted tools are found, throw an error.
   if (choices.length === 0) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
       'No permitted tools found.'
     );
   }
@@ -52,8 +52,8 @@ export const promptSelectToolForRemoval = async (
 
   // If no tool is selected, throw an error.
   if (!tool) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED,
       'Tool removal cancelled.'
     );
   }
@@ -67,9 +67,9 @@ export const promptSelectToolForRemoval = async (
  * This function displays details of the selected tool and asks the user to confirm the action.
  *
  * @param tool - The tool to remove.
- * @throws FssCliError - If the user cancels the confirmation.
+ * @throws AwCliError - If the user cancels the confirmation.
  */
-export const promptConfirmRemoval = async (tool: FssTool<any, any>) => {
+export const promptConfirmRemoval = async (tool: AwTool<any, any>) => {
   // Display details of the selected tool.
   logger.log('');
   logger.log(`${tool.name} (${tool.ipfsCid})`);
@@ -85,8 +85,8 @@ export const promptConfirmRemoval = async (tool: FssTool<any, any>) => {
 
   // If the user does not confirm, throw an error.
   if (!confirmed) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED,
       'Tool removal cancelled.'
     );
   }

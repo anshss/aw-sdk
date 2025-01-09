@@ -1,4 +1,4 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/agent-wallet';
+import { type Delegatee as AwDelegatee } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -11,25 +11,25 @@ import {
 } from '../../prompts/delegatee';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
- * Handles the process of executing a tool in the Full Self-Signing (FSS) system.
+ * Handles the process of executing a tool in the Full Self-Signing (AW) system.
  * This function retrieves delegated PKPs, lists registered tools for the selected PKP,
  * prompts the user to select a tool and provide parameters, and executes the tool.
  * It also handles errors that occur during the process.
  *
- * @param fssDelegatee - An instance of the FssDelegatee class.
+ * @param awDelegatee - An instance of the AwDelegatee class.
  */
-export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
+export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
   try {
     // Retrieve the list of PKPs delegated to the user.
-    const pkps = await fssDelegatee.getDelegatedPkps();
+    const pkps = await awDelegatee.getDelegatedPkps();
 
     // If no PKPs are delegated, throw an error.
     if (pkps.length === 0) {
-      throw new FssCliError(
-        FssCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_PKPS,
+      throw new AwCliError(
+        AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_PKPS,
         'No PKPs are currently delegated to you.'
       );
     }
@@ -37,7 +37,7 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
     // Prompt the user to select a PKP.
     const selectedPkp = await promptSelectPkp(pkps);
 
-    const registeredTools = await fssDelegatee.getRegisteredToolsForPkp(
+    const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
       selectedPkp.tokenId
     );
 
@@ -45,8 +45,8 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
       registeredTools.toolsWithPolicies.length === 0 &&
       registeredTools.toolsWithoutPolicies.length === 0
     ) {
-      throw new FssCliError(
-        FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
+      throw new AwCliError(
+        AwCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
         'No registered tools for this PKP.'
       );
     }
@@ -77,7 +77,7 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
       (tool) => tool.ipfsCid === selectedTool.ipfsCid
     );
     if (toolWithPolicy) {
-      const policy = await fssDelegatee.getToolPolicy(
+      const policy = await awDelegatee.getToolPolicy(
         selectedPkp.tokenId,
         selectedTool.ipfsCid
       );
@@ -92,7 +92,7 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
 
     // Execute the tool.
     logger.loading('Executing tool...');
-    const response = await fssDelegatee.executeTool({
+    const response = await awDelegatee.executeTool({
       ipfsId: selectedTool.ipfsCid,
       jsParams: {
         params,
@@ -106,33 +106,31 @@ export const handleExecuteTool = async (fssDelegatee: FssDelegatee) => {
     console.log('response', response);
   } catch (error) {
     // Handle specific errors related to tool execution.
-    if (error instanceof FssCliError) {
-      if (error.type === FssCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
+    if (error instanceof AwCliError) {
+      if (error.type === AwCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
         logger.error('No PKP selected');
         return;
       }
-      if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS) {
+      if (error.type === AwCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS) {
         logger.error('No tools available for the selected PKP');
         return;
       }
-      if (error.type === FssCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED) {
+      if (error.type === AwCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED) {
         logger.error('No tool selected');
         return;
       }
       if (
-        error.type === FssCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED
+        error.type === AwCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_CANCELLED
       ) {
         logger.error('Tool parameter input cancelled');
         return;
       }
-      if (
-        error.type === FssCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID
-      ) {
+      if (error.type === AwCliErrorType.DELEGATEE_EXECUTE_TOOL_PARAMS_INVALID) {
         logger.error(error.message);
         return;
       }
       if (
-        error.type === FssCliErrorType.DELEGATEE_EXECUTE_TOOL_POLICY_VIOLATED
+        error.type === AwCliErrorType.DELEGATEE_EXECUTE_TOOL_POLICY_VIOLATED
       ) {
         logger.error('Tool execution violates policy constraints');
         return;

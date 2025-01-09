@@ -1,20 +1,20 @@
 import prompts from 'prompts';
-import { type FssTool } from '@lit-protocol/agent-wallet';
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { type AwTool } from '@lit-protocol/agent-wallet';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Prompts the user to select a tool from a combined list of tools with and without policies.
  * Each tool is displayed with its name and IPFS CID. Tools with policies are marked as having a policy.
  *
- * @param toolsWithPolicies - An array of `FssTool` objects that have associated policies.
- * @param toolsWithoutPolicies - An array of `FssTool` objects that do not have associated policies.
- * @returns A promise that resolves to the selected `FssTool` object.
- * @throws {FssCliError} If no tools are available to select, an error of type `DELEGATEE_SELECT_TOOL_NO_TOOLS` is thrown.
- * @throws {FssCliError} If the user cancels the selection or no tool is selected, an error of type `DELEGATEE_SELECT_TOOL_CANCELLED` is thrown.
+ * @param toolsWithPolicies - An array of `AwTool` objects that have associated policies.
+ * @param toolsWithoutPolicies - An array of `AwTool` objects that do not have associated policies.
+ * @returns A promise that resolves to the selected `AwTool` object.
+ * @throws {AwCliError} If no tools are available to select, an error of type `DELEGATEE_SELECT_TOOL_NO_TOOLS` is thrown.
+ * @throws {AwCliError} If the user cancels the selection or no tool is selected, an error of type `DELEGATEE_SELECT_TOOL_CANCELLED` is thrown.
  */
 export const promptSelectTool = async (
-  toolsWithPolicies: FssTool<any, any>[],
-  toolsWithoutPolicies: FssTool<any, any>[]
+  toolsWithPolicies: AwTool<any, any>[],
+  toolsWithoutPolicies: AwTool<any, any>[]
 ) => {
   // Combine tools with and without policies into a single list, marking whether each tool has a policy.
   const allTools = [
@@ -32,8 +32,8 @@ export const promptSelectTool = async (
 
   // If no tools are available, throw an error.
   if (allTools.length === 0) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
       'No tools available to select'
     );
   }
@@ -48,12 +48,12 @@ export const promptSelectTool = async (
 
   // If no tool is selected, throw an error.
   if (!tool) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED,
       'No tool selected'
     );
   }
 
   // Return the selected tool.
-  return tool as FssTool<any, any>;
+  return tool as AwTool<any, any>;
 };

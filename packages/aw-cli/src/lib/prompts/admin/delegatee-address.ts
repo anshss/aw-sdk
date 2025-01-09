@@ -5,14 +5,14 @@ import prompts from 'prompts';
 import { ethers } from 'ethers';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 /**
  * Prompts the user to enter a delegatee address and validates it.
  * This function ensures the entered address is a valid Ethereum address and handles user cancellation.
  *
  * @returns The validated and normalized Ethereum address.
- * @throws FssCliError - If the user cancels the operation or provides an invalid address.
+ * @throws AwCliError - If the user cancels the operation or provides an invalid address.
  */
 export const promptDelegateeAddress = async () => {
   // Prompt the user to enter a delegatee address.
@@ -37,8 +37,8 @@ export const promptDelegateeAddress = async () => {
 
   // If the user cancels the prompt or provides an empty address, throw an error.
   if (!address) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_DELEGATEE_ADDRESS_CANCELLED,
       'Delegatee operation cancelled.'
     );
   }

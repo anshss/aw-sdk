@@ -21,8 +21,8 @@ import {
 } from './utils/pkp-tool-registry';
 import { LocalStorage } from './utils/storage';
 import { loadPkpFromStorage, mintPkp, savePkpToStorage } from './utils/pkp';
-import { FssSignerError, FssSignerErrorType } from './errors';
-import { FssTool } from '@lit-protocol/aw-tool';
+import { AwSignerError, AwSignerErrorType } from './errors';
+import { AwTool } from '@lit-protocol/aw-tool';
 
 /**
  * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.
@@ -98,15 +98,15 @@ export class Admin {
    * @param adminConfig - Configuration for the Admin role.
    * @param agentConfig - Configuration for the agent, including the Lit network and debug mode.
    * @returns A promise that resolves to an instance of the `Admin` class.
-   * @throws {FssSignerError} If the Lit network is not provided or the private key is missing.
+   * @throws {AwSignerError} If the Lit network is not provided or the private key is missing.
    */
   public static async create(
     adminConfig: AdminConfig,
     { litNetwork, debug = false }: AgentConfig = {}
   ) {
     if (!litNetwork) {
-      throw new FssSignerError(
-        FssSignerErrorType.ADMIN_MISSING_LIT_NETWORK,
+      throw new AwSignerError(
+        AwSignerErrorType.ADMIN_MISSING_LIT_NETWORK,
         'Lit network not provided'
       );
     }
@@ -125,8 +125,8 @@ export class Admin {
       const adminPrivateKey = adminConfig.privateKey || storedPrivateKey;
 
       if (adminPrivateKey === null) {
-        throw new FssSignerError(
-          FssSignerErrorType.ADMIN_MISSING_PRIVATE_KEY,
+        throw new AwSignerError(
+          AwSignerErrorType.ADMIN_MISSING_PRIVATE_KEY,
           'Admin private key not provided and not found in storage. Please provide a private key.'
         );
       }
@@ -138,8 +138,8 @@ export class Admin {
 
       adminWallet = new ethers.Wallet(adminPrivateKey, provider);
     } else {
-      throw new FssSignerError(
-        FssSignerErrorType.ADMIN_MULTISIG_NOT_IMPLEMENTED,
+      throw new AwSignerError(
+        AwSignerErrorType.ADMIN_MULTISIG_NOT_IMPLEMENTED,
         'Multisig admin not implemented, use EOA instead.'
       );
     }
@@ -235,8 +235,8 @@ export class Admin {
    * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
   public async getRegisteredToolsForPkp(): Promise<{
-    toolsWithPolicies: Array<FssTool<any, any>>;
-    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsWithPolicies: Array<AwTool<any, any>>;
+    toolsWithoutPolicies: Array<AwTool<any, any>>;
     toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
     toolsUnknownWithoutPolicies: string[];
   }> {

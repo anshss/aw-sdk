@@ -1,5 +1,5 @@
 import { LIT_NETWORK } from '@lit-protocol/constants';
-import { type FssTool } from '@lit-protocol/aw-tool';
+import { type AwTool } from '@lit-protocol/aw-tool';
 import type { ethers } from 'ethers';
 
 /**
@@ -166,7 +166,7 @@ export interface DelegatedPkpInfo {
 
 export interface IntentMatcherResponse<TParams extends Record<string, any>> {
   analysis: any;
-  matchedTool: FssTool | null;
+  matchedTool: AwTool | null;
   params: {
     foundParams: Partial<TParams>;
     missingParams: Array<keyof TParams>;
@@ -177,7 +177,7 @@ export interface IntentMatcherResponse<TParams extends Record<string, any>> {
 export interface IntentMatcher {
   analyzeIntentAndMatchTool(
     intent: string,
-    registeredTools: FssTool<any, any>[]
+    registeredTools: AwTool<any, any>[]
   ): Promise<IntentMatcherResponse<any>>;
 }
 

@@ -52,9 +52,9 @@ export const originalConsole = {
   error: originalError,
 };
 
-import { FssCli } from './lib/cli';
+import { AwCli } from './lib/cli';
 
-const cli = new FssCli();
+const cli = new AwCli();
 cli.start().catch((error) => {
   console.error('Failed to start CLI:', error);
   process.exit(1);

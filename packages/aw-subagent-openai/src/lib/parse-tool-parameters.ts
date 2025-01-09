@@ -1,8 +1,8 @@
 // Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
 
-// Import the FssTool type from the '@lit-protocol/aw-tool' package.
-import type { FssTool } from '@lit-protocol/aw-tool';
+// Import the AwTool type from the '@lit-protocol/aw-tool' package.
+import type { AwTool } from '@lit-protocol/aw-tool';
 
 /**
  * Parses and validates parameters from a user's intent for a given tool.
@@ -26,7 +26,7 @@ export async function parseToolParametersFromIntent<
   openai: OpenAI,
   openAiModel: string,
   intent: string,
-  tool: FssTool<TParams, TPolicy>
+  tool: AwTool<TParams, TPolicy>
 ): Promise<{
   foundParams: Partial<TParams>;
   missingParams: Array<keyof TParams>;

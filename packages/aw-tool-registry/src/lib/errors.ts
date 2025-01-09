@@ -1,8 +1,8 @@
 /**
- * Enum representing the types of errors that can occur in the FssToolRegistry.
+ * Enum representing the types of errors that can occur in the AwToolRegistry.
  * Each error type corresponds to a specific failure scenario.
  */
-export enum FssToolRegistryErrorType {
+export enum AwToolRegistryErrorType {
   /** Indicates that the requested tool was not found in the registry. */
   TOOL_NOT_FOUND = 'TOOL_NOT_FOUND',
 
@@ -24,8 +24,8 @@ export type ErrorDetails = {
   /** The stack trace of the error. */
   stack?: string;
 
-  /** The type of the error, if it is an `FssToolRegistryError`. */
-  type?: FssToolRegistryErrorType;
+  /** The type of the error, if it is an `AwToolRegistryError`. */
+  type?: AwToolRegistryErrorType;
 
   /** Additional details about the error. */
   details?: unknown;
@@ -35,10 +35,10 @@ export type ErrorDetails = {
 };
 
 /**
- * Custom error class for the FssToolRegistry.
+ * Custom error class for the AwToolRegistry.
  * Extends the built-in `Error` class to include additional metadata such as error type and serialized details.
  */
-export class FssToolRegistryError extends Error {
+export class AwToolRegistryError extends Error {
   /**
    * A serialized string representation of the error details.
    * This is useful for logging and debugging.
@@ -46,14 +46,14 @@ export class FssToolRegistryError extends Error {
   public readonly serializedDetails: string;
 
   /**
-   * Creates an instance of `FssToolRegistryError`.
+   * Creates an instance of `AwToolRegistryError`.
    *
-   * @param type - The type of the error, as defined in `FssToolRegistryErrorType`.
+   * @param type - The type of the error, as defined in `AwToolRegistryErrorType`.
    * @param message - A human-readable error message.
    * @param details - Optional additional details about the error, such as nested errors or custom properties.
    */
   constructor(
-    public readonly type: FssToolRegistryErrorType,
+    public readonly type: AwToolRegistryErrorType,
     message: string,
     public readonly details?: Record<string, ErrorDetails | unknown>
   ) {
@@ -71,7 +71,7 @@ export class FssToolRegistryError extends Error {
                 name: value.name,
                 message: value.message,
                 stack: value.stack,
-                ...(value instanceof FssToolRegistryError
+                ...(value instanceof AwToolRegistryError
                   ? {
                       type: value.type,
                       details: value.serializedDetails

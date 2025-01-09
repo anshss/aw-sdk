@@ -5,7 +5,7 @@ import prompts from 'prompts';
 import { ethers } from 'ethers';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -15,7 +15,7 @@ import { logger } from '../../utils/logger';
  * This function handles user cancellation and ensures proper Ethereum address formatting.
  *
  * @returns An array of validated and normalized Ethereum addresses.
- * @throws FssCliError - If the user cancels the operation.
+ * @throws AwCliError - If the user cancels the operation.
  */
 export const promptSelectDelegateesToAdd = async () => {
   // Initialize an array to store the entered delegatee addresses.
@@ -58,8 +58,8 @@ export const promptSelectDelegateesToAdd = async () => {
 
         // If the user confirms cancellation, throw an error.
         if (confirmed) {
-          throw new FssCliError(
-            FssCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
+          throw new AwCliError(
+            AwCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
             'Batch delegatee addition cancelled.'
           );
         }
@@ -92,8 +92,8 @@ export const promptSelectDelegateesToAdd = async () => {
 
   // If the user does not confirm, throw an error.
   if (!confirmed) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_BATCH_ADD_DELEGATEE_CANCELLED,
       'Batch delegatee addition cancelled.'
     );
   }

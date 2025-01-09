@@ -12,7 +12,7 @@ import type {
   ExecuteJsResponse,
   JsonExecutionSdkParams,
 } from '@lit-protocol/types';
-import { type FssTool } from '@lit-protocol/aw-tool';
+import { type AwTool } from '@lit-protocol/aw-tool';
 import { ethers } from 'ethers';
 
 import type {
@@ -33,7 +33,7 @@ import {
   saveCapacityCreditToStorage,
 } from './utils/capacity-credit';
 import { LocalStorage } from './utils/storage';
-import { FssSignerError, FssSignerErrorType } from './errors';
+import { AwSignerError, AwSignerErrorType } from './errors';
 import {
   DEFAULT_REGISTRY_CONFIG,
   getPkpToolPolicyRegistryContract,
@@ -122,15 +122,15 @@ export class Delegatee implements CredentialStore {
    * @param delegateePrivateKey - Optional. The private key for the Delegatee role.
    * @param agentConfig - Configuration for the agent, including the Lit network and debug mode.
    * @returns A promise that resolves to an instance of the `Delegatee` class.
-   * @throws {FssSignerError} If the Lit network is not provided or the private key is missing.
+   * @throws {AwSignerError} If the Lit network is not provided or the private key is missing.
    */
   public static async create(
     delegateePrivateKey?: string,
     { litNetwork, debug = false }: AgentConfig = {}
   ) {
     if (!litNetwork) {
-      throw new FssSignerError(
-        FssSignerErrorType.DELEGATEE_MISSING_LIT_NETWORK,
+      throw new AwSignerError(
+        AwSignerErrorType.DELEGATEE_MISSING_LIT_NETWORK,
         'Lit network not provided'
       );
     }
@@ -147,8 +147,8 @@ export class Delegatee implements CredentialStore {
     const _delegateePrivateKey = delegateePrivateKey || storedPrivateKey;
 
     if (_delegateePrivateKey === null) {
-      throw new FssSignerError(
-        FssSignerErrorType.DELEGATEE_MISSING_PRIVATE_KEY,
+      throw new AwSignerError(
+        AwSignerErrorType.DELEGATEE_MISSING_PRIVATE_KEY,
         'Delegatee private key not provided and not found in storage. Please provide a private key.'
       );
     }
@@ -245,8 +245,8 @@ export class Delegatee implements CredentialStore {
    * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
   public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: Array<FssTool<any, any>>;
-    toolsWithoutPolicies: Array<FssTool<any, any>>;
+    toolsWithPolicies: Array<AwTool<any, any>>;
+    toolsWithoutPolicies: Array<AwTool<any, any>>;
     toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
     toolsUnknownWithoutPolicies: string[];
   }> {

@@ -1,5 +1,5 @@
-import { Admin as FssAdmin, type LitNetwork } from '@lit-protocol/agent-wallet';
-import { FssSignerError, FssSignerErrorType } from '@lit-protocol/aw-signer';
+import { Admin as AwAdmin, type LitNetwork } from '@lit-protocol/agent-wallet';
+import { AwSignerError, AwSignerErrorType } from '@lit-protocol/aw-signer';
 
 import { logger } from '../utils/logger';
 import {
@@ -27,35 +27,35 @@ import {
  * It initializes the Admin role, handles user interactions via a menu, and delegates actions to appropriate handlers.
  */
 export class Admin {
-  // Private instance of the FssAdmin class.
-  private fssAdmin: FssAdmin;
+  // Private instance of the AwAdmin class.
+  private awAdmin: AwAdmin;
 
   /**
    * Private constructor for the Admin class.
-   * @param fssAdmin - An instance of the `FssAdmin` class.
+   * @param awAdmin - An instance of the `AwAdmin` class.
    */
-  private constructor(fssAdmin: FssAdmin) {
-    this.fssAdmin = fssAdmin;
+  private constructor(awAdmin: AwAdmin) {
+    this.awAdmin = awAdmin;
     logger.success('Admin role initialized successfully.');
   }
 
   /**
-   * Creates an instance of the `FssAdmin` class.
+   * Creates an instance of the `AwAdmin` class.
    * Handles errors related to missing private keys or insufficient balances by prompting the user for input.
    *
    * @param litNetwork - The Lit network to use for the Admin role.
    * @param privateKey - Optional. The private key for the Admin role.
-   * @returns A promise that resolves to an instance of the `FssAdmin` class.
+   * @returns A promise that resolves to an instance of the `AwAdmin` class.
    * @throws If initialization fails, the function logs an error and exits the process.
    */
-  private static async createFssAdmin(
+  private static async createAwAdmin(
     litNetwork: LitNetwork,
     privateKey?: string
-  ): Promise<FssAdmin> {
-    let fssAdmin: FssAdmin;
+  ): Promise<AwAdmin> {
+    let awAdmin: AwAdmin;
     try {
-      // Attempt to create the FssAdmin instance.
-      fssAdmin = await FssAdmin.create(
+      // Attempt to create the AwAdmin instance.
+      awAdmin = await AwAdmin.create(
         {
           type: 'eoa',
           privateKey,
@@ -66,18 +66,18 @@ export class Admin {
       );
     } catch (error) {
       // Handle specific errors related to missing private keys or insufficient balances.
-      if (error instanceof FssSignerError) {
-        if (error.type === FssSignerErrorType.ADMIN_MISSING_PRIVATE_KEY) {
+      if (error instanceof AwSignerError) {
+        if (error.type === AwSignerErrorType.ADMIN_MISSING_PRIVATE_KEY) {
           // Prompt the user for a private key if it is missing.
           const privateKey = await promptAdminInit();
-          return Admin.createFssAdmin(litNetwork, privateKey);
+          return Admin.createAwAdmin(litNetwork, privateKey);
         }
 
-        if (error.type === FssSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT) {
+        if (error.type === AwSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT) {
           // Prompt the user to fund the account if the balance is insufficient.
           const hasFunded = await promptAdminInsufficientBalance();
           if (hasFunded) {
-            return Admin.createFssAdmin(litNetwork, privateKey);
+            return Admin.createAwAdmin(litNetwork, privateKey);
           }
         }
       }
@@ -87,7 +87,7 @@ export class Admin {
       process.exit(1);
     }
 
-    return fssAdmin;
+    return awAdmin;
   }
 
   /**
@@ -97,8 +97,8 @@ export class Admin {
    */
   public static async create(litNetwork: LitNetwork) {
     logger.info('Initializing Admin role...');
-    const fssAdmin = await Admin.createFssAdmin(litNetwork);
-    return new Admin(fssAdmin);
+    const awAdmin = await Admin.createAwAdmin(litNetwork);
+    return new Admin(awAdmin);
   }
 
   /**
@@ -115,40 +115,40 @@ export class Admin {
     // Handle the selected action.
     switch (option) {
       case 'permitTool':
-        await handlePermitTool(admin.fssAdmin);
+        await handlePermitTool(admin.awAdmin);
         break;
       case 'removeTool':
-        await handleRemoveTool(admin.fssAdmin);
+        await handleRemoveTool(admin.awAdmin);
         break;
       case 'getRegisteredTools':
-        await handleGetTools(admin.fssAdmin);
+        await handleGetTools(admin.awAdmin);
         break;
       case 'getToolPolicy':
-        await handleGetToolPolicy(admin.fssAdmin);
+        await handleGetToolPolicy(admin.awAdmin);
         break;
       case 'setToolPolicy':
-        await handleSetToolPolicy(admin.fssAdmin);
+        await handleSetToolPolicy(admin.awAdmin);
         break;
       case 'removeToolPolicy':
-        await handleRemoveToolPolicy(admin.fssAdmin);
+        await handleRemoveToolPolicy(admin.awAdmin);
         break;
       case 'getDelegatees':
-        await handleGetDelegatees(admin.fssAdmin);
+        await handleGetDelegatees(admin.awAdmin);
         break;
       case 'isDelegatee':
-        await handleIsDelegatee(admin.fssAdmin);
+        await handleIsDelegatee(admin.awAdmin);
         break;
       case 'addDelegatee':
-        await handleAddDelegatee(admin.fssAdmin);
+        await handleAddDelegatee(admin.awAdmin);
         break;
       case 'removeDelegatee':
-        await handleRemoveDelegatee(admin.fssAdmin);
+        await handleRemoveDelegatee(admin.awAdmin);
         break;
       case 'batchAddDelegatees':
-        await handleBatchAddDelegatee(admin.fssAdmin);
+        await handleBatchAddDelegatee(admin.awAdmin);
         break;
       case 'batchRemoveDelegatees':
-        await handleBatchRemoveDelegatee(admin.fssAdmin);
+        await handleBatchRemoveDelegatee(admin.awAdmin);
         break;
       default:
         // Log an error and exit if an invalid option is selected.
@@ -164,6 +164,6 @@ export class Admin {
    * Disconnects the Admin instance from the Lit network.
    */
   public disconnect() {
-    this.fssAdmin.disconnect();
+    this.awAdmin.disconnect();
   }
 }

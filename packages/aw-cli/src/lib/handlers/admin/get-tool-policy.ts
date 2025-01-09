@@ -1,8 +1,5 @@
-// Import the FssAdmin and FssTool types from the '@lit-protocol/agent-wallet' package.
-import {
-  type Admin as FssAdmin,
-  type FssTool,
-} from '@lit-protocol/agent-wallet';
+// Import the AwAdmin and AwTool types from the '@lit-protocol/agent-wallet' package.
+import { type Admin as AwAdmin, type AwTool } from '@lit-protocol/agent-wallet';
 
 // Import the prompts library for user interaction.
 import prompts from 'prompts';
@@ -11,7 +8,7 @@ import prompts from 'prompts';
 import { logger } from '../../utils/logger';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 // Import the handleGetTools function to retrieve permitted tools.
 import { handleGetTools } from './get-tools';
@@ -22,10 +19,10 @@ import { handleGetTools } from './get-tools';
  *
  * @param toolsWithPolicies - An array of tools with policies.
  * @returns The selected tool.
- * @throws FssCliError - If the user cancels the selection.
+ * @throws AwCliError - If the user cancels the selection.
  */
 const promptSelectToolForPolicy = async (
-  toolsWithPolicies: FssTool<any, any>[]
+  toolsWithPolicies: AwTool<any, any>[]
 ) => {
   // Map the tools to a list of choices for the prompts library.
   const choices = toolsWithPolicies.map((tool) => ({
@@ -43,8 +40,8 @@ const promptSelectToolForPolicy = async (
 
   // Throw an error if the user cancels the selection.
   if (!tool) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
       'Tool policy viewing cancelled.'
     );
   }
@@ -57,15 +54,15 @@ const promptSelectToolForPolicy = async (
  * Retrieves and displays the policy for a selected tool.
  * This function logs the tool's name, IPFS CID, policy version, and decoded policy.
  *
- * @param fssAdmin - An instance of the FssAdmin class.
+ * @param awAdmin - An instance of the AwAdmin class.
  * @param tool - The tool for which to retrieve the policy.
  */
-const getToolPolicy = async (fssAdmin: FssAdmin, tool: FssTool<any, any>) => {
+const getToolPolicy = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting tool policy...');
 
-  // Retrieve the tool's policy and version from the FSS system.
-  const { policy, version } = await fssAdmin.getToolPolicy(tool.ipfsCid);
+  // Retrieve the tool's policy and version from the AW system.
+  const { policy, version } = await awAdmin.getToolPolicy(tool.ipfsCid);
 
   // Log the tool's name, IPFS CID, policy version, and decoded policy.
   logger.info('Tool Policy:');
@@ -80,39 +77,39 @@ const getToolPolicy = async (fssAdmin: FssAdmin, tool: FssTool<any, any>) => {
  * This function retrieves the list of permitted tools, prompts the user to select a tool,
  * and displays the tool's policy. It also handles errors that occur during the process.
  *
- * @param fssAdmin - An instance of the FssAdmin class.
+ * @param awAdmin - An instance of the AwAdmin class.
  */
-export const handleGetToolPolicy = async (fssAdmin: FssAdmin) => {
+export const handleGetToolPolicy = async (awAdmin: AwAdmin) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(fssAdmin);
+    const permittedTools = await handleGetTools(awAdmin);
 
     // If no permitted tools are found, throw an error.
     if (
       permittedTools === null ||
       permittedTools?.toolsWithPolicies.length === 0
     ) {
-      throw new FssCliError(
-        FssCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
         'No tools are currently permitted.'
       );
     }
 
     // Prompt the user to select a tool and retrieve its policy.
     await getToolPolicy(
-      fssAdmin,
+      awAdmin,
       await promptSelectToolForPolicy(permittedTools.toolsWithPolicies)
     );
   } catch (error) {
     // Handle specific errors related to tool policy retrieval.
-    if (error instanceof FssCliError) {
-      if (error.type === FssCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS) {
+    if (error instanceof AwCliError) {
+      if (error.type === AwCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS) {
         // Log an error message if no permitted tools are found.
         logger.error('No permitted tools with policies found.');
         return;
       }
 
-      if (error.type === FssCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED) {
+      if (error.type === AwCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED) {
         // Log an error message if the user cancels the operation.
         logger.error('Tool policy viewing cancelled.');
         return;

@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 import { LocalStorage } from './storage';
 import { CapacityCreditMintOptions, CapacityCreditInfo } from '../types';
-import { FssSignerError, FssSignerErrorType } from '../errors';
+import { AwSignerError, AwSignerErrorType } from '../errors';
 
 /**
  * Load capacity credit ID from storage
@@ -18,8 +18,8 @@ export function loadCapacityCreditFromStorage(
       return JSON.parse(capacityCredit) as CapacityCreditInfo;
     }
   } catch (error) {
-    throw new FssSignerError(
-      FssSignerErrorType.STORAGE_FAILED_TO_GET_ITEM,
+    throw new AwSignerError(
+      AwSignerErrorType.STORAGE_FAILED_TO_GET_ITEM,
       'Failed to retrieve capacity credit from storage',
       {
         details: error,
@@ -100,8 +100,8 @@ export async function mintCapacityCredit(
   );
 
   if (mintCost.gt(await litContracts.signer.getBalance())) {
-    throw new FssSignerError(
-      FssSignerErrorType.INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT,
+    throw new AwSignerError(
+      AwSignerErrorType.INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT,
       `${await litContracts.signer.getAddress()} has insufficient balance to mint capacity credit: ${ethers.utils.formatEther(
         await litContracts.signer.getBalance()
       )} < ${ethers.utils.formatEther(mintCost)}`

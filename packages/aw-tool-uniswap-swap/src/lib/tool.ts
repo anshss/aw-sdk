@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  type FssTool,
+  type AwTool,
   type SupportedLitNetwork,
   NETWORK_CONFIGS,
   NetworkConfig,
@@ -110,12 +110,12 @@ const validateUniswapSwapParameters = (
  * Creates a network-specific UniswapSwap tool.
  * @param {SupportedLitNetwork} network - The Lit network to use.
  * @param {NetworkConfig} config - The configuration for the network.
- * @returns {FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>} - The configured FssTool instance.
+ * @returns {AwTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>} - The configured AwTool instance.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
-): FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
+): AwTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
   name: 'UniswapSwap',
   description: `A Lit Action that swaps tokens on Uniswap.`,
   ipfsCid: IPFS_CIDS[network],
@@ -130,7 +130,7 @@ const createNetworkTool = (
 
 /**
  * A collection of network-specific UniswapSwap tools.
- * @type {Record<SupportedLitNetwork, FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>>}
+ * @type {Record<SupportedLitNetwork, AwTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>>}
  */
 export const UniswapSwap = Object.entries(NETWORK_CONFIGS).reduce(
   (acc, [network, config]) => ({
@@ -139,6 +139,6 @@ export const UniswapSwap = Object.entries(NETWORK_CONFIGS).reduce(
   }),
   {} as Record<
     SupportedLitNetwork,
-    FssTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>
+    AwTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType>
   >
 );

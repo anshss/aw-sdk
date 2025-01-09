@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 export const promptToolMatchingIntent = async (): Promise<string> => {
   const { intent } = await prompts({
@@ -10,8 +10,8 @@ export const promptToolMatchingIntent = async (): Promise<string> => {
   });
 
   if (!intent) {
-    throw new FssCliError(
-      FssCliErrorType.DELEGATEE_GET_TOOL_MATCHING_INTENT_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.DELEGATEE_GET_TOOL_MATCHING_INTENT_CANCELLED,
       'Intent input cancelled'
     );
   }

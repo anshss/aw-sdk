@@ -4,11 +4,11 @@ import prompts from 'prompts';
 // Import the zod library for schema validation.
 import { z } from 'zod';
 
-// Import the FssTool type from the '@lit-protocol/agent-wallet' package.
-import { type FssTool } from '@lit-protocol/agent-wallet';
+// Import the AwTool type from the '@lit-protocol/agent-wallet' package.
+import { type AwTool } from '@lit-protocol/agent-wallet';
 
 // Import custom error types and utilities.
-import { FssCliError, FssCliErrorType } from '../../errors';
+import { AwCliError, AwCliErrorType } from '../../errors';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -94,9 +94,9 @@ const promptArrayValues = async (
  *
  * @param tool - The tool for which to configure the policy.
  * @returns An object containing the encoded policy and version.
- * @throws FssCliError - If the user cancels the operation or provides invalid input.
+ * @throws AwCliError - If the user cancels the operation or provides invalid input.
  */
-export const promptPolicyDetails = async (tool: FssTool<any, any>) => {
+export const promptPolicyDetails = async (tool: AwTool<any, any>) => {
   // Log the tool details for context.
   logger.info('Tool Policy Configuration:');
   logger.log(`Name: ${tool.name}`);
@@ -149,8 +149,8 @@ export const promptPolicyDetails = async (tool: FssTool<any, any>) => {
 
     // If the user cancels the input, throw an error.
     if (!value) {
-      throw new FssCliError(
-        FssCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
         'Tool policy setting cancelled.'
       );
     }
@@ -186,8 +186,8 @@ export const promptPolicyDetails = async (tool: FssTool<any, any>) => {
 
   // If the user does not confirm, throw an error.
   if (!confirmed) {
-    throw new FssCliError(
-      FssCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
       'Tool policy setting cancelled.'
     );
   }

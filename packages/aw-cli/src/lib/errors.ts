@@ -1,4 +1,4 @@
-export enum FssCliErrorType {
+export enum AwCliErrorType {
   ADMIN_PERMIT_TOOL_NO_UNPERMITTED_TOOLS = 'ADMIN_PERMIT_TOOL_NO_UNPERMITTED_TOOLS',
   ADMIN_PERMIT_TOOL_CANCELLED = 'ADMIN_PERMIT_TOOL_CANCELLED',
   ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS = 'ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS',
@@ -37,21 +37,21 @@ export type ErrorDetails = {
   name?: string;
   message?: string;
   stack?: string;
-  type?: FssCliErrorType;
+  type?: AwCliErrorType;
   details?: unknown;
   [key: string]: unknown;
 };
 
-export class FssCliError extends Error {
+export class AwCliError extends Error {
   public readonly serializedDetails: string;
 
   constructor(
-    public readonly type: FssCliErrorType,
+    public readonly type: AwCliErrorType,
     message: string,
     public readonly details?: Record<string, ErrorDetails | unknown>
   ) {
     super(message);
-    this.name = 'FssCliError';
+    this.name = 'AwCliError';
 
     // Store a serialized version of details for better error logging
     this.serializedDetails = details
@@ -64,7 +64,7 @@ export class FssCliError extends Error {
                 name: value.name,
                 message: value.message,
                 stack: value.stack,
-                ...(value instanceof FssCliError
+                ...(value instanceof AwCliError
                   ? {
                       type: value.type,
                       details: value.serializedDetails

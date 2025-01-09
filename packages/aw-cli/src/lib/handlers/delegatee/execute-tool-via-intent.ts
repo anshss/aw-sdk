@@ -1,5 +1,5 @@
 import {
-  Delegatee as FssDelegatee,
+  Delegatee as AwDelegatee,
   IntentMatcher,
 } from '@lit-protocol/agent-wallet';
 
@@ -8,11 +8,11 @@ import { handleGetToolViaIntent } from './get-tool-via-intent';
 import { promptToolParams } from '../../prompts/delegatee';
 
 export const handleExecuteToolViaIntent = async (
-  fssDelegatee: FssDelegatee,
+  awDelegatee: AwDelegatee,
   intentMatcher: IntentMatcher
 ) => {
   const { selectedPkp, intentMatcherResponse } = await handleGetToolViaIntent(
-    fssDelegatee,
+    awDelegatee,
     intentMatcher
   );
 
@@ -27,7 +27,7 @@ export const handleExecuteToolViaIntent = async (
 
   logger.loading('Executing tool...');
 
-  const response = await fssDelegatee.executeTool({
+  const response = await awDelegatee.executeTool({
     ipfsId: intentMatcherResponse.matchedTool!.ipfsCid,
     jsParams: {
       params,

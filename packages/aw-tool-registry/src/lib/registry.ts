@@ -1,4 +1,4 @@
-import type { FssTool } from '@lit-protocol/aw-tool';
+import type { AwTool } from '@lit-protocol/aw-tool';
 import { ERC20Transfer } from '@lit-protocol/aw-tool-erc20-transfer';
 import { UniswapSwap } from '@lit-protocol/aw-tool-uniswap-swap';
 import { SignEcdsa } from '@lit-protocol/aw-tool-sign-ecdsa';
@@ -11,9 +11,9 @@ export type LitNetwork = 'datil-dev' | 'datil-test' | 'datil';
 
 /**
  * Represents a tool that is specific to a Lit network.
- * @template T - The type of the tool, which must extend `FssTool`.
+ * @template T - The type of the tool, which must extend `AwTool`.
  */
-export type NetworkSpecificTool<T extends FssTool<any, any>> = Record<
+export type NetworkSpecificTool<T extends AwTool<any, any>> = Record<
   LitNetwork,
   T
 >;
@@ -23,24 +23,24 @@ export type NetworkSpecificTool<T extends FssTool<any, any>> = Record<
  */
 export type PermittedTools = {
   /** Tools that have associated policies. */
-  toolsWithPolicies: FssTool<any, any>[];
+  toolsWithPolicies: AwTool<any, any>[];
 
   /** Tools that do not have associated policies. */
-  toolsWithoutPolicies: FssTool<any, any>[];
+  toolsWithoutPolicies: AwTool<any, any>[];
 };
 
 /**
  * A registry for storing and managing tools.
  * The registry maps tool names to their network-specific implementations.
  */
-const toolRegistry = new Map<string, NetworkSpecificTool<FssTool<any, any>>>();
+const toolRegistry = new Map<string, NetworkSpecificTool<AwTool<any, any>>>();
 
 /**
  * Registers a tool in the registry.
  * @param name - The name of the tool.
  * @param tool - The network-specific implementation of the tool.
  */
-export function registerTool<T extends FssTool<any, any>>(
+export function registerTool<T extends AwTool<any, any>>(
   name: string,
   tool: NetworkSpecificTool<T>
 ): void {
@@ -53,7 +53,7 @@ export function registerTool<T extends FssTool<any, any>>(
  * @param network - The Lit network for which the tool is registered.
  * @returns The tool if found, or `null` if the tool is not registered for the specified network.
  */
-export function getToolByName<T extends FssTool<any, any>>(
+export function getToolByName<T extends AwTool<any, any>>(
   name: string,
   network: LitNetwork
 ): T | null {
@@ -67,7 +67,7 @@ export function getToolByName<T extends FssTool<any, any>>(
  * @param ipfsCid - The IPFS CID of the tool.
  * @returns An object containing the tool and its network if found, or `null` if the tool is not found.
  */
-export function getToolByIpfsCid<T extends FssTool<any, any>>(
+export function getToolByIpfsCid<T extends AwTool<any, any>>(
   ipfsCid: string
 ): { tool: T; network: LitNetwork } | null {
   for (const [, networkTools] of toolRegistry.entries()) {
@@ -88,7 +88,7 @@ export function getToolByIpfsCid<T extends FssTool<any, any>>(
  * @param network - The Lit network for which to list the tools.
  * @returns An array of tools registered for the specified network.
  */
-export function listToolsByNetwork<T extends FssTool<any, any>>(
+export function listToolsByNetwork<T extends AwTool<any, any>>(
   network: LitNetwork
 ): Array<T> {
   return Array.from(toolRegistry.values()).map(
@@ -100,7 +100,7 @@ export function listToolsByNetwork<T extends FssTool<any, any>>(
  * Lists all registered tools for all networks.
  * @returns An array of objects containing the tool and its network.
  */
-export function listAllTools<T extends FssTool<any, any>>(): Array<{
+export function listAllTools<T extends AwTool<any, any>>(): Array<{
   tool: T;
   network: LitNetwork;
 }> {

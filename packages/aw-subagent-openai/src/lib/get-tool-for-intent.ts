@@ -1,7 +1,7 @@
 // Import the OpenAI class from the 'openai' package.
 import { OpenAI } from 'openai';
 
-import type { FssTool } from '@lit-protocol/aw-tool';
+import type { AwTool } from '@lit-protocol/aw-tool';
 
 // Import a helper function to generate a prompt for tool matching.
 import { getToolMatchingPrompt } from './get-tool-matching-prompt';
@@ -22,10 +22,10 @@ export async function getToolForIntent(
   openai: OpenAI,
   openAiModel: string,
   userIntent: string,
-  registeredTools: FssTool<any, any>[]
+  registeredTools: AwTool<any, any>[]
 ): Promise<{
   analysis: any;
-  matchedTool: FssTool | null;
+  matchedTool: AwTool | null;
 }> {
   const completion = await openai.chat.completions.create({
     model: openAiModel,

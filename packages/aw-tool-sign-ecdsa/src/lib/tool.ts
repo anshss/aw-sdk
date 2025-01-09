@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import {
-  type FssTool,
+  type AwTool,
   type SupportedLitNetwork,
   NETWORK_CONFIGS,
   NetworkConfig,
@@ -67,12 +67,12 @@ const validateSignEcdsaParameters = (
  * Creates a network-specific SignEcdsa tool.
  * @param network - The supported Lit network (e.g., `datil-dev`, `datil-test`, `datil`).
  * @param config - The network configuration.
- * @returns A configured `FssTool` instance for the Signing ECDSA Lit Action.
+ * @returns A configured `AwTool` instance for the Signing ECDSA Lit Action.
  */
 const createNetworkTool = (
   network: SupportedLitNetwork,
   config: NetworkConfig
-): FssTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType> => ({
+): AwTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType> => ({
   name: 'SignEcdsa',
   description: `A Lit Action that signs a message with an allowlist of message prefixes.`,
   ipfsCid: IPFS_CIDS[network],
@@ -96,6 +96,6 @@ export const SignEcdsa = Object.entries(NETWORK_CONFIGS).reduce(
   }),
   {} as Record<
     SupportedLitNetwork,
-    FssTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType>
+    AwTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType>
   >
 );

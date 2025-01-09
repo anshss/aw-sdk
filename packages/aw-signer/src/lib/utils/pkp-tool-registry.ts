@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { type LitContracts } from '@lit-protocol/contracts-sdk';
 import bs58 from 'bs58';
 import { getToolByIpfsCid } from '@lit-protocol/aw-tool-registry';
-import type { FssTool } from '@lit-protocol/aw-tool';
+import type { AwTool } from '@lit-protocol/aw-tool';
 
 import {
   UnknownRegisteredToolWithPolicy,
@@ -73,11 +73,11 @@ export const getRegisteredTools = async (
   pkpTokenId: string
 ): Promise<{
   toolsWithPolicies: Array<{
-    tool: FssTool<any, any>;
+    tool: AwTool<any, any>;
     network: string;
   }>;
   toolsWithoutPolicies: Array<{
-    tool: FssTool<any, any>;
+    tool: AwTool<any, any>;
     network: string;
   }>;
   toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
@@ -101,11 +101,11 @@ export const getRegisteredTools = async (
     await toolPolicyRegistryContract.getRegisteredTools(pkpTokenId);
 
   const toolsWithPolicies: Array<{
-    tool: FssTool<any, any>;
+    tool: AwTool<any, any>;
     network: string;
   }> = [];
   const toolsWithoutPolicies: Array<{
-    tool: FssTool<any, any>;
+    tool: AwTool<any, any>;
     network: string;
   }> = [];
   const toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[] = [];

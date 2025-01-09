@@ -1,14 +1,14 @@
-// Import the FssTool type from the '@lit-protocol/aw-tool' package.
-import type { FssTool } from '@lit-protocol/aw-tool';
+// Import the AwTool type from the '@lit-protocol/aw-tool' package.
+import type { AwTool } from '@lit-protocol/aw-tool';
 
 /**
  * Generates a prompt for OpenAI to analyze a user's intent and match it to an appropriate tool.
  * The prompt includes descriptions of the available tools and instructions for OpenAI to follow.
  *
- * @param tools - An array of FssTool objects representing the available tools.
+ * @param tools - An array of AwTool objects representing the available tools.
  * @returns A string containing the generated prompt.
  */
-export function getToolMatchingPrompt(tools: FssTool<any, any>[]): string {
+export function getToolMatchingPrompt(tools: AwTool<any, any>[]): string {
   const toolDescriptions = tools
     .map(
       (tool) =>

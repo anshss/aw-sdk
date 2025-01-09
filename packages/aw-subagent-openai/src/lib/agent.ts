@@ -4,7 +4,7 @@ import type {
   IntentMatcher,
   IntentMatcherResponse,
 } from '@lit-protocol/aw-signer';
-import type { FssTool } from '@lit-protocol/aw-tool';
+import type { AwTool } from '@lit-protocol/aw-tool';
 
 // Import helper functions for matching tools and parsing parameters based on intent.
 import { getToolForIntent } from './get-tool-for-intent';
@@ -24,7 +24,7 @@ export class OpenAiIntentMatcher implements IntentMatcher {
 
   public async analyzeIntentAndMatchTool(
     intent: string,
-    registeredTools: FssTool<any, any>[]
+    registeredTools: AwTool<any, any>[]
   ): Promise<IntentMatcherResponse<any>> {
     if (!this.openai) {
       throw new Error(

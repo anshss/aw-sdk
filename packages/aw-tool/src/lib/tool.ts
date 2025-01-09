@@ -61,12 +61,12 @@ export const BaseEthereumAddressSchema = z
 export type EthereumAddress = z.infer<typeof BaseEthereumAddressSchema>;
 
 /**
- * Represents a generic FSS (Function-as-a-Service) tool.
+ * Represents a generic AW (Function-as-a-Service) tool.
  * @template TParams - The type of the tool's parameters.
  * @template TPolicy - The type of the tool's policy.
  * @description A tool that can be configured with parameters and policies for execution.
  */
-export interface FssTool<
+export interface AwTool<
   TParams extends Record<string, any> = Record<string, any>,
   TPolicy extends { type: string } = { type: string }
 > {

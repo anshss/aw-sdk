@@ -1,7 +1,7 @@
 import {
-  Delegatee as FssDelegatee,
-  FssSignerError,
-  FssSignerErrorType,
+  Delegatee as AwDelegatee,
+  AwSignerError,
+  AwSignerErrorType,
   IntentMatcher,
   LitNetwork,
 } from '@lit-protocol/agent-wallet';
@@ -27,53 +27,53 @@ import { handleExecuteToolViaIntent } from '../handlers/delegatee/execute-tool-v
  * It initializes the Delegatee role, handles user interactions via a menu, and delegates actions to appropriate handlers.
  */
 export class Delegatee {
-  // Private instance of the FssDelegatee class.
-  private fssDelegatee: FssDelegatee;
+  // Private instance of the AwDelegatee class.
+  private awDelegatee: AwDelegatee;
 
   public intentMatcher: IntentMatcher | null = null;
   /**
    * Private constructor for the Delegatee class.
-   * @param fssDelegatee - An instance of the `FssDelegatee` class.
+   * @param awDelegatee - An instance of the `AwDelegatee` class.
    */
-  private constructor(fssDelegatee: FssDelegatee) {
-    this.fssDelegatee = fssDelegatee;
+  private constructor(awDelegatee: AwDelegatee) {
+    this.awDelegatee = awDelegatee;
     logger.success('Delegatee role initialized successfully.');
   }
 
   /**
-   * Creates an instance of the `FssDelegatee` class.
+   * Creates an instance of the `AwDelegatee` class.
    * Handles errors related to missing private keys or insufficient balances by prompting the user for input.
    *
    * @param litNetwork - The Lit network to use for the Delegatee role.
    * @param privateKey - Optional. The private key for the Delegatee role.
-   * @returns A promise that resolves to an instance of the `FssDelegatee` class.
+   * @returns A promise that resolves to an instance of the `AwDelegatee` class.
    * @throws If initialization fails, the function logs an error and exits the process.
    */
-  private static async createFssDelegatee(
+  private static async createAwDelegatee(
     litNetwork: LitNetwork,
     privateKey?: string
-  ): Promise<FssDelegatee> {
-    let fssDelegatee: FssDelegatee;
+  ): Promise<AwDelegatee> {
+    let awDelegatee: AwDelegatee;
     try {
-      // Attempt to create the FssDelegatee instance.
-      fssDelegatee = await FssDelegatee.create(privateKey, { litNetwork });
+      // Attempt to create the AwDelegatee instance.
+      awDelegatee = await AwDelegatee.create(privateKey, { litNetwork });
     } catch (error) {
       // Handle specific errors related to missing private keys or insufficient balances.
-      if (error instanceof FssSignerError) {
-        if (error.type === FssSignerErrorType.DELEGATEE_MISSING_PRIVATE_KEY) {
+      if (error instanceof AwSignerError) {
+        if (error.type === AwSignerErrorType.DELEGATEE_MISSING_PRIVATE_KEY) {
           // Prompt the user for a private key if it is missing.
           const privateKey = await promptDelegateeInit();
-          return Delegatee.createFssDelegatee(litNetwork, privateKey);
+          return Delegatee.createAwDelegatee(litNetwork, privateKey);
         }
 
         if (
           error.type ===
-          FssSignerErrorType.INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT
+          AwSignerErrorType.INSUFFICIENT_BALANCE_CAPACITY_CREDIT_MINT
         ) {
           // Prompt the user to fund the account if the balance is insufficient.
           const hasFunded = await promptDelegateeInsufficientBalance();
           if (hasFunded) {
-            return Delegatee.createFssDelegatee(litNetwork, privateKey);
+            return Delegatee.createAwDelegatee(litNetwork, privateKey);
           }
         }
       }
@@ -83,7 +83,7 @@ export class Delegatee {
       process.exit(1);
     }
 
-    return fssDelegatee;
+    return awDelegatee;
   }
 
   public static async create(
@@ -91,8 +91,8 @@ export class Delegatee {
     intentMatcher: IntentMatcher | null = null
   ) {
     logger.info('Initializing Delegatee role...');
-    const fssDelegatee = await Delegatee.createFssDelegatee(litNetwork);
-    const delegatee = new Delegatee(fssDelegatee);
+    const awDelegatee = await Delegatee.createAwDelegatee(litNetwork);
+    const delegatee = new Delegatee(awDelegatee);
     delegatee.intentMatcher = intentMatcher;
     return delegatee;
   }
@@ -111,42 +111,42 @@ export class Delegatee {
     // Handle the selected action.
     switch (option) {
       case 'getDelegatedPkps':
-        await handleGetDelegatedPkps(delegatee.fssDelegatee);
+        await handleGetDelegatedPkps(delegatee.awDelegatee);
         break;
       case 'getRegisteredTools':
-        await handleGetRegisteredTools(delegatee.fssDelegatee);
+        await handleGetRegisteredTools(delegatee.awDelegatee);
         break;
       case 'getToolPolicy':
-        await handleGetToolPolicy(delegatee.fssDelegatee);
+        await handleGetToolPolicy(delegatee.awDelegatee);
         break;
       case 'getToolViaIntent':
         if (delegatee.intentMatcher === null) {
           const intentMatcher = await handleGetIntentMatcher(
-            delegatee.fssDelegatee
+            delegatee.awDelegatee
           );
           delegatee.setIntentMatcher(intentMatcher);
         }
 
         await handleGetToolViaIntent(
-          delegatee.fssDelegatee,
+          delegatee.awDelegatee,
           delegatee.intentMatcher as IntentMatcher
         );
         break;
       case 'executeToolViaIntent':
         if (delegatee.intentMatcher === null) {
           const intentMatcher = await handleGetIntentMatcher(
-            delegatee.fssDelegatee
+            delegatee.awDelegatee
           );
           delegatee.setIntentMatcher(intentMatcher);
         }
 
         await handleExecuteToolViaIntent(
-          delegatee.fssDelegatee,
+          delegatee.awDelegatee,
           delegatee.intentMatcher as IntentMatcher
         );
         break;
       case 'executeTool':
-        await handleExecuteTool(delegatee.fssDelegatee);
+        await handleExecuteTool(delegatee.awDelegatee);
         break;
       default:
         // Log an error and exit if an invalid option is selected.
@@ -163,6 +163,6 @@ export class Delegatee {
   }
 
   public disconnect() {
-    this.fssDelegatee.disconnect();
+    this.awDelegatee.disconnect();
   }
 }
