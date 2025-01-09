@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Suppress deprecation warnings
+process.env.NO_DEPRECATION = '*';
+
 // Apply console patches before any other imports
 // Save original references
 const originalLog = console.log;
