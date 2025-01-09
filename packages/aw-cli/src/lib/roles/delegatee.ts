@@ -4,7 +4,7 @@ import {
   FssSignerErrorType,
   IntentMatcher,
   LitNetwork,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 import { logger } from '../utils/logger';
 import {
@@ -161,7 +161,6 @@ export class Delegatee {
   public setIntentMatcher(intentMatcher: IntentMatcher) {
     this.intentMatcher = intentMatcher;
   }
-
 
   public disconnect() {
     this.fssDelegatee.disconnect();

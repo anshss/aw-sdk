@@ -1,4 +1,4 @@
-import { type Delegatee as FssDelegatee } from '@lit-protocol/full-self-signing';
+import { type Delegatee as FssDelegatee } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';

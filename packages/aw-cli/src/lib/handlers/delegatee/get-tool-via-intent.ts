@@ -1,7 +1,7 @@
 import {
   Delegatee as FssDelegatee,
   IntentMatcher,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 import { logger } from '../../utils/logger';
 import {

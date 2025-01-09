@@ -1,9 +1,9 @@
-// Import the FssTool, FssAdmin, and PermittedTools types from the '@lit-protocol/full-self-signing' package.
+// Import the FssTool, FssAdmin, and PermittedTools types from the '@lit-protocol/agent-wallet' package.
 import {
   FssTool,
   type Admin as FssAdmin,
   type PermittedTools,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 // Import the prompts library for user interaction.
 import prompts from 'prompts';

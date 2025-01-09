@@ -4,8 +4,8 @@ import prompts from 'prompts';
 // Import the zod library for schema validation.
 import { z } from 'zod';
 
-// Import the FssTool type from the '@lit-protocol/full-self-signing' package.
-import { type FssTool } from '@lit-protocol/full-self-signing';
+// Import the FssTool type from the '@lit-protocol/agent-wallet' package.
+import { type FssTool } from '@lit-protocol/agent-wallet';
 
 // Import custom error types and utilities.
 import { FssCliError, FssCliErrorType } from '../../errors';

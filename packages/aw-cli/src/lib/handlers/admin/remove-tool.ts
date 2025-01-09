@@ -1,8 +1,8 @@
-// Import the FssAdmin and FssTool types from the '@lit-protocol/full-self-signing' package.
+// Import the FssAdmin and FssTool types from the '@lit-protocol/agent-wallet' package.
 import {
   type Admin as FssAdmin,
   type FssTool,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -66,7 +66,10 @@ export const handleRemoveTool = async (fssAdmin: FssAdmin) => {
     }
 
     // Prompt the user to select a tool to remove and remove it.
-    await removeTool(fssAdmin, await promptSelectToolForRemoval(permittedTools));
+    await removeTool(
+      fssAdmin,
+      await promptSelectToolForRemoval(permittedTools)
+    );
   } catch (error) {
     // Handle specific errors related to tool removal.
     if (error instanceof FssCliError) {

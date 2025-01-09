@@ -1,5 +1,5 @@
 import prompts from 'prompts';
-import type { LitNetwork } from '@lit-protocol/full-self-signing';
+import type { LitNetwork } from '@lit-protocol/agent-wallet';
 
 /**
  * Prompts the user to select a Lit network from a predefined list of options.
@@ -15,7 +15,8 @@ export const promptSelectLitNetwork = async (): Promise<LitNetwork> => {
     type: 'select', // Use a select input type for the menu.
     name: 'network', // The name of the selected network.
     message: 'Select a Lit network:', // The message displayed to the user.
-    choices: [ // The list of available Lit networks.
+    choices: [
+      // The list of available Lit networks.
       {
         title: 'Datil Dev',
         description: 'Development network',

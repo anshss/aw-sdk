@@ -1,5 +1,5 @@
 export default {
-  displayName: 'full-self-signing',
+  displayName: 'agent-wallet',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
   transform: {

@@ -1,8 +1,8 @@
 // Import the prompts library for user interaction.
 import prompts from 'prompts';
 
-// Import types from the '@lit-protocol/full-self-signing' package.
-import type { PermittedTools, FssTool } from '@lit-protocol/full-self-signing';
+// Import types from the '@lit-protocol/agent-wallet' package.
+import type { PermittedTools, FssTool } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';

@@ -1,7 +1,4 @@
-import {
-  Admin as FssAdmin,
-  type LitNetwork,
-} from '@lit-protocol/full-self-signing';
+import { Admin as FssAdmin, type LitNetwork } from '@lit-protocol/agent-wallet';
 import { FssSignerError, FssSignerErrorType } from '@lit-protocol/aw-signer';
 
 import { logger } from '../utils/logger';

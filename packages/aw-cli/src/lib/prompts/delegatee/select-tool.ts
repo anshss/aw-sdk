@@ -1,5 +1,5 @@
 import prompts from 'prompts';
-import { type FssTool } from '@lit-protocol/full-self-signing';
+import { type FssTool } from '@lit-protocol/agent-wallet';
 import { FssCliError, FssCliErrorType } from '../../errors';
 
 /**

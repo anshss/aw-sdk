@@ -1,5 +1,5 @@
-// Import the FssAdmin type from the '@lit-protocol/full-self-signing' package.
-import { type Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+// Import the FssAdmin type from the '@lit-protocol/agent-wallet' package.
+import { type Admin as FssAdmin } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';

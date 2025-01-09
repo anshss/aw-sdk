@@ -13,7 +13,7 @@
       "@lit-protocol/aw-signer": ["../aw-signer/src"],
       "@lit-protocol/aw-tool-registry": ["../aw-tool-registry/src"],
       "@lit-protocol/aw-tool-erc20-transfer": ["../aw-tool-erc20-transfer/src"],
-      "@lit-protocol/full-self-signing": ["../full-self-signing/src"],
+      "@lit-protocol/agent-wallet": ["../agent-wallet/src"],
       "@lit-protocol/aw-tool": ["../aw-tool/src"]
     }
   },
@@ -23,7 +23,7 @@
       "path": "../aw-subagent-openai/tsconfig.lib.json"
     },
     {
-      "path": "../full-self-signing/tsconfig.lib.json"
+      "path": "../agent-wallet/tsconfig.lib.json"
     },
     {
       "path": "../aw-tool-sign-ecdsa/tsconfig.lib.json"

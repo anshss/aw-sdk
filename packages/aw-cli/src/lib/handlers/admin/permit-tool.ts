@@ -1,5 +1,5 @@
-// Import the FssAdmin class from the '@lit-protocol/full-self-signing' package.
-import { Admin as FssAdmin } from '@lit-protocol/full-self-signing';
+// Import the FssAdmin class from the '@lit-protocol/agent-wallet' package.
+import { Admin as FssAdmin } from '@lit-protocol/agent-wallet';
 
 // Import prompt utilities for user interaction.
 import {

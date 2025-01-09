@@ -8,7 +8,7 @@
     "lit-agent": "./dist/src/index.js"
   },
   "dependencies": {
-    "@lit-protocol/full-self-signing": "workspace:*",
+    "@lit-protocol/agent-wallet": "workspace:*",
     "@lit-protocol/aw-signer": "workspace:*",
     "@lit-protocol/aw-tool": "workspace:*",
     "@lit-protocol/aw-tool-registry": "workspace:*",

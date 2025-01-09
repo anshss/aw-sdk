@@ -1,7 +1,7 @@
 import {
   Delegatee as FssDelegatee,
   OpenAiIntentMatcher,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 import { promptGetOpenAiApiKey } from '../../prompts/delegatee/open-ai-api-key';
 

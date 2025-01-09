@@ -13,7 +13,7 @@
       "path": "./packages/aw-tool-registry"
     },
     {
-      "path": "./packages/full-self-signing"
+      "path": "./packages/agent-wallet"
     },
     {
       "path": "./packages/aw-subagent-openai"

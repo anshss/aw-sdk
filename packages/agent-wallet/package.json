@@ -1,5 +1,5 @@
 {
-  "name": "@lit-protocol/full-self-signing",
+  "name": "@lit-protocol/agent-wallet",
   "version": "0.1.1-10",
   "publishConfig": {
     "access": "public"
@@ -31,7 +31,7 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
-    "sourceRoot": "packages/full-self-signing/src",
+    "sourceRoot": "packages/agent-wallet/src",
     "projectType": "library",
     "targets": {
       "build": {
@@ -40,15 +40,15 @@
           "{options.outputPath}"
         ],
         "options": {
-          "outputPath": "packages/full-self-signing/dist",
-          "main": "packages/full-self-signing/src/index.ts",
-          "tsConfig": "packages/full-self-signing/tsconfig.lib.json",
+          "outputPath": "packages/agent-wallet/dist",
+          "main": "packages/agent-wallet/src/index.ts",
+          "tsConfig": "packages/agent-wallet/tsconfig.lib.json",
           "assets": [
-            "packages/full-self-signing/*.md"
+            "packages/agent-wallet/*.md"
           ]
         }
       }
     },
-    "name": "full-self-signing"
+    "name": "agent-wallet"
   }
 }

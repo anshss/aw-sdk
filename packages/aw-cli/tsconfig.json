@@ -7,7 +7,7 @@
       "path": "../aw-subagent-openai"
     },
     {
-      "path": "../full-self-signing"
+      "path": "../agent-wallet"
     },
     {
       "path": "../aw-tool-sign-ecdsa"

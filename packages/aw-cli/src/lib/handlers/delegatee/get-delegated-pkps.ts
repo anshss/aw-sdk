@@ -1,8 +1,8 @@
-// Import the DelegatedPkpInfo and FssDelegatee types from the '@lit-protocol/full-self-signing' package.
+// Import the DelegatedPkpInfo and FssDelegatee types from the '@lit-protocol/agent-wallet' package.
 import type {
   DelegatedPkpInfo,
   Delegatee as FssDelegatee,
-} from '@lit-protocol/full-self-signing';
+} from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
