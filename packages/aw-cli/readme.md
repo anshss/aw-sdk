@@ -70,14 +70,19 @@ Open the .env file and add your Pinata API key:
 plaintext
 Copy
 
+```bash
 PINATA_API_KEY=your-pinata-api-key
+
+```
 
 Usage
 Starting the CLI
 bash
 Copy
 
+```bash
 pnpm start:cli
+```
 
 The CLI will deploy Lit Action tools to IPFS and display a wall of text confirming the deployment.
 Selecting a Lit Network
@@ -86,6 +91,7 @@ You will be prompted to select a Lit network:
 plaintext
 Copy
 
+```bash
 ? Select a Lit network: › - Use arrow-keys. Return to submit.
 ❯   Datil Dev - Development network
     Datil Test
@@ -96,21 +102,21 @@ Copy
     Datil Test: For testing environments.
 
     Datil: For production use.
+```
 
 If you're just getting started, choose Datil. You can obtain test tokens (tstLit) from the Chronicle Yellowstone Faucet.
+https://chronicle-yellowstone-faucet.getlit.dev/
+
 Selecting Your Role
 
-Next, select your role:
+Next, select your role. If you are just gettig started, choose Admin:
 plaintext
 Copy
-
+```bash
 ? Select your role: › - Use arrow-keys. Return to submit.
 ❯   Admin - Can set policies and manage delegatees
     Delegatee - Can execute tools within policy constraints
-
-    Admin: For managing policies and delegatees.
-
-    Delegatee: For executing tools within the constraints set by the admin.
+```
 
 Admin Actions
 
