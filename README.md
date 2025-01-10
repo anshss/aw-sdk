@@ -253,7 +253,15 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
    pnpm build
    ```
 
-3. **Deploy Tools and Start the CLI:**
+3. **Add a Pinata JWT Token:**
+
+  ```bash
+  cp .env.example .env
+  ```
+
+  Then add your Pinata JWT token to the `.env` file.
+
+4. **Deploy Tools and Start the CLI:**
 
    ```bash
    pnpm start:cli
@@ -266,6 +274,8 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
      - ECDSA Signing tool
      - ERC20 Transfer tool
    - Start the interactive CLI
+
+   **Note:** After running this command the first time and deploying the tools, you can run `pnpm start:cli:no-build` to skip the build step.
 
 4. **Initial Setup Process:**
    
