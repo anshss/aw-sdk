@@ -219,11 +219,11 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
 
 3. **Add a Pinata JWT Token:**
 
-  ```bash
-  cp .env.example .env
-  ```
+   ```bash
+   cp .env.example .env
+   ```
 
-  Then add your Pinata JWT token to the `.env` file.
+   Then add your Pinata JWT token to the `.env` file.
 
 4. **Deploy Tools and Start the CLI:**
 
