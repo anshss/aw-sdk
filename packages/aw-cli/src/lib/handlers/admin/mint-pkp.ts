@@ -11,9 +11,7 @@ import { promptManagePkp } from '../../prompts/admin/manage-pkp';
 export async function handleMintPkp(awAdmin: AwAdmin) {
   try {
     const pkpInfo = await awAdmin.mintPkp();
-    logger.success(
-      `Minted Agent Wallet with address: ${pkpInfo.info.ethAddress}`
-    );
+    logger.success(`Minted Agent Wallet: ${pkpInfo.info.ethAddress}`);
 
     const shouldManage = await promptManagePkp(pkpInfo);
 

@@ -9,3 +9,4 @@ export * from './remove-delegatee';
 export * from './batch-add-delegatee';
 export * from './batch-remove-delegatee';
 export * from './select-pkp';
+export * from './new-pkp-owner';

@@ -26,6 +26,7 @@ import {
   handleBatchAddDelegatee,
   handleBatchRemoveDelegatee,
   handleMintPkp,
+  handleTransferOwnership,
 } from '../handlers/admin';
 
 /**
@@ -100,7 +101,8 @@ export class Admin {
   }
 
   public static async showManageOrMintMenu(admin: Admin) {
-    const action = await promptAdminManageOrMintMenu();
+    const pkps = await admin.awAdmin.getPkps();
+    const action = await promptAdminManageOrMintMenu(pkps.length);
 
     if (action === 'mint') {
       const { shouldManage, pkpInfo } = await handleMintPkp(admin.awAdmin);
@@ -110,13 +112,13 @@ export class Admin {
         await Admin.showManagePkpMenu(admin, pkpInfo);
       }
     } else if (action === 'manage') {
-      await Admin.showPkpSelectionMenu(admin);
+      await Admin.showPkpSelectionMenu(admin, pkps);
     }
   }
 
-  public static async showPkpSelectionMenu(admin: Admin) {
-    const pkps = await admin.awAdmin.getPkps();
-    await Admin.showManagePkpMenu(admin, await promptSelectPkp(pkps));
+  public static async showPkpSelectionMenu(admin: Admin, pkps?: PkpInfo[]) {
+    const _pkps = pkps ?? (await admin.awAdmin.getPkps());
+    await Admin.showManagePkpMenu(admin, await promptSelectPkp(_pkps));
   }
 
   /**
@@ -169,10 +171,10 @@ export class Admin {
         await handleBatchRemoveDelegatee(admin.awAdmin, pkp);
         break;
       case 'transferOwnership':
-        // await handleTransferOwnership(admin.awAdmin, pkp);
+        await handleTransferOwnership(admin.awAdmin, pkp);
+        await Admin.showManageOrMintMenu(admin);
         break;
       default:
-        // Log an error and exit if an invalid option is selected.
         logger.error('Invalid option selected');
         process.exit(1);
     }

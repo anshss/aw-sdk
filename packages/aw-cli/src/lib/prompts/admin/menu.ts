@@ -31,13 +31,17 @@ const categoryChoices: Record<
   ],
 };
 
-export const promptAdminManageOrMintMenu = async () => {
+export const promptAdminManageOrMintMenu = async (numberOfPkps: number) => {
   const { action } = await prompts({
     type: 'select',
     name: 'action',
     message: 'What would you like to do?',
     choices: [
-      { title: 'Manage Existing Agent Wallet', value: 'manage' },
+      {
+        title: 'Manage Existing Agent Wallet',
+        value: 'manage',
+        disabled: numberOfPkps === 0,
+      },
       { title: 'Mint New Agent Wallet', value: 'mint' },
     ],
   });
