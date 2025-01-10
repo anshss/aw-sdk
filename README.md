@@ -220,23 +220,6 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - Command implementations
   - User interaction prompts
 
-### Architecture Overview
-
-The architecture demonstrates clear separation of concerns:
-1. Base definitions (aw-tool)
-2. Tool implementations (individual tool packages)
-3. Tool management (aw-tool-registry)
-4. Security and signing (aw-signer)
-5. AI integration (aw-subagent-openai)
-6. Integration layer (agent-wallet)
-7. User interface (aw-cli)
-
-This modular design allows for:
-- Easy addition of new tools
-- Separation of security concerns
-- Flexible AI integration
-- Clear dependency management
-
 ## Getting Started
 
 ### Prerequisites
@@ -332,3 +315,12 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
    - RPC URL
 
 The CLI will guide you through each step and provide feedback on the execution status of your commands.
+
+## Additional Support
+
+Need help? Here are some resources to get you started:
+
+- **Documentation**: Visit the [Lit Protocol Documentation](https://developer.litprotocol.com/) for comprehensive guides and API references
+- **Telegram**: Connect with us on [Telegram](https://t.me/+aa73FAF9Vp82ZjJh) for updates and community chat
+
+For bug reports and feature requests, please use the GitHub Issues section of this repository or notify us on Telegram.
