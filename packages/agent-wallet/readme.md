@@ -1,7 +1,7 @@
 # Agent-Wallet Home Repository
 
 ## Overview
-This repository serves as the home for the **Agent-Wallet** project. While it may not be the central hub for core functionality, it plays a crucial role in handling **error management** and **invocation processes**.
+This repository serves as the home for the **Agent-Wallet** project. It does not implement core functionality but, it plays a crucial role in handling **error management** and **invocation processes**.
 
 ## Purpose
 - **Error Handling**: Ensures robust error management across the system.
