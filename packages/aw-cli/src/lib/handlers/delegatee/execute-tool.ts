@@ -1,4 +1,7 @@
-import { type Delegatee as AwDelegatee } from '@lit-protocol/agent-wallet';
+import type {
+  DelegatedPkpInfo,
+  Delegatee as AwDelegatee,
+} from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -35,7 +38,7 @@ export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
     }
 
     // Prompt the user to select a PKP.
-    const selectedPkp = await promptSelectPkp(pkps);
+    const selectedPkp = (await promptSelectPkp(pkps)) as DelegatedPkpInfo;
 
     const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
       selectedPkp.tokenId
@@ -107,7 +110,7 @@ export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
   } catch (error) {
     // Handle specific errors related to tool execution.
     if (error instanceof AwCliError) {
-      if (error.type === AwCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
+      if (error.type === AwCliErrorType.ADMIN_SELECT_PKP_CANCELLED) {
         logger.error('No PKP selected');
         return;
       }

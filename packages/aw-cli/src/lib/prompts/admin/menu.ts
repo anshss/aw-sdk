@@ -4,6 +4,56 @@ import prompts from 'prompts';
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
 
+type ManageChoice = 'tools' | 'policies' | 'delegatees' | 'transferOwnership';
+type Choice = { title: string; value: string };
+
+const categoryChoices: Record<
+  Exclude<ManageChoice, 'transferOwnership'>,
+  Choice[]
+> = {
+  tools: [
+    { title: 'Permit Tool', value: 'permitTool' },
+    { title: 'Remove Tool', value: 'removeTool' },
+    { title: 'List Permitted Tools', value: 'getRegisteredTools' },
+  ],
+  policies: [
+    { title: 'Get Tool Policy', value: 'getToolPolicy' },
+    { title: 'Set Tool Policy', value: 'setToolPolicy' },
+    { title: 'Remove Tool Policy', value: 'removeToolPolicy' },
+  ],
+  delegatees: [
+    { title: 'List Delegatees', value: 'getDelegatees' },
+    { title: 'Check if Address is Delegatee', value: 'isDelegatee' },
+    { title: 'Add Delegatee', value: 'addDelegatee' },
+    { title: 'Remove Delegatee', value: 'removeDelegatee' },
+    { title: 'Batch Add Delegatees', value: 'batchAddDelegatees' },
+    { title: 'Batch Remove Delegatees', value: 'batchRemoveDelegatees' },
+  ],
+};
+
+export const promptAdminManageOrMintMenu = async (numberOfPkps: number) => {
+  const { action } = await prompts({
+    type: 'select',
+    name: 'action',
+    message: 'What would you like to do?',
+    choices: [
+      {
+        title: 'Manage Existing Agent Wallet',
+        value: 'manage',
+        disabled: numberOfPkps === 0,
+      },
+      { title: 'Mint New Agent Wallet', value: 'mint' },
+    ],
+  });
+
+  if (!action) {
+    logger.error('No action selected');
+    process.exit(1);
+  }
+
+  return action;
+};
+
 /**
  * Displays a menu of available admin actions and prompts the user to select an action.
  * This function ensures that an option is selected before proceeding. If no option is selected,
@@ -11,26 +61,35 @@ import { logger } from '../../utils/logger';
  *
  * @returns The selected admin action as a string.
  */
-export const promptAdminMenu = async () => {
-  // Prompt the user to select an admin action from the menu.
-  const { option } = await prompts({
-    type: 'select', // Use a select input for the menu.
-    name: 'option',
-    message: 'Select an action:',
+export const promptAdminManagePkpMenu = async () => {
+  const response = await prompts({
+    type: 'select',
+    name: 'manageChoice',
+    message: 'What would you like to manage?',
     choices: [
-      { title: 'Permit Tool', value: 'permitTool' },
-      { title: 'Remove Tool', value: 'removeTool' },
-      { title: 'List Permitted Tools', value: 'getRegisteredTools' },
-      { title: 'Get Tool Policy', value: 'getToolPolicy' },
-      { title: 'Set Tool Policy', value: 'setToolPolicy' },
-      { title: 'Remove Tool Policy', value: 'removeToolPolicy' },
-      { title: 'List Delegatees', value: 'getDelegatees' },
-      { title: 'Check if Address is Delegatee', value: 'isDelegatee' },
-      { title: 'Add Delegatee', value: 'addDelegatee' },
-      { title: 'Remove Delegatee', value: 'removeDelegatee' },
-      { title: 'Batch Add Delegatees', value: 'batchAddDelegatees' },
-      { title: 'Batch Remove Delegatees', value: 'batchRemoveDelegatees' },
+      { title: 'Tools', value: 'tools' },
+      { title: 'Policies', value: 'policies' },
+      { title: 'Delegatees', value: 'delegatees' },
+      { title: 'Transfer Ownership', value: 'transferOwnership' },
     ],
+  });
+
+  const manageChoice = response.manageChoice as ManageChoice;
+  if (!manageChoice) {
+    logger.error('No category selected');
+    process.exit(1);
+  }
+
+  if (manageChoice === 'transferOwnership') {
+    return manageChoice;
+  }
+
+  // Then prompt for specific action within the chosen category
+  const { option } = await prompts({
+    type: 'select',
+    name: 'option',
+    message: `Select a ${manageChoice} action:`,
+    choices: categoryChoices[manageChoice],
   });
 
   // If no option is selected, log an error and exit the process.

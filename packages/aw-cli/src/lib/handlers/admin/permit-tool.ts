@@ -1,5 +1,5 @@
 // Import the AwAdmin class from the '@lit-protocol/agent-wallet' package.
-import { Admin as AwAdmin } from '@lit-protocol/agent-wallet';
+import { Admin as AwAdmin, type PkpInfo } from '@lit-protocol/agent-wallet';
 
 // Import prompt utilities for user interaction.
 import {
@@ -27,7 +27,7 @@ import { handleGetTools } from './get-tools';
  * @param awAdmin - An instance of the AwAdmin class.
  * @param tool - The tool to permit.
  */
-const permitTool = async (awAdmin: AwAdmin, tool: AwTool) => {
+const permitTool = async (awAdmin: AwAdmin, pkp: PkpInfo, tool: AwTool) => {
   // Prompt the user to confirm the tool permitting action.
   await promptConfirmPermit(tool);
 
@@ -35,7 +35,7 @@ const permitTool = async (awAdmin: AwAdmin, tool: AwTool) => {
   logger.loading('Permitting tool...');
 
   // Permit the tool in the AW system.
-  await awAdmin.permitTool({ ipfsCid: tool.ipfsCid });
+  await awAdmin.permitTool(pkp.info.tokenId, tool.ipfsCid);
 
   // Log a success message once the tool is permitted.
   logger.success('Tool permitted successfully.');
@@ -48,14 +48,15 @@ const permitTool = async (awAdmin: AwAdmin, tool: AwTool) => {
  *
  * @param awAdmin - An instance of the AwAdmin class.
  */
-export const handlePermitTool = async (awAdmin: AwAdmin) => {
+export const handlePermitTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of already permitted tools.
-    const alreadyPermittedTools = await handleGetTools(awAdmin);
+    const alreadyPermittedTools = await handleGetTools(awAdmin, pkp);
 
     // Prompt the user to select a tool to permit and permit it.
     await permitTool(
       awAdmin,
+      pkp,
       await promptSelectToolToPermit(awAdmin.litNetwork, alreadyPermittedTools)
     );
   } catch (error) {

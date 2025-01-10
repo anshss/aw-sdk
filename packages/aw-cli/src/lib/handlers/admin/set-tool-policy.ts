@@ -1,8 +1,9 @@
 // Import the AwTool, AwAdmin, and PermittedTools types from the '@lit-protocol/agent-wallet' package.
-import {
+import type {
   AwTool,
-  type Admin as AwAdmin,
-  type PermittedTools,
+  PkpInfo,
+  Admin as AwAdmin,
+  PermittedTools,
 } from '@lit-protocol/agent-wallet';
 
 // Import the prompts library for user interaction.
@@ -74,6 +75,7 @@ const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
  */
 const setToolPolicy = async (
   awAdmin: AwAdmin,
+  pkp: PkpInfo,
   tool: AwTool<any, any>,
   policy: string,
   version: string
@@ -82,7 +84,7 @@ const setToolPolicy = async (
   logger.loading('Setting tool policy...');
 
   // Set the tool's policy in the AW system.
-  await awAdmin.setToolPolicy(tool.ipfsCid, policy, version);
+  await awAdmin.setToolPolicy(pkp.info.tokenId, tool.ipfsCid, policy, version);
 
   // Log a success message once the policy is set.
   logger.success('Tool policy set successfully.');
@@ -94,11 +96,12 @@ const setToolPolicy = async (
  * collects policy details, sets the policy, and handles any errors that occur during the process.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to set the tool policy for.
  */
-export const handleSetToolPolicy = async (awAdmin: AwAdmin) => {
+export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin);
+    const permittedTools = await handleGetTools(awAdmin, pkp);
 
     // If no tools without policies are found, throw an error.
     if (
@@ -118,7 +121,7 @@ export const handleSetToolPolicy = async (awAdmin: AwAdmin) => {
     const { policy, version } = await promptPolicyDetails(selectedTool);
 
     // Set the policy for the selected tool.
-    await setToolPolicy(awAdmin, selectedTool, policy, version);
+    await setToolPolicy(awAdmin, pkp, selectedTool, policy, version);
   } catch (error) {
     // Handle specific errors related to tool policy setting.
     if (error instanceof AwCliError) {

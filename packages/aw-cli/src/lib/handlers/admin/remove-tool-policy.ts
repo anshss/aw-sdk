@@ -1,5 +1,9 @@
 // Import the AwTool and AwAdmin types from the '@lit-protocol/agent-wallet' package.
-import { type AwTool, type Admin as AwAdmin } from '@lit-protocol/agent-wallet';
+import type {
+  AwTool,
+  Admin as AwAdmin,
+  PkpInfo,
+} from '@lit-protocol/agent-wallet';
 
 // Import the prompts library for user interaction.
 import prompts from 'prompts';
@@ -83,14 +87,19 @@ const promptSelectToolForPolicyRemoval = async (
  * This function logs the progress and success of the operation.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the tool policy for.
  * @param tool - The tool for which the policy will be removed.
  */
-const removeToolPolicy = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
+const removeToolPolicy = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo,
+  tool: AwTool<any, any>
+) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Removing tool policy...');
 
   // Remove the tool's policy from the AW system.
-  await awAdmin.removeToolPolicy(tool.ipfsCid);
+  await awAdmin.removeToolPolicy(pkp.info.tokenId, tool.ipfsCid);
 
   // Log a success message once the policy is removed.
   logger.success('Tool policy removed successfully.');
@@ -102,11 +111,15 @@ const removeToolPolicy = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
  * confirms the action, removes the policy, and handles any errors that occur during the process.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the tool policy for.
  */
-export const handleRemoveToolPolicy = async (awAdmin: AwAdmin) => {
+export const handleRemoveToolPolicy = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo
+) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin);
+    const permittedTools = await handleGetTools(awAdmin, pkp);
 
     // If no tools with policies are found, throw an error.
     if (
@@ -122,6 +135,7 @@ export const handleRemoveToolPolicy = async (awAdmin: AwAdmin) => {
     // Prompt the user to select a tool for policy removal and remove the policy.
     await removeToolPolicy(
       awAdmin,
+      pkp,
       await promptSelectToolForPolicyRemoval(permittedTools.toolsWithPolicies)
     );
   } catch (error) {
