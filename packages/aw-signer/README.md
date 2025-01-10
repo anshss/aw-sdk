@@ -28,33 +28,46 @@ The Admin role is responsible for managing PKPs, delegatees, and policies:
 
 ```typescript
 import { Admin } from '@lit-protocol/aw-signer';
+import { AUTH_METHOD_SCOPE } from '@lit-protocol/constants';
 
-// Initialize Admin with EOA private key
-const admin = new Admin({
-  type: 'eoa',
-  privateKey: 'your-private-key',
-  litNetwork: 'datil-dev'
-});
+// Initialize Admin
+const admin = await Admin.create(
+  {
+    type: 'eoa',
+    privateKey: 'your-private-key'
+  },
+  {
+    litNetwork: 'datil-dev'
+  }
+);
 
-// Mint a new PKP
-const pkp = await admin.mintPkp();
+// PKP info is available in admin.pkpInfo
+const pkpTokenId = admin.pkpInfo.tokenId;
 
 // Add a delegatee
-await admin.addDelegatee(pkp.tokenId, 'delegatee-address');
+await admin.addDelegatee('delegatee-address');
 
 // Permit a tool
-await admin.permitTool(pkp.tokenId, 'tool-ipfs-cid');
+await admin.permitTool({
+    ipfsCid: 'tool-ipfs-cid',
+    signingScopes: [AUTH_METHOD_SCOPE.SignAnything] // optional
+});
 
 // Set tool policy
 await admin.setToolPolicy(
-  pkp.tokenId,
+  pkpTokenId,
   'tool-ipfs-cid',
   policyData,
   'v1'
 );
 
-// Get registered tools
-const tools = await admin.getRegisteredToolsForPkp(pkp.tokenId);
+// Get registered tools (no pkpTokenId needed for Admin)
+const {
+  toolsWithPolicies,
+  toolsWithoutPolicies,
+  toolsUnknownWithPolicies,
+  toolsUnknownWithoutPolicies
+} = await admin.getRegisteredToolsForPkp();
 ```
 
 ### As a Delegatee
@@ -64,26 +77,48 @@ The Delegatee role executes tools within the constraints set by the Admin:
 ```typescript
 import { Delegatee } from '@lit-protocol/aw-signer';
 
-// Initialize Delegatee with EOA private key
-const delegatee = new Delegatee({
-  type: 'eoa',
-  privateKey: 'your-private-key',
-  litNetwork: 'datil-dev'
-});
+// Initialize Delegatee
+const delegatee = await Delegatee.create(
+  'your-private-key',
+  {
+    litNetwork: 'datil-dev'
+  }
+);
 
 // Get delegated PKPs
 const pkps = await delegatee.getDelegatedPkps();
+const pkpTokenId = pkps[0].tokenId; // example using first PKP
 
-// Get available tools
-const tools = await delegatee.getRegisteredToolsForPkp(pkpTokenId);
+// Get available tools for a specific PKP
+const {
+  toolsWithPolicies,
+  toolsWithoutPolicies,
+  toolsUnknownWithPolicies,
+  toolsUnknownWithoutPolicies
+} = await delegatee.getRegisteredToolsForPkp(pkpTokenId);
+
+// Select a tool (in this example, we'll use the first tool with a policy)
+const selectedTool = toolsWithPolicies[0];
+
+// Check tool policy if available
+if (selectedTool) {
+  const policy = await delegatee.getToolPolicy(pkpTokenId, selectedTool.ipfsCid);
+  const decodedPolicy = selectedTool.policy.decode(policy.policy);
+  console.log('Tool Policy:', decodedPolicy);
+}
 
 // Execute a tool
 await delegatee.executeTool({
-  pkpTokenId,
-  ipfsCid,
-  params: toolParams,
-  authSig,
-  jsParams
+  ipfsId: selectedTool.ipfsCid,
+  jsParams: {
+    params: {
+      // Tool-specific parameters
+      // For example, for ERC20 transfer:
+      // tokenAddress: '0x...',
+      // recipientAddress: '0x...',
+      // amount: '1000000000000000000'
+    },
+  }
 });
 ```
 
@@ -99,13 +134,19 @@ const { tool, params } = await delegatee.getToolViaIntent(
   intentMatcher
 );
 
+// Check tool policy if available
+const policy = await delegatee.getToolPolicy(pkpTokenId, tool.ipfsCid);
+if (policy) {
+  const decodedPolicy = tool.policy.decode(policy.policy);
+  console.log('Tool Policy:', decodedPolicy);
+}
+
 // Execute the selected tool
 await delegatee.executeTool({
-  pkpTokenId,
-  ipfsCid: tool.ipfsCid,
-  params,
-  authSig,
-  jsParams
+  ipfsId: tool.ipfsCid,
+  jsParams: {
+    params, // Parameters are already formatted by getToolViaIntent
+  }
 });
 ```
 
@@ -117,20 +158,30 @@ await delegatee.executeTool({
 interface AdminConfig {
   type: 'eoa';                  // Currently only EOA is supported
   privateKey?: string;          // Admin's private key
+}
+
+interface AgentConfig {
   litNetwork?: LitNetwork;      // 'datil-dev' | 'datil-test' | 'datil'
   debug?: boolean;              // Enable debug logging
 }
+
+// Usage:
+const admin = await Admin.create(
+  { type: 'eoa', privateKey: 'your-private-key' },
+  { litNetwork: 'datil-dev', debug: false }
+);
 ```
 
 ### Delegatee Configuration
 
 ```typescript
-interface DelegateeConfig {
-  type: 'eoa';                  // Currently only EOA is supported
-  privateKey?: string;          // Delegatee's private key
-  litNetwork?: LitNetwork;      // 'datil-dev' | 'datil-test' | 'datil'
-  debug?: boolean;              // Enable debug logging
-}
+// The Delegatee.create method takes:
+// 1. An optional private key string
+// 2. An AgentConfig object
+const delegatee = await Delegatee.create(
+  'your-private-key',
+  { litNetwork: 'datil-dev', debug: false }
+);
 ```
 
 ## Tool Policies
