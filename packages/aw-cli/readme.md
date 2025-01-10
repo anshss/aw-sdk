@@ -61,7 +61,10 @@ Copy
 ```
 
 # Rename the .env.example file to .env
+
+```bash
 mv .env.example .env
+```
 
 Open the .env file and add your Pinata API key:
 plaintext
