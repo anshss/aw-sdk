@@ -80,44 +80,8 @@ The architecture ensures that all interactions are secure and policy-compliant, 
 
 The project is structured into several interconnected packages, each with specific responsibilities. The core TypeScript/JavaScript packages and their dependencies are shown below:
 
-```
-@lit-protocol/aw-tool
+![Dependency graph (1)](https://github.com/user-attachments/assets/904ffeb6-aafa-4b7d-ba31-2414fab8f273)
 
-@lit-protocol/aw-tool-erc20-transfer
-└── @lit-protocol/aw-tool
-
-@lit-protocol/aw-tool-uniswap-swap
-└── @lit-protocol/aw-tool
-
-@lit-protocol/aw-tool-sign-ecdsa
-└── @lit-protocol/aw-tool
-
-@lit-protocol/aw-tool-registry
-├── @lit-protocol/aw-tool
-├── @lit-protocol/aw-tool-erc20-transfer
-├── @lit-protocol/aw-tool-uniswap-swap
-└── @lit-protocol/aw-tool-sign-ecdsa
-
-@lit-protocol/aw-signer
-├── @lit-protocol/aw-tool
-└── @lit-protocol/aw-tool-registry
-
-@lit-protocol/aw-subagent-openai
-├── @lit-protocol/aw-tool
-└── @lit-protocol/aw-tool-registry
-
-@lit-protocol/agent-wallet
-├── @lit-protocol/aw-tool
-├── @lit-protocol/aw-tool-registry
-├── @lit-protocol/aw-signer
-└── @lit-protocol/aw-subagent-openai
-
-@lit-protocol/aw-cli
-├── @lit-protocol/agent-wallet
-├── @lit-protocol/aw-signer
-├── @lit-protocol/aw-tool
-└── @lit-protocol/aw-tool-registry
-```
 
 Additionally, the project includes:
 
