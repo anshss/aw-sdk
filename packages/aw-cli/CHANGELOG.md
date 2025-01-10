@@ -1,6 +1,8 @@
-# Unreleased
+# `@lit-protocol/aw-cli`
 
-## Added
+## Unreleased
+
+### Added
 
 - (#26) Admin CLI menus:
   - After selecting the `Admin` role, you are now prompted to select to either manage an existing Agent Wallet or mint a new one.

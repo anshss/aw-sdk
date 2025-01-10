@@ -1,11 +1,13 @@
-# Unreleased
+# `@lit-protocol/aw-signer`
 
-## Changed
+## Unreleased
+
+### Changed
 
 - (#26) A PKP is no longer automatically minted when an `Admin` is initialized.
 - (#26) All `public` methods in `Admin` now expect `pkpTokenId: string` as an argument in order to fetch the PKP from local storage.
 
-## Added
+### Added
 
 - (#26) Added new methods to the `Admin` class:
   - `getPkps`: Returns an array of `PkpInfo` objects from local storage.
