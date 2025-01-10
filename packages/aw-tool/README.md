@@ -25,10 +25,8 @@ Copy the following files from an existing tool package (e.g., aw-tool-sign-ecdsa
    - `jest.config.ts`
    - `eslint.config.js`
    - `.gitignore`
-   - `.env.template`
 
 2. Copy the entire `tools` directory
-   - Update the tool name in `tools/scripts/deploy-lit-action.js`
 
 ## Implement Tool Logic
 
@@ -49,14 +47,14 @@ src/
 ### Required Modifications
 
 1. `src/lib/ipfs.ts`:
-   - Update the `name` field in the IPFS metadata
+   - No changes needed
 
 2. `src/lib/lit-action.ts`:
    - Write your custom Lit Action code that will run on Lit nodes
-   - This is where your tool's core signing/validation logic goes
+   - This is where your tool's core validation and execution logic goes
 
 3. `src/lib/policy.ts`:
-   - Define your tool's conditions for when signing should be allowed
+   - Define your tool's conditions for when execution should be allowed
    - Implement the validation functions for your conditions
 
 4. `src/lib/tool.ts`:
