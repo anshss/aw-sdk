@@ -80,7 +80,7 @@ The architecture ensures that all interactions are secure and policy-compliant, 
 
 The project is structured into several interconnected packages, each with specific responsibilities. The core TypeScript/JavaScript packages and their dependencies are shown below:
 
-![Dependency graph](https://github.com/user-attachments/assets/9170e66e-2981-4a2e-9251-0b211418a713)
+![Dependency graph (1)](https://github.com/user-attachments/assets/904ffeb6-aafa-4b7d-ba31-2414fab8f273)
 
 
 Additionally, the project includes:
