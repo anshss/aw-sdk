@@ -67,8 +67,6 @@ mv .env.example .env
 ```
 
 Open the .env file and add your Pinata API key:
-plaintext
-Copy
 
 ```bash
 PINATA_API_KEY=your-pinata-api-key
@@ -88,8 +86,6 @@ The CLI will deploy Lit Action tools to IPFS and display a wall of text confirmi
 Selecting a Lit Network
 
 You will be prompted to select a Lit network:
-plaintext
-Copy
 
 ```bash
 ? Select a Lit network: › - Use arrow-keys. Return to submit.
