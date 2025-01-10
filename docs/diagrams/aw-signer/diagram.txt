@@ -1,0 +1,40 @@
+title: Agent Wallet Signer Flow
+
+Admin -> PKPNFTContract: mintPkp()
+note: Creates new PKP NFT and returns ownership to Admin
+PKPNFTContract -> Admin: {tokenId, publicKey}
+
+Admin -> PermissionsContract: addDelegatee(pkpTokenId, delegateeAddress)
+note: Grants execution rights to delegatee address
+PermissionsContract -> Admin: success
+
+Admin -> PermissionsContract: addPermittedAction(ipfsId, authMethodScopes, pkpTokenId)
+note: Allows specific tool to be used with PKP
+PermissionsContract -> Admin: success
+
+Admin -> PolicyRegistry: setToolPolicy(pkpTokenId, ipfsCid, policyData, version)
+note: Sets constraints for tool execution (e.g., transfer limits)
+PolicyRegistry -> Admin: success
+
+Delegatee -> PKPNFTContract: getDelegatedPkps(delegateeAddress)
+note: Retrieves all PKPs delegated to this address
+PKPNFTContract -> Delegatee: PkpInfo[]
+
+Delegatee -> ToolRegistry: getRegisteredToolsForPkp(pkpTokenId)
+note: Gets all tools available for this PKP
+ToolRegistry -> Delegatee: {toolsWithPolicies, toolsWithoutPolicies}
+
+Delegatee -> ToolRegistry: getToolViaIntent(pkpTokenId, intent, matcher)
+note: Uses LLM to match intent to appropriate tool
+ToolRegistry -> Delegatee: {tool, params}
+
+Delegatee -> Delegatee: generateAuthSig()
+note: Creates authentication signature for tool execution
+
+Delegatee -> LitNodes: executeTool(pkpTokenId, ipfsCid, params, authSig)
+note: Executes tool with policy validation in Lit Action
+LitNodes -> Delegatee: ExecutionResult
+
+Admin -> PermissionsContract: revokePermittedAction(pkpTokenId, ipfsCid)
+note: Optionally removes tool access from PKP
+PermissionsContract -> Admin: success
