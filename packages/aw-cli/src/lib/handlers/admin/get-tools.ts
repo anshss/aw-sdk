@@ -1,7 +1,8 @@
 // Import the AwAdmin, AwTool, and PermittedTools types from the '@lit-protocol/agent-wallet' package.
-import {
-  type Admin as AwAdmin,
-  type PermittedTools,
+import type {
+  PkpInfo,
+  Admin as AwAdmin,
+  PermittedTools,
 } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
@@ -19,12 +20,15 @@ import { logger } from '../../utils/logger';
  *   If no tools are found, the function returns `null`.
  */
 export const handleGetTools = async (
-  awAdmin: AwAdmin
+  awAdmin: AwAdmin,
+  pkp: PkpInfo
 ): Promise<PermittedTools | null> => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting permitted tools');
 
-  const registeredTools = await awAdmin.getRegisteredToolsForPkp();
+  const registeredTools = await awAdmin.getRegisteredToolsForPkp(
+    pkp.info.tokenId
+  );
 
   // If no tools are found, log an informational message and return `null`.
   if (

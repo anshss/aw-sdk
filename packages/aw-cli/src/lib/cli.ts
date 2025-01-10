@@ -16,7 +16,7 @@ export class AwCli {
       case Role.Admin:
         try {
           admin = await Admin.create(selectedLitNetwork);
-          await Admin.showMenu(admin);
+          await Admin.showManageOrMintMenu(admin);
         } finally {
           if (admin !== null) {
             admin.disconnect();

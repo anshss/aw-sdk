@@ -1,12 +1,17 @@
-import { Admin as AwAdmin, type LitNetwork } from '@lit-protocol/agent-wallet';
+import {
+  Admin as AwAdmin,
+  type PkpInfo,
+  type LitNetwork,
+} from '@lit-protocol/agent-wallet';
 import { AwSignerError, AwSignerErrorType } from '@lit-protocol/aw-signer';
 
 import { logger } from '../utils/logger';
 import {
   promptAdminInit,
-  promptAdminInsufficientBalance,
-  promptAdminMenu,
+  promptAdminManageOrMintMenu,
+  promptAdminManagePkpMenu,
 } from '../prompts/admin';
+import { promptSelectPkp } from '../prompts/admin/select-pkp';
 import {
   handlePermitTool,
   handleRemoveTool,
@@ -20,6 +25,7 @@ import {
   handleRemoveDelegatee,
   handleBatchAddDelegatee,
   handleBatchRemoveDelegatee,
+  handleMintPkp,
 } from '../handlers/admin';
 
 /**
@@ -72,14 +78,6 @@ export class Admin {
           const privateKey = await promptAdminInit();
           return Admin.createAwAdmin(litNetwork, privateKey);
         }
-
-        if (error.type === AwSignerErrorType.INSUFFICIENT_BALANCE_PKP_MINT) {
-          // Prompt the user to fund the account if the balance is insufficient.
-          const hasFunded = await promptAdminInsufficientBalance();
-          if (hasFunded) {
-            return Admin.createAwAdmin(litNetwork, privateKey);
-          }
-        }
       }
 
       // Log any other errors and exit the process.
@@ -101,6 +99,26 @@ export class Admin {
     return new Admin(awAdmin);
   }
 
+  public static async showManageOrMintMenu(admin: Admin) {
+    const action = await promptAdminManageOrMintMenu();
+
+    if (action === 'mint') {
+      const { shouldManage, pkpInfo } = await handleMintPkp(admin.awAdmin);
+      if (!shouldManage) {
+        await Admin.showManageOrMintMenu(admin);
+      } else {
+        await Admin.showManagePkpMenu(admin, pkpInfo);
+      }
+    } else if (action === 'manage') {
+      await Admin.showPkpSelectionMenu(admin);
+    }
+  }
+
+  public static async showPkpSelectionMenu(admin: Admin) {
+    const pkps = await admin.awAdmin.getPkps();
+    await Admin.showManagePkpMenu(admin, await promptSelectPkp(pkps));
+  }
+
   /**
    * Displays the Admin menu and handles user-selected actions.
    * The menu allows the Admin to perform various operations such as permitting tools, managing delegatees, and setting policies.
@@ -108,47 +126,50 @@ export class Admin {
    * @param admin - An instance of the `Admin` class.
    * @returns A promise that resolves when the menu interaction is complete.
    */
-  public static async showMenu(admin: Admin) {
+  public static async showManagePkpMenu(admin: Admin, pkp: PkpInfo) {
     // Prompt the user to select an action from the Admin menu.
-    const option = await promptAdminMenu();
+    const option = await promptAdminManagePkpMenu();
 
     // Handle the selected action.
     switch (option) {
       case 'permitTool':
-        await handlePermitTool(admin.awAdmin);
+        await handlePermitTool(admin.awAdmin, pkp);
         break;
       case 'removeTool':
-        await handleRemoveTool(admin.awAdmin);
+        await handleRemoveTool(admin.awAdmin, pkp);
         break;
       case 'getRegisteredTools':
-        await handleGetTools(admin.awAdmin);
+        await handleGetTools(admin.awAdmin, pkp);
         break;
       case 'getToolPolicy':
-        await handleGetToolPolicy(admin.awAdmin);
+        await handleGetToolPolicy(admin.awAdmin, pkp);
         break;
       case 'setToolPolicy':
-        await handleSetToolPolicy(admin.awAdmin);
+        await handleSetToolPolicy(admin.awAdmin, pkp);
         break;
       case 'removeToolPolicy':
-        await handleRemoveToolPolicy(admin.awAdmin);
+        await handleRemoveToolPolicy(admin.awAdmin, pkp);
         break;
       case 'getDelegatees':
-        await handleGetDelegatees(admin.awAdmin);
+        await handleGetDelegatees(admin.awAdmin, pkp);
         break;
       case 'isDelegatee':
-        await handleIsDelegatee(admin.awAdmin);
+        await handleIsDelegatee(admin.awAdmin, pkp);
         break;
       case 'addDelegatee':
-        await handleAddDelegatee(admin.awAdmin);
+        await handleAddDelegatee(admin.awAdmin, pkp);
         break;
       case 'removeDelegatee':
-        await handleRemoveDelegatee(admin.awAdmin);
+        await handleRemoveDelegatee(admin.awAdmin, pkp);
         break;
       case 'batchAddDelegatees':
-        await handleBatchAddDelegatee(admin.awAdmin);
+        await handleBatchAddDelegatee(admin.awAdmin, pkp);
         break;
       case 'batchRemoveDelegatees':
-        await handleBatchRemoveDelegatee(admin.awAdmin);
+        await handleBatchRemoveDelegatee(admin.awAdmin, pkp);
+        break;
+      case 'transferOwnership':
+        // await handleTransferOwnership(admin.awAdmin, pkp);
         break;
       default:
         // Log an error and exit if an invalid option is selected.
@@ -157,7 +178,7 @@ export class Admin {
     }
 
     // Recursively show the menu again to allow further actions.
-    await Admin.showMenu(admin);
+    await Admin.showManagePkpMenu(admin, pkp);
   }
 
   /**

@@ -5,26 +5,26 @@ import type { LocalStorage } from './storage';
 import { PkpInfo } from '../types';
 import { AwSignerError, AwSignerErrorType } from '../errors';
 
-export function loadPkpFromStorage(storage: LocalStorage): PkpInfo | null {
+export function loadPkpsFromStorage(storage: LocalStorage): PkpInfo[] {
   try {
-    const pkp = storage.getItem('pkp');
-    if (pkp) {
-      return JSON.parse(pkp) as PkpInfo;
+    const pkps = storage.getItem('pkps');
+    if (pkps) {
+      return JSON.parse(pkps) as PkpInfo[];
     }
   } catch (error) {
     throw new AwSignerError(
       AwSignerErrorType.STORAGE_FAILED_TO_GET_ITEM,
-      'Failed to retrieve PKP from storage',
+      'Failed to retrieve PKPs from storage',
       {
         details: error,
       }
     );
   }
-  return null;
+  return [];
 }
 
-export function savePkpToStorage(storage: LocalStorage, pkpInfo: PkpInfo) {
-  storage.setItem('pkp', JSON.stringify(pkpInfo));
+export function savePkpsToStorage(storage: LocalStorage, pkps: PkpInfo[]) {
+  storage.setItem('pkps', JSON.stringify(pkps));
 }
 
 export async function mintPkp(
