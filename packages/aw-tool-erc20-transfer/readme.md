@@ -4,7 +4,7 @@ The `aw-tool-uniswap-swap` folder contains utilities for interacting with Uniswa
 
 ---
 
-## Files Overview
+## Files Overview (in src/lib)
 
 ### 1. **`ipfs.ts`**
 Handles IPFS CIDs for different environments (development, testing, production). Falls back to default CIDs if the build output is not found.
@@ -45,30 +45,3 @@ Configures the ERC20 transfer tool for different Lit networks.
 - **Parameter Validation**: Validates inputs like `pkpEthAddress`, `tokenIn`, `recipientAddress`, and `amountIn`.
 - **Network-Specific Tools**: Creates tools for `datil-dev`, `datil-test`, and `datil` environments.
 - **Policy Integration**: Integrates with the `ERC20TransferPolicy` for policy handling.
-
----
-
-## Usage Example
-
-### 1. **Set Up the Tool**
-```typescript
-import { ERC20Transfer } from './tool';
-
-const tool = ERC20Transfer['datil-dev'];
-
-const params = {
-  pkpEthAddress: '0x...',
-  tokenIn: '0x...',
-  recipientAddress: '0x...',
-  amountIn: '100',
-  chainId: '1',
-  rpcUrl: 'https://mainnet.infura.io/v3/...',
-};
-
-const validationResult = tool.parameters.validate(params);
-if (validationResult !== true) {
-  console.error('Validation errors:', validationResult);
-}
-
-const result = await tool.execute(params);
-console.log('Transaction hash:', result.transferHash);
