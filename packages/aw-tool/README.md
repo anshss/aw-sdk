@@ -25,10 +25,11 @@ Copy the following files from an existing tool package (e.g., aw-tool-sign-ecdsa
    - `jest.config.ts`
    - `eslint.config.js`
    - `.gitignore`
-   - `.env.template`
 
 2. Copy the entire `tools` directory
-   - Update the tool name in `tools/scripts/deploy-lit-action.js`
+
+3. Source files:
+   - `src/lib/ipfs.ts`
 
 ## Implement Tool Logic
 
@@ -48,39 +49,27 @@ src/
 
 ### Required Modifications
 
-1. `src/lib/ipfs.ts`:
-   - Update the `name` field in the IPFS metadata
-
-2. `src/lib/lit-action.ts`:
+1. `src/lib/lit-action.ts`:
    - Write your custom Lit Action code that will run on Lit nodes
-   - This is where your tool's core signing/validation logic goes
+   - This is where your tool's core validation and execution logic goes
+   - Examples can be found in the other tool packages
 
-3. `src/lib/policy.ts`:
-   - Define your tool's conditions for when signing should be allowed
+2. `src/lib/policy.ts`:
+   - Define your tool's conditions for when execution should be allowed
    - Implement the validation functions for your conditions
+   - Examples can be found in the other tool packages
 
-4. `src/lib/tool.ts`:
+3. `src/lib/tool.ts`:
    - This file needs to be almost completely rewritten for your tool
    - Implement your tool's specific functionality and logic
+   - Examples can be found in the other tool packages
 
-5. `src/index.ts`:
+4. `src/index.ts`:
    - Edit this file to export your tool
+   - Examples can be found in the other tool packages
 
 ## Register Your Tool
 
 In the `aw-tool-registry` package:
 1. Import your tool in `registry.ts` and call `registerTool` with your tool name and class
 2. Add your tool package as a dependency in `package.json` using the workspace syntax
-
-## Deployment
-
-1. Set up your environment:
-   - Copy `.env.template` to `.env`
-   - Add your `PINATA_JWT` to the `.env` file
-
-2. Deploy your Lit Action to IPFS:
-```bash
-pnpm nx deploy aw-tool-TOOL_NAME
-```
-
-This will pin your Lit Action code to IPFS using Pinata. 
