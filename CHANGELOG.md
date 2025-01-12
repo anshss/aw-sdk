@@ -1,6 +1,50 @@
 ## 0.1.0-9 (2025-01-12)
 
-This was a version bump only, there were no code changes.
+### `@lit-protocol/aw-cli`
+
+#### Added
+
+- (#26) Admin CLI menus:
+  - After selecting the `Admin` role, you are now prompted to select to either manage an existing Agent Wallet or mint a new one.
+    - A new `Mint New Agent Wallet` option was added to allow minting new Agent Wallets for a single Admin.
+  - After selecting the `Manage` option, you are now prompted to select an Agent Wallet you'd like to manage.
+  - After selecting an Agent Wallet, you are now prompted to select a category (`Tools`, `Policies`, `Delegatees`, or `Transfer Ownership`) of what you'd like to manage for the selected Agent Wallet.
+    - A new `Transfer Ownership` option was added to allow transferring ownership of an Agent Wallet to a new owner.
+
+### `@lit-protocol/aw-signer`
+
+#### Changed
+
+- (#26) A PKP is no longer automatically minted when an `Admin` is initialized.
+- (#26) All `public` methods in `Admin` now expect `pkpTokenId: string` as an argument in order to fetch the PKP from local storage.
+
+#### Added
+
+- (#27) Added Package README:
+  - Added a README to the package to provide a high-level overview of the package and its purpose.
+  - Added swimlane diagram to the README.
+  - Added a CHANGELOG to the package to track changes to the package.
+- (#26) Added new methods to the `Admin` class:
+  - `getPkps`: Returns an array of `PkpInfo` objects from local storage.
+  - `getPkpByTokenId`: Returns a `PkpInfo` object from local storage by its token ID.
+  - `mintPkp`: Mints a new PKP, adds it's `PkpInfo` object to local storage, and returns the `PkpInfo` object.
+  - `transferPkpOwnership`: Transfers ownership of a PKP to a new owner, removes the `PkpInfo` object from local storage, and returns the transaction receipt.
+
+### `@lit-protocol/aw-tool`
+
+#### Added
+
+- (#27) Added Package README:
+    - Added a README to the package to provide a high-level overview of the package and its purpose.
+    - Added a CHANGELOG to the package to track changes to the package.
+
+### `@lit-protocol/aw-tool-registry`
+
+#### Added
+
+- (#27) Added Package README:
+    - Added a README to the package to provide a high-level overview of the package and its purpose.
+    - Added a CHANGELOG to the package to track changes to the package.
 
 ## 0.1.0-8 (2025-01-10)
 
