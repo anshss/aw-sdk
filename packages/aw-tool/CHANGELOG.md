@@ -1,6 +1,6 @@
 # `@lit-protocol/aw-tool`
 
-## Unreleased
+##  0.1.0-9 (2025-01-12)
 
 ### Added
 

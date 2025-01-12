@@ -1,6 +1,6 @@
 # `@lit-protocol/aw-signer`
 
-## Unreleased
+##  0.1.0-9 (2025-01-12)
 
 ### Changed
 
