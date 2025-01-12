@@ -1,5 +1,9 @@
 // Import the AwAdmin and AwTool types from the '@lit-protocol/agent-wallet' package.
-import { type Admin as AwAdmin, type AwTool } from '@lit-protocol/agent-wallet';
+import type {
+  PkpInfo,
+  Admin as AwAdmin,
+  AwTool,
+} from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -22,9 +26,14 @@ import { handleGetTools } from './get-tools';
  * and logs the progress and success of the operation.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the tool from.
  * @param tool - The tool to remove.
  */
-const removeTool = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
+const removeTool = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo,
+  tool: AwTool<any, any>
+) => {
   // Prompt the user to confirm the tool removal action.
   await promptConfirmRemoval(tool);
 
@@ -32,7 +41,7 @@ const removeTool = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
   logger.loading('Removing tool...');
 
   // Remove the tool from the AW system.
-  await awAdmin.removeTool(tool.ipfsCid);
+  await awAdmin.removeTool(pkp.info.tokenId, tool.ipfsCid);
 
   // Log a success message once the tool is removed.
   logger.success('Tool removed successfully.');
@@ -45,10 +54,10 @@ const removeTool = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
  *
  * @param awAdmin - An instance of the AwAdmin class.
  */
-export const handleRemoveTool = async (awAdmin: AwAdmin) => {
+export const handleRemoveTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin);
+    const permittedTools = await handleGetTools(awAdmin, pkp);
 
     // If no permitted tools are found, throw an error.
     if (
@@ -63,7 +72,11 @@ export const handleRemoveTool = async (awAdmin: AwAdmin) => {
     }
 
     // Prompt the user to select a tool to remove and remove it.
-    await removeTool(awAdmin, await promptSelectToolForRemoval(permittedTools));
+    await removeTool(
+      awAdmin,
+      pkp,
+      await promptSelectToolForRemoval(permittedTools)
+    );
   } catch (error) {
     // Handle specific errors related to tool removal.
     if (error instanceof AwCliError) {

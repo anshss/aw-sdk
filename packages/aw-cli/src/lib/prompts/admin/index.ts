@@ -1,13 +1,12 @@
-export { promptAdminInit } from './init';
-export { promptAdminInsufficientBalance } from './insufficient-balance';
-export { promptAdminMenu } from './menu';
-export { promptSelectToolToPermit, promptConfirmPermit } from './permit-tool';
-export {
-  promptSelectToolForRemoval,
-  promptConfirmRemoval,
-} from './remove-tool';
-export { promptPolicyDetails } from './policy-details';
-export { promptDelegateeAddress } from './delegatee-address';
-export { promptSelectDelegateeToRemove } from './remove-delegatee';
-export { promptSelectDelegateesToAdd } from './batch-add-delegatee';
-export { promptSelectDelegateesToRemove } from './batch-remove-delegatee';
+export * from './init';
+export * from './menu';
+export * from './insufficient-balance';
+export * from './permit-tool';
+export * from './remove-tool';
+export * from './policy-details';
+export * from './delegatee-address';
+export * from './remove-delegatee';
+export * from './batch-add-delegatee';
+export * from './batch-remove-delegatee';
+export * from './select-pkp';
+export * from './new-pkp-owner';

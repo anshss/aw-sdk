@@ -1,5 +1,5 @@
 // Import the AwAdmin type from the '@lit-protocol/agent-wallet' package.
-import { type Admin as AwAdmin } from '@lit-protocol/agent-wallet';
+import type { PkpInfo, Admin as AwAdmin } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -15,14 +15,19 @@ import { promptSelectDelegateeToRemove } from '../../prompts/admin';
  * This function logs the progress and success of the operation.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the delegatee for.
  * @param address - The address of the delegatee to remove.
  */
-const removeDelegatee = async (awAdmin: AwAdmin, address: string) => {
+const removeDelegatee = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo,
+  address: string
+) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Removing delegatee...');
 
   // Remove the delegatee from the AW system.
-  await awAdmin.removeDelegatee(address);
+  await awAdmin.removeDelegatee(pkp.info.tokenId, address);
 
   // Log a success message once the delegatee is removed.
   logger.success(`Successfully removed delegatee: ${address}`);
@@ -34,17 +39,18 @@ const removeDelegatee = async (awAdmin: AwAdmin, address: string) => {
  * and handles any errors that occur during the process.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the delegatee for.
  */
-export const handleRemoveDelegatee = async (awAdmin: AwAdmin) => {
+export const handleRemoveDelegatee = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of delegatees from the AW system.
-    const delegatees = await awAdmin.getDelegatees();
+    const delegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
 
     // Prompt the user to select a delegatee to remove.
     const address = await promptSelectDelegateeToRemove(delegatees);
 
     // Remove the selected delegatee from the AW system.
-    await removeDelegatee(awAdmin, address);
+    await removeDelegatee(awAdmin, pkp, address);
   } catch (error) {
     // Handle specific errors related to delegatee removal.
     if (error instanceof AwCliError) {

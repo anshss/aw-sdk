@@ -10,3 +10,5 @@ export * from './add-delegatee';
 export * from './remove-delegatee';
 export * from './batch-add-delegatee';
 export * from './batch-remove-delegatee';
+export * from './mint-pkp';
+export * from './transfer-ownership';

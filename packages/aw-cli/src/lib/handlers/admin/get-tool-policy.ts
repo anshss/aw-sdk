@@ -1,5 +1,9 @@
 // Import the AwAdmin and AwTool types from the '@lit-protocol/agent-wallet' package.
-import { type Admin as AwAdmin, type AwTool } from '@lit-protocol/agent-wallet';
+import type {
+  PkpInfo,
+  Admin as AwAdmin,
+  AwTool,
+} from '@lit-protocol/agent-wallet';
 
 // Import the prompts library for user interaction.
 import prompts from 'prompts';
@@ -55,14 +59,22 @@ const promptSelectToolForPolicy = async (
  * This function logs the tool's name, IPFS CID, policy version, and decoded policy.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to get the tool policy for.
  * @param tool - The tool for which to retrieve the policy.
  */
-const getToolPolicy = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
+const getToolPolicy = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo,
+  tool: AwTool<any, any>
+) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting tool policy...');
 
   // Retrieve the tool's policy and version from the AW system.
-  const { policy, version } = await awAdmin.getToolPolicy(tool.ipfsCid);
+  const { policy, version } = await awAdmin.getToolPolicy(
+    pkp.info.tokenId,
+    tool.ipfsCid
+  );
 
   // Log the tool's name, IPFS CID, policy version, and decoded policy.
   logger.info('Tool Policy:');
@@ -79,10 +91,10 @@ const getToolPolicy = async (awAdmin: AwAdmin, tool: AwTool<any, any>) => {
  *
  * @param awAdmin - An instance of the AwAdmin class.
  */
-export const handleGetToolPolicy = async (awAdmin: AwAdmin) => {
+export const handleGetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin);
+    const permittedTools = await handleGetTools(awAdmin, pkp);
 
     // If no permitted tools are found, throw an error.
     if (
@@ -98,6 +110,7 @@ export const handleGetToolPolicy = async (awAdmin: AwAdmin) => {
     // Prompt the user to select a tool and retrieve its policy.
     await getToolPolicy(
       awAdmin,
+      pkp,
       await promptSelectToolForPolicy(permittedTools.toolsWithPolicies)
     );
   } catch (error) {

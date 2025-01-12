@@ -9,6 +9,12 @@ export enum AwSignerErrorType {
   /** Indicates that the private key was not provided for the Admin role. */
   ADMIN_MISSING_PRIVATE_KEY = 'ADMIN_MISSING_PRIVATE_KEY',
 
+  /** Indicates that the PKP was not found in storage. */
+  ADMIN_PKP_NOT_FOUND = 'ADMIN_PKP_NOT_FOUND',
+
+  /** Indicates that the PKP transfer failed. */
+  ADMIN_PKP_TRANSFER_FAILED = 'ADMIN_PKP_TRANSFER_FAILED',
+
   /** Indicates that the Lit network was not provided for the Delegatee role. */
   DELEGATEE_MISSING_LIT_NETWORK = 'DELEGATEE_MISSING_LIT_NETWORK',
 

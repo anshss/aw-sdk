@@ -580,15 +580,15 @@ export default async () => {
      * @param {string} signedTx - The signed transaction.
      * @returns {Promise<string>} The transaction hash.
      */
-    async function broadcastTransaction(signedTx: string) {
+    async function broadcastTransaction(
+      provider: JsonRpcProvider,
+      signedTx: string
+    ) {
       console.log('Broadcasting transaction...');
       const txHash = await Lit.Actions.runOnce(
         { waitForResponse: true, name: 'txnSender' },
         async () => {
           try {
-            const provider = new ethers.providers.JsonRpcProvider(
-              params.rpcUrl
-            );
             const receipt = await provider.sendTransaction(signedTx);
             console.log('Transaction sent:', receipt.hash);
             return receipt.hash;
@@ -687,7 +687,7 @@ export default async () => {
     );
 
     const signedApprovalTx = await signTx(approvalTx, 'erc20ApprovalSig');
-    const approvalHash = await broadcastTransaction(signedApprovalTx);
+    const approvalHash = await broadcastTransaction(provider, signedApprovalTx);
     console.log('Approval transaction hash:', approvalHash);
 
     // Wait for approval confirmation
@@ -718,7 +718,7 @@ export default async () => {
     );
 
     const signedSwapTx = await signTx(swapTx, 'erc20SwapSig');
-    const swapHash = await broadcastTransaction(signedSwapTx);
+    const swapHash = await broadcastTransaction(provider, signedSwapTx);
     console.log('Swap transaction hash:', swapHash);
 
     Lit.Actions.setResponse({
