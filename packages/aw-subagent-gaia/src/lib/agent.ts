@@ -31,11 +31,15 @@ export class OpenAiIntentMatcher implements IntentMatcher {
   /**
    * Constructs an instance of the `OpenAiIntentMatcher`.
    * 
-   * @param {string} apiKey - The API key for the OpenAI client.
-   * @param {string} [model='gpt-4o-mini'] - The model to be used for intent analysis. Defaults to 'gpt-4o-mini'.
+   * @param {string} baseUrl - Your node URL (Example: 'https://YOUR-NODE-ID.us.gaianet.network/v1'). Defaults to https://llama8b.gaia.domains/v1
+   * @param {string} apiKey - Your Gaia API Key
+   * @param {string} [model='llama'] - The model to be used for intent analysis. Defaults to 'llama'.
    */
-  constructor(apiKey: string, model = 'gpt-4o-mini') {
-    this.openai = new OpenAI({ apiKey: apiKey });
+  constructor(baseUrl = 'https://llama8b.gaia.domains/v1', apiKey: string, model = 'llama') {
+    this.openai = new OpenAI({
+      baseURL: baseUrl,
+      apiKey: apiKey 
+    });
     this.model = model;
   }
 
