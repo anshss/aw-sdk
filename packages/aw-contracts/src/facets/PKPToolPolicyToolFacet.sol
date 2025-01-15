@@ -9,6 +9,17 @@ import "../libraries/PKPToolPolicyEvents.sol";
 contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
 
+    struct FilteredToolData {
+        string[] allTools;                // All registered tools
+        string[] blanketPolicies;         // Blanket policies for each tool (aligned with allTools)
+        string[] toolsWithoutPolicy;      // Tools with no policies
+        string[] toolsWithPolicy;         // Tools with any policy
+        bool[] hasBlanketPolicy;          // Whether each tool with policy has a blanket policy
+        address[][] delegateesWithPolicy; // Delegatees for each tool with policy
+        string[][] delegateePolicies;     // Policies for each delegatee (aligned with delegateesWithPolicy)
+        address[] allDelegatees;          // All delegatees
+    }
+
     function isToolRegistered(uint256 pkpTokenId, string calldata toolIpfsCid) 
         external 
         view 
@@ -32,35 +43,42 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             string[] memory blanketPolicies
         )
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        string[] storage toolsList = l.registeredTools[pkpTokenId];
-        address[] storage delegateesList = l.pkpDelegatees[pkpTokenId];
-        uint256 toolsLength = toolsList.length;
-        uint256 delegateesLength = delegateesList.length;
+        FilteredToolData memory filtered = _collectToolData(pkpTokenId);
+        uint256 toolsLength = filtered.allTools.length;
+        uint256 delegateesLength = filtered.allDelegatees.length;
 
-        toolIpfsCids = new string[](toolsLength);
+        toolIpfsCids = filtered.allTools;
+        blanketPolicies = filtered.blanketPolicies;
+        delegatees = filtered.allDelegatees;
+        
+        // Initialize policy arrays
         delegateesPolicies = new string[][](toolsLength);
-        delegatees = new address[](delegateesLength);
-        blanketPolicies = new string[](toolsLength);
-
-        // Copy tools and initialize policy arrays
         for (uint256 i; i < toolsLength;) {
-            toolIpfsCids[i] = toolsList[i];
             delegateesPolicies[i] = new string[](delegateesLength);
-            blanketPolicies[i] = l.policies[pkpTokenId][toolsList[i]][address(0)];
             unchecked { ++i; }
         }
 
-        // Copy delegatees
-        for (uint256 i; i < delegateesLength;) {
-            delegatees[i] = delegateesList[i];
-            unchecked { ++i; }
-        }
-
-        // Fill in delegatee-specific policies
-        for (uint256 i; i < toolsLength;) {
-            for (uint256 j; j < delegateesLength;) {
-                delegateesPolicies[i][j] = l.policies[pkpTokenId][toolsList[i]][delegateesList[j]];
+        // Fill in policies for tools that have them
+        for (uint256 i; i < filtered.toolsWithPolicy.length;) {
+            string memory tool = filtered.toolsWithPolicy[i];
+            // Find tool's index in allTools
+            for (uint256 j; j < toolsLength;) {
+                if (keccak256(bytes(filtered.allTools[j])) == keccak256(bytes(tool))) {
+                    // For each delegatee with policy
+                    for (uint256 k; k < filtered.delegateesWithPolicy[i].length;) {
+                        address delegatee = filtered.delegateesWithPolicy[i][k];
+                        // Find delegatee's index
+                        for (uint256 m; m < delegateesLength;) {
+                            if (filtered.allDelegatees[m] == delegatee) {
+                                delegateesPolicies[j][m] = filtered.delegateePolicies[i][k];
+                                break;
+                            }
+                            unchecked { ++m; }
+                        }
+                        unchecked { ++k; }
+                    }
+                    break;
+                }
                 unchecked { ++j; }
             }
             unchecked { ++i; }
@@ -76,68 +94,12 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             bool[] memory hasBlanketPolicy
         )
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        string[] storage allTools = l.registeredTools[pkpTokenId];
-        address[] storage allDelegatees = l.pkpDelegatees[pkpTokenId];
-        uint256 toolsLength = allTools.length;
-        
-        // Create a max-sized arrays in memory
-        string[] memory tempTools = new string[](toolsLength);
-        address[][] memory tempDelegatees = new address[][](toolsLength);
-        bool[] memory tempBlanket = new bool[](toolsLength);
-        uint256 count;
-        
-        // Single pass to collect tools with any policies
-        for (uint256 i; i < toolsLength;) {
-            string storage tool = allTools[i];
-            bool hasPolicy = false;
-            
-            // Check blanket policy
-            bool hasBlanket = bytes(l.policies[pkpTokenId][tool][address(0)]).length > 0;
-            if (hasBlanket) {
-                hasPolicy = true;
-            }
-            
-            // Check delegatee-specific policies
-            address[] memory toolDelegatees = new address[](allDelegatees.length);
-            uint256 delegateeCount;
-            
-            for (uint256 j; j < allDelegatees.length;) {
-                if (bytes(l.policies[pkpTokenId][tool][allDelegatees[j]]).length > 0) {
-                    toolDelegatees[delegateeCount] = allDelegatees[j];
-                    unchecked { ++delegateeCount; }
-                    hasPolicy = true;
-                }
-                unchecked { ++j; }
-            }
-            
-            if (hasPolicy) {
-                tempTools[count] = tool;
-                
-                // Resize delegatees array to actual size
-                address[] memory resizedDelegatees = new address[](delegateeCount);
-                for (uint256 k; k < delegateeCount;) {
-                    resizedDelegatees[k] = toolDelegatees[k];
-                    unchecked { ++k; }
-                }
-                tempDelegatees[count] = resizedDelegatees;
-                tempBlanket[count] = hasBlanket;
-                unchecked { ++count; }
-            }
-            unchecked { ++i; }
-        }
-        
-        // Create correctly sized arrays and copy only the used elements
-        toolsWithPolicy = new string[](count);
-        delegateesWithPolicy = new address[][](count);
-        hasBlanketPolicy = new bool[](count);
-        
-        for (uint256 i; i < count;) {
-            toolsWithPolicy[i] = tempTools[i];
-            delegateesWithPolicy[i] = tempDelegatees[i];
-            hasBlanketPolicy[i] = tempBlanket[i];
-            unchecked { ++i; }
-        }
+        FilteredToolData memory filtered = _collectToolData(pkpTokenId);
+        return (
+            filtered.toolsWithPolicy,
+            filtered.delegateesWithPolicy,
+            filtered.hasBlanketPolicy
+        );
     }
 
     function getToolsWithoutPolicy(uint256 pkpTokenId)
@@ -145,46 +107,8 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         view
         returns (string[] memory toolsWithoutPolicy)
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        string[] storage allTools = l.registeredTools[pkpTokenId];
-        address[] storage allDelegatees = l.pkpDelegatees[pkpTokenId];
-        uint256 length = allTools.length;
-        
-        // Create a max-sized array in memory
-        string[] memory tempTools = new string[](length);
-        uint256 count;
-        
-        // Single pass to collect tools without any policies
-        for (uint256 i; i < length;) {
-            string storage tool = allTools[i];
-            bool hasPolicy = false;
-            
-            // Check blanket policy
-            if (bytes(l.policies[pkpTokenId][tool][address(0)]).length > 0) {
-                hasPolicy = true;
-            } else {
-                // Check delegatee-specific policies
-                for (uint256 j; j < allDelegatees.length && !hasPolicy;) {
-                    if (bytes(l.policies[pkpTokenId][tool][allDelegatees[j]]).length > 0) {
-                        hasPolicy = true;
-                    }
-                    unchecked { ++j; }
-                }
-            }
-            
-            if (!hasPolicy) {
-                tempTools[count] = tool;
-                unchecked { ++count; }
-            }
-            unchecked { ++i; }
-        }
-        
-        // Create correctly sized array and copy only the used elements
-        toolsWithoutPolicy = new string[](count);
-        for (uint256 i; i < count;) {
-            toolsWithoutPolicy[i] = tempTools[i];
-            unchecked { ++i; }
-        }
+        FilteredToolData memory filtered = _collectToolData(pkpTokenId);
+        return filtered.toolsWithoutPolicy;
     }
 
     /// @notice Register a tool for a PKP token
@@ -192,6 +116,125 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     /// @param toolIpfsCid The IPFS CID of the tool
     function setTool(uint256 pkpTokenId, string calldata toolIpfsCid) external onlyPKPOwner(pkpTokenId) {
         _setTool(pkpTokenId, toolIpfsCid);
+    }
+
+    /// @notice Remove a tool from a PKP token
+    /// @param pkpTokenId The PKP token ID to remove the tool from
+    /// @param toolIpfsCid The IPFS CID of the tool to remove
+    function removeTool(uint256 pkpTokenId, string calldata toolIpfsCid) external onlyPKPOwner(pkpTokenId) {
+        _removeTool(pkpTokenId, toolIpfsCid);
+    }
+
+    /// @notice Register multiple tools for a PKP token in a single transaction
+    /// @param pkpTokenId The PKP token ID to register the tools for
+    /// @param toolIpfsCids Array of IPFS CIDs of the tools to register
+    function setToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            _setTool(pkpTokenId, toolIpfsCids[i]);
+            unchecked { ++i; }
+        }
+    }
+
+    /// @notice Remove multiple tools from a PKP token in a single transaction
+    /// @param pkpTokenId The PKP token ID to remove the tools from
+    /// @param toolIpfsCids Array of IPFS CIDs of the tools to remove
+    function removeToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            _removeTool(pkpTokenId, toolIpfsCids[i]);
+            unchecked { ++i; }
+        }
+    }
+
+    function _collectToolData(uint256 pkpTokenId)
+        internal
+        view
+        returns (FilteredToolData memory filtered)
+    {
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        string[] storage allTools = l.registeredTools[pkpTokenId];
+        filtered.allDelegatees = l.pkpDelegatees[pkpTokenId];
+        uint256 toolsLength = allTools.length;
+        uint256 delegateesLength = filtered.allDelegatees.length;
+
+        // Initialize arrays for all tools
+        filtered.allTools = new string[](toolsLength);
+        filtered.blanketPolicies = new string[](toolsLength);
+
+        // Create max-sized arrays for tools with/without policy
+        string[] memory withPolicy = new string[](toolsLength);
+        bool[] memory hasBlanket = new bool[](toolsLength);
+        address[][] memory delegatees = new address[][](toolsLength);
+        string[][] memory policies = new string[][](toolsLength);
+        string[] memory withoutPolicy = new string[](toolsLength);
+        uint256 withPolicyCount;
+        uint256 withoutPolicyCount;
+        
+        for (uint256 i; i < toolsLength;) {
+            string memory tool = allTools[i];
+            filtered.allTools[i] = tool;
+            
+            // Check blanket policy
+            string memory blanketPolicy = l.policies[pkpTokenId][tool][address(0)];
+            filtered.blanketPolicies[i] = blanketPolicy;
+            bool hasBlanketPolicy = bytes(blanketPolicy).length > 0;
+            
+            // Check delegatee-specific policies
+            address[] memory toolDelegatees = new address[](delegateesLength);
+            string[] memory toolPolicies = new string[](delegateesLength);
+            uint256 delegateeCount;
+            
+            for (uint256 j; j < delegateesLength;) {
+                string memory policy = l.policies[pkpTokenId][tool][filtered.allDelegatees[j]];
+                if (bytes(policy).length > 0) {
+                    toolDelegatees[delegateeCount] = filtered.allDelegatees[j];
+                    toolPolicies[delegateeCount] = policy;
+                    unchecked { ++delegateeCount; }
+                }
+                unchecked { ++j; }
+            }
+            
+            // Resize delegatees and policies arrays to actual size
+            if (delegateeCount > 0 || hasBlanketPolicy) {
+                address[] memory resizedDelegatees = new address[](delegateeCount);
+                string[] memory resizedPolicies = new string[](delegateeCount);
+                for (uint256 k; k < delegateeCount;) {
+                    resizedDelegatees[k] = toolDelegatees[k];
+                    resizedPolicies[k] = toolPolicies[k];
+                    unchecked { ++k; }
+                }
+
+                withPolicy[withPolicyCount] = tool;
+                hasBlanket[withPolicyCount] = hasBlanketPolicy;
+                delegatees[withPolicyCount] = resizedDelegatees;
+                policies[withPolicyCount] = resizedPolicies;
+                unchecked { ++withPolicyCount; }
+            } else {
+                withoutPolicy[withoutPolicyCount] = tool;
+                unchecked { ++withoutPolicyCount; }
+            }
+            
+            unchecked { ++i; }
+        }
+
+        // Create correctly sized arrays
+        filtered.toolsWithPolicy = new string[](withPolicyCount);
+        filtered.hasBlanketPolicy = new bool[](withPolicyCount);
+        filtered.delegateesWithPolicy = new address[][](withPolicyCount);
+        filtered.delegateePolicies = new string[][](withPolicyCount);
+        filtered.toolsWithoutPolicy = new string[](withoutPolicyCount);
+
+        // Copy only the used elements
+        for (uint256 i; i < withPolicyCount;) {
+            filtered.toolsWithPolicy[i] = withPolicy[i];
+            filtered.hasBlanketPolicy[i] = hasBlanket[i];
+            filtered.delegateesWithPolicy[i] = delegatees[i];
+            filtered.delegateePolicies[i] = policies[i];
+            unchecked { ++i; }
+        }
+        for (uint256 i; i < withoutPolicyCount;) {
+            filtered.toolsWithoutPolicy[i] = withoutPolicy[i];
+            unchecked { ++i; }
+        }
     }
 
     /// @notice Internal function to register a tool
@@ -226,13 +269,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         // If we get here, the tool is not registered => add it
         tools.push(toolIpfsCid);
         layout.toolIndices[pkpTokenId][toolIpfsCid] = tools.length - 1;
-    }
-
-    /// @notice Remove a tool from a PKP token
-    /// @param pkpTokenId The PKP token ID to remove the tool from
-    /// @param toolIpfsCid The IPFS CID of the tool to remove
-    function removeTool(uint256 pkpTokenId, string calldata toolIpfsCid) external onlyPKPOwner(pkpTokenId) {
-        _removeTool(pkpTokenId, toolIpfsCid);
+        emit PKPToolPolicyEvents.ToolRegistered(pkpTokenId, toolIpfsCid);
     }
 
     /// @notice Internal function to remove a tool
@@ -273,25 +310,6 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         // Remove the last element and clean up the index mapping
         tools.pop();
         delete layout.toolIndices[pkpTokenId][toolIpfsCid];
-    }
-
-    /// @notice Register multiple tools for a PKP token in a single transaction
-    /// @param pkpTokenId The PKP token ID to register the tools for
-    /// @param toolIpfsCids Array of IPFS CIDs of the tools to register
-    function setToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
-        for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _setTool(pkpTokenId, toolIpfsCids[i]);
-            unchecked { ++i; }
-        }
-    }
-
-    /// @notice Remove multiple tools from a PKP token in a single transaction
-    /// @param pkpTokenId The PKP token ID to remove the tools from
-    /// @param toolIpfsCids Array of IPFS CIDs of the tools to remove
-    function removeToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
-        for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _removeTool(pkpTokenId, toolIpfsCids[i]);
-            unchecked { ++i; }
-        }
+        emit PKPToolPolicyEvents.ToolRemoved(pkpTokenId, toolIpfsCid);
     }
 } 

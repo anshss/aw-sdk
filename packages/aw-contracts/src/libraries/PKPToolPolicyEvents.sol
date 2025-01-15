@@ -62,4 +62,14 @@ library PKPToolPolicyEvents {
         address indexed delegatee,
         string parameterName
     );
+
+    event ToolRegistered(
+        uint256 indexed pkpTokenId,
+        string toolIpfsCid
+    );
+
+    event ToolRemoved(
+        uint256 indexed pkpTokenId,
+        string toolIpfsCid
+    );
 } 

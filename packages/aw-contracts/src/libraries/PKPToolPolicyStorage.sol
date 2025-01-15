@@ -34,6 +34,9 @@ library PKPToolPolicyStorage {
         /// @dev pkpTokenId => toolIpfsCid => delegatee => parameterName => parameterValue
         mapping(uint256 => mapping(string => mapping(address => mapping(string => bytes)))) policyParameters;
         
+        // Mapping from PKP token ID => tool IPFS CID => delegatee address => parameter name => index in policyNames array
+        mapping(uint256 => mapping(string => mapping(address => mapping(string => uint256)))) policyNameIndices;
+
         // Scoped policy names tracking
         /// @notice Array of policy parameter names for each PKP token ID, tool, and delegatee
         /// @dev pkpTokenId => toolIpfsCid => delegatee => parameterNames[]

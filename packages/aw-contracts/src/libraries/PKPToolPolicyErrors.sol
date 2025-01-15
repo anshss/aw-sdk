@@ -10,4 +10,6 @@ library PKPToolPolicyErrors {
     error NotPKPOwner();
     error InvalidPolicyParameter();
     error InvalidDelegatee();
+    error PolicyParameterNotFound(string parameterName);
+    error NoPolicySet();
 } 
