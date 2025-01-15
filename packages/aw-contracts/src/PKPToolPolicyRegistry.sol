@@ -10,10 +10,10 @@ interface IPKPNFTFacet {
 error InvalidPKPTokenId();
 error ToolNotFound(string ipfsCid);
 error EmptyIPFSCID();
-error EmptyPolicy();
+error EmptyPolicyIPFSCID();
 error EmptyDelegatees();
 error NotPKPOwner();
-error EmptyVersion();
+error InvalidPolicyParameter();
 
 /// @dev Emitted when delegatees are set for a PKP
 event NewDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
@@ -23,48 +23,50 @@ event DelegateeRemoved(uint256 indexed pkpTokenId, address indexed delegatee);
 event ToolPolicySet(
     uint256 indexed pkpTokenId,
     string ipfsCid,
-    bytes policy,
-    string version
+    string policyIpfsCid,
+    address delegatee // address(0) for blanket policies
 );
 /// @dev Emitted when a tool policy is removed
-event ToolPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid);
+event ToolPolicyRemoved(uint256 indexed pkpTokenId, string ipfsCid, address delegatee);
+event PolicyParameterSet(
+    uint256 indexed pkpTokenId,
+    string ipfsCid,
+    address delegatee, // address(0) for blanket policies
+    bytes4 parameterName,
+    bytes parameterValue
+);
+event PolicyParameterRemoved(
+    uint256 indexed pkpTokenId,
+    string ipfsCid,
+    address delegatee, // address(0) for blanket policies
+    bytes4 parameterName
+);
 
 /**
  * @title PKPToolPolicyRegistry
- * @dev Registry for managing PKP-specific tool policies. Each PKP's owner (admin)
- * can set policies for tools it wants to execute and manage delegatees who are
+ * @dev Registry for managing PKP-specific tool policies using Lit Actions.
+ * Each PKP's owner can set policies for tools and manage delegatees who are
  * authorized to execute the tools.
  *
- * Each tool has a policy - Tool-specific configuration bytes that must be ABI encoded
+ * Each tool policy is a Lit Action that returns a boolean indicating whether
+ * the execution is authorized. The policy can access on-chain parameters and
+ * integrate with external services.
  *
  * Policy Format:
- * The policy field must be ABI encoded data using abi.encode().
- * Example:
- * - abi.encode(uint256 maxAmount, address[] allowedTokens)
- * - abi.encode(bytes32 role, uint256 threshold)
+ * - Lit Action IPFS CID that returns { response: boolean }
+ * - On-chain parameters accessible via bytes4(keccak256(parameterName))
+ *
+ * Policy Precedence:
+ * - Delegatee-specific policies take precedence over blanket policies
+ * - Blanket policies (set with delegatee = address(0)) apply to all delegatees
+ *   unless they have a specific policy set
  *
  * IPFS CID Format:
- * - Must be a valid IPFS CID v0 (e.g., "QmZ4tDuvesekSs4qM5ZBKpXiZGun7S2CYtEZRB3DYXkjGx")
- * - Represents the content hash of the tool code stored on IPFS
- * - CID v1 is not supported
+ * - Must be a valid IPFS CID v0
+ * - Represents either the tool code or policy code stored on IPFS
  * - Cannot be empty
- *
- * Policies:
- * - Must not be empty (use removeToolPolicy to remove a policy)
- * - Must be properly ABI encoded
- * - Version must be specified
  */
 contract PKPToolPolicyRegistry {
-    /**
-     * @dev Stores the policy for a specific tool
-     * @param policy Tool-specific configuration bytes that must be ABI encoded using abi.encode()
-     * @param version Version of the policy (e.g., "1.0.0")
-     */
-    struct ToolPolicy {
-        bytes policy; // Tool-specific ABI encoded configuration bytes
-        string version; // Version of the policy
-    }
-
     /// @dev Reference to the PKP NFT contract
     IPKPNFTFacet public immutable PKPNFT_CONTRACT;
 
@@ -80,13 +82,16 @@ contract PKPToolPolicyRegistry {
     /// @dev Maps delegatee address -> PKP token ID -> index in delegateePkps array
     mapping(address => mapping(uint256 => uint256)) internal delegateePkpIndices;
 
-    /// @dev Maps PKP token ID -> IPFS CID -> policy
-    mapping(uint256 => mapping(string => ToolPolicy)) public policies;
+    /// @dev Maps PKP token ID -> tool IPFS CID -> delegatee -> policy IPFS CID
+    mapping(uint256 => mapping(string => mapping(address => string))) public policies;
 
-    /// @dev Maps PKP token ID -> list of registered IPFS CIDs
+    /// @dev Maps PKP token ID -> tool IPFS CID -> delegatee -> parameter name -> parameter value
+    mapping(uint256 => mapping(string => mapping(address => mapping(bytes4 => bytes)))) public policyParameters;
+
+    /// @dev Maps PKP token ID -> list of registered tool IPFS CIDs
     mapping(uint256 => string[]) internal registeredTools;
 
-    /// @dev Maps PKP token ID -> IPFS CID -> index in registeredTools array
+    /// @dev Maps PKP token ID -> tool IPFS CID -> index in registeredTools array
     mapping(uint256 => mapping(string => uint256)) internal toolIndices;
 
     /**
@@ -108,123 +113,195 @@ contract PKPToolPolicyRegistry {
     }
 
     /**
-     * @dev Get all registered tools and their policies for a PKP
-     * @param pkpTokenId The PKP token ID to get registered tools for
-     * @return ipfsCids Array of IPFS CIDs for registered tools
-     * @return policyData Array of ABI encoded policy structs
-     * @return versions Array of policy versions
+     * @dev Get all registered tools and their policies for a PKP and delegatee
+     * @param pkpTokenId The PKP token ID
+     * @param delegatee The delegatee address
+     * @return toolIpfsCids Array of tool IPFS CIDs
+     * @return policyIpfsCids Array of policy IPFS CIDs (delegatee-specific or blanket)
      */
-    function getRegisteredTools(uint256 pkpTokenId)
+    function getRegisteredTools(uint256 pkpTokenId, address delegatee)
         external
         view
-        returns (
-            string[] memory ipfsCids,
-            bytes[] memory policyData,
-            string[] memory versions
-        )
+        returns (string[] memory toolIpfsCids, string[] memory policyIpfsCids)
     {
         string[] storage toolsList = registeredTools[pkpTokenId];
         uint256 length = toolsList.length;
 
-        ipfsCids = new string[](length);
-        policyData = new bytes[](length);
-        versions = new string[](length);
+        toolIpfsCids = new string[](length);
+        policyIpfsCids = new string[](length);
 
         for (uint256 i = 0; i < length; i++) {
             string memory currentCid = toolsList[i];
-            ipfsCids[i] = currentCid;
+            toolIpfsCids[i] = currentCid;
             
-            ToolPolicy storage currentPolicy = policies[pkpTokenId][currentCid];
-            policyData[i] = currentPolicy.policy;
-            versions[i] = currentPolicy.version;
+            // First try delegatee-specific policy
+            string memory policy = policies[pkpTokenId][currentCid][delegatee];
+            
+            // If no delegatee-specific policy, use blanket policy
+            if (bytes(policy).length == 0) {
+                policy = policies[pkpTokenId][currentCid][address(0)];
+            }
+            
+            policyIpfsCids[i] = policy;
         }
 
-        return (ipfsCids, policyData, versions);
+        return (toolIpfsCids, policyIpfsCids);
     }
 
     /**
-     * @dev Get the policy for a specific tool
-     * @param pkpTokenId The PKP token ID to get the policy for
-     * @param ipfsCid IPFS CID of the tool
-     * @return policy The ABI encoded policy struct
-     * @return version Version of the policy
+     * @dev Get the policy for a specific tool and delegatee, respecting precedence
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param delegatee The delegatee address
+     * @return policyIpfsCid The policy Lit Action IPFS CID (delegatee-specific or blanket)
      */
-    function getToolPolicy(uint256 pkpTokenId, string calldata ipfsCid)
+    function getToolPolicy(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee)
         external
         view
-        returns (bytes memory policy, string memory version)
+        returns (string memory policyIpfsCid)
     {
-        ToolPolicy storage toolPolicy = policies[pkpTokenId][ipfsCid];
-        return (toolPolicy.policy, toolPolicy.version);
+        // First try delegatee-specific policy
+        policyIpfsCid = policies[pkpTokenId][toolIpfsCid][delegatee];
+        
+        // If no delegatee-specific policy, return blanket policy
+        if (bytes(policyIpfsCid).length == 0) {
+            policyIpfsCid = policies[pkpTokenId][toolIpfsCid][address(0)];
+        }
+        
+        return policyIpfsCid;
     }
 
     /**
-     * @dev Set or update a policy for a specific tool
-     * @notice This function must be called by the PKP's admin
-     * @notice Use removeToolPolicy to remove a policy, not an empty policy
-     * @param pkpTokenId The PKP token ID to set the policy for
-     * @param ipfsCid IPFS CID of the tool
-     * @param policy Tool-specific policy bytes that must be ABI encoded
-     * @param version Version of the policy
+     * @dev Set or update a policy for a specific tool and optionally a delegatee
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param policyIpfsCid Policy Lit Action IPFS CID
+     * @param delegatee The delegatee address (use address(0) for blanket policy)
      */
     function setToolPolicy(
         uint256 pkpTokenId,
-        string calldata ipfsCid,
-        bytes calldata policy,
-        string calldata version
+        string calldata toolIpfsCid,
+        string calldata policyIpfsCid,
+        address delegatee
     ) external onlyPKPOwner(pkpTokenId) {
-        if (bytes(ipfsCid).length == 0) revert EmptyIPFSCID();
-        if (policy.length == 0) revert EmptyPolicy();
-        if (bytes(version).length == 0) revert EmptyVersion();
-
-        ToolPolicy storage toolPolicy = policies[pkpTokenId][ipfsCid];
+        if (bytes(toolIpfsCid).length == 0) revert EmptyIPFSCID();
+        if (bytes(policyIpfsCid).length == 0) revert EmptyPolicyIPFSCID();
 
         // If this is a new tool, add it to the list
-        if (toolPolicy.policy.length == 0) {
-            toolIndices[pkpTokenId][ipfsCid] = registeredTools[pkpTokenId].length;
-            registeredTools[pkpTokenId].push(ipfsCid);
+        if (toolIndices[pkpTokenId][toolIpfsCid] == 0 && registeredTools[pkpTokenId].length == 0) {
+            toolIndices[pkpTokenId][toolIpfsCid] = registeredTools[pkpTokenId].length;
+            registeredTools[pkpTokenId].push(toolIpfsCid);
         }
 
-        toolPolicy.policy = policy;
-        toolPolicy.version = version;
+        policies[pkpTokenId][toolIpfsCid][delegatee] = policyIpfsCid;
 
-        emit ToolPolicySet(pkpTokenId, ipfsCid, policy, version);
+        emit ToolPolicySet(pkpTokenId, toolIpfsCid, policyIpfsCid, delegatee);
     }
 
     /**
-     * @dev Remove a policy for a specific tool
-     * @notice This function must be called by the PKP's admin
-     * @param pkpTokenId The PKP token ID to remove the policy for
-     * @param ipfsCid IPFS CID of the tool to remove
+     * @dev Remove a policy for a specific tool and delegatee
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param delegatee The delegatee address
      */
-    function removeToolPolicy(uint256 pkpTokenId, string calldata ipfsCid) external onlyPKPOwner(pkpTokenId) {
-        if (bytes(ipfsCid).length == 0) revert EmptyIPFSCID();
+    function removeToolPolicy(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
+        address delegatee
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (bytes(toolIpfsCid).length == 0) revert EmptyIPFSCID();
+        if (delegatee == address(0)) revert InvalidPKPTokenId();
 
-        // Get the index of the IPFS CID in the array
-        uint256 index = toolIndices[pkpTokenId][ipfsCid];
-        string[] storage tools = registeredTools[pkpTokenId];
+        delete policies[pkpTokenId][toolIpfsCid][delegatee];
 
-        // Check if the tool exists
-        if (index >= tools.length || 
-            keccak256(bytes(tools[index])) != keccak256(bytes(ipfsCid))) {
-            revert ToolNotFound(ipfsCid);
+        // Clean up policy parameters
+        // Note: We don't enumerate and delete all parameters as it would be gas intensive
+        // Parameters can be overwritten when needed
+
+        emit ToolPolicyRemoved(pkpTokenId, toolIpfsCid, delegatee);
+    }
+
+    /**
+     * @dev Set a policy parameter value
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param delegatee The delegatee address
+     * @param parameterName The parameter name (as bytes4(keccak256(name)))
+     * @param parameterValue The parameter value
+     */
+    function setPolicyParameter(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
+        address delegatee,
+        bytes4 parameterName,
+        bytes calldata parameterValue
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (bytes(toolIpfsCid).length == 0) revert EmptyIPFSCID();
+        if (delegatee == address(0)) revert InvalidPKPTokenId();
+        if (parameterName == bytes4(0)) revert InvalidPolicyParameter();
+        if (parameterValue.length == 0) revert InvalidPolicyParameter();
+
+        policyParameters[pkpTokenId][toolIpfsCid][delegatee][parameterName] = parameterValue;
+
+        emit PolicyParameterSet(
+            pkpTokenId,
+            toolIpfsCid,
+            delegatee,
+            parameterName,
+            parameterValue
+        );
+    }
+
+    /**
+     * @dev Remove a policy parameter
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param delegatee The delegatee address
+     * @param parameterName The parameter name (as bytes4(keccak256(name)))
+     */
+    function removePolicyParameter(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
+        address delegatee,
+        bytes4 parameterName
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (bytes(toolIpfsCid).length == 0) revert EmptyIPFSCID();
+        if (delegatee == address(0)) revert InvalidPKPTokenId();
+        if (parameterName == bytes4(0)) revert InvalidPolicyParameter();
+
+        delete policyParameters[pkpTokenId][toolIpfsCid][delegatee][parameterName];
+
+        emit PolicyParameterRemoved(
+            pkpTokenId,
+            toolIpfsCid,
+            delegatee,
+            parameterName
+        );
+    }
+
+    /**
+     * @dev Get a policy parameter value, respecting precedence
+     * @param pkpTokenId The PKP token ID
+     * @param toolIpfsCid Tool IPFS CID
+     * @param delegatee The delegatee address
+     * @param parameterName The parameter name (as bytes4(keccak256(name)))
+     * @return The parameter value (delegatee-specific or blanket)
+     */
+    function getPolicyParameter(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
+        address delegatee,
+        bytes4 parameterName
+    ) external view returns (bytes memory) {
+        // First try delegatee-specific parameter
+        bytes memory value = policyParameters[pkpTokenId][toolIpfsCid][delegatee][parameterName];
+        
+        // If no delegatee-specific parameter, return blanket parameter
+        if (value.length == 0) {
+            value = policyParameters[pkpTokenId][toolIpfsCid][address(0)][parameterName];
         }
-
-        // Get the last element's CID
-        string memory lastCid = tools[tools.length - 1];
-
-        // If we're not removing the last element, move the last element to the removed position
-        if (index != tools.length - 1) {
-            tools[index] = lastCid;
-            toolIndices[pkpTokenId][lastCid] = index;
-        }
-
-        // Remove the last element and clean up storage
-        tools.pop();
-        delete policies[pkpTokenId][ipfsCid];
-        delete toolIndices[pkpTokenId][ipfsCid];
-
-        emit ToolPolicyRemoved(pkpTokenId, ipfsCid);
+        
+        return value;
     }
 
     /**
