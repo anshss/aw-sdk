@@ -53,10 +53,12 @@ library PKPToolRegistryPolicyEvents {
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
     /// @param toolIpfsCids Array of tool IPFS CIDs for which blanket policies were set
     /// @param policyIpfsCids Array of policy IPFS CIDs that were set as blanket policies
+    /// @param enablePolicies Whether the policies were enabled by default
     event BlanketPoliciesSet(
         uint256 indexed pkpTokenId,
         string[] toolIpfsCids,
-        string[] policyIpfsCids
+        string[] policyIpfsCids,
+        bool enablePolicies
     );
 
     /// @notice Emitted when multiple blanket policies are removed

@@ -36,6 +36,7 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to set policies for
     /// @param policyIpfsCids Array of policy IPFS CIDs to set as blanket policies
+    /// @param enablePolicies Whether to enable the policies when set
     /// @custom:throws ArrayLengthMismatch if toolIpfsCids and policyIpfsCids arrays have different lengths
     /// @custom:throws NotPKPOwner if caller is not the PKP owner
     /// @custom:throws EmptyIPFSCID if any tool CID is empty
@@ -44,15 +45,16 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
     function setBlanketToolPolicies(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids,
-        string[] calldata policyIpfsCids
+        string[] calldata policyIpfsCids,
+        bool enablePolicies
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != policyIpfsCids.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _setToolPolicy(pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i]);
+            _setToolPolicy(pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i], enablePolicies);
             unchecked { ++i; }
         }
-        emit PKPToolRegistryPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids);
+        emit PKPToolRegistryPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids, enablePolicies);
     }
 
     /// @notice Remove blanket policies from multiple tools
