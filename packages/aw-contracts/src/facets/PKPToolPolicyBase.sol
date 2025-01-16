@@ -28,19 +28,11 @@ abstract contract PKPToolPolicyBase {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        uint256 index = l.toolIndices[pkpTokenId][toolIpfsCid];
-        string[] storage tools = l.registeredTools[pkpTokenId];
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
 
-        // If index != 0, check if it points to our tool
-        if (index != 0) {
-            if (index >= tools.length || keccak256(bytes(tools[index])) != keccak256(bytes(toolIpfsCid))) {
-                revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
-            }
-        } else {
-            // If index == 0, check if it's actually at position 0
-            if (tools.length == 0 || keccak256(bytes(tools[0])) != keccak256(bytes(toolIpfsCid))) {
-                revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
-            }
+        if (!toolInfo.enabled) {
+            revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
         }
     }
 } 

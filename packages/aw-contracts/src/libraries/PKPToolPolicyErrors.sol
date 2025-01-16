@@ -2,14 +2,17 @@
 pragma solidity ^0.8.24;
 
 library PKPToolPolicyErrors {
-    error InvalidPKPTokenId();
-    error ToolNotFound(string ipfsCid);
+    error NotPKPOwner();
     error EmptyIPFSCID();
     error EmptyPolicyIPFSCID();
-    error EmptyDelegatees();
-    error NotPKPOwner();
+    error ToolNotFound(string toolIpfsCid);
     error InvalidPolicyParameter();
-    error InvalidDelegatee();
-    error PolicyParameterNotFound(string parameterName);
     error NoPolicySet();
+    error ArrayLengthMismatch();
+    error InvalidPKPTokenId();
+    error EmptyDelegatees();
+
+    error ZeroAddressCannotBeDelegatee();
+    error DelegateeAlreadyExists(uint256 pkpTokenId, address delegatee);
+    error DelegateeNotFound(uint256 pkpTokenId, address delegatee);
 } 

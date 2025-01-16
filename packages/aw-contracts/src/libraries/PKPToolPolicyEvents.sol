@@ -2,18 +2,22 @@
 pragma solidity ^0.8.24;
 
 library PKPToolPolicyEvents {
+    event AddedDelegatee(uint256 indexed pkpTokenId, address delegatee);
+
     /// @notice Emitted when new delegatees are added to a PKP
     /// @param pkpTokenId The PKP token ID
     /// @param delegatees Array of delegatee addresses
-    event NewDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
+    event BatchAddedDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
     
     /// @notice Emitted when a delegatee is removed from a PKP
     /// @param pkpTokenId The PKP token ID
     /// @param delegatee The removed delegatee address
-    event DelegateeRemoved(
+    event RemovedDelegatee(
         uint256 indexed pkpTokenId,
         address indexed delegatee
     );
+
+    event BatchRemovedDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
 
     /// @notice Emitted when a policy is set for a tool
     /// @param pkpTokenId The PKP token ID
