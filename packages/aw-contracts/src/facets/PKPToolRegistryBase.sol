@@ -2,8 +2,8 @@
 pragma solidity ^0.8.24;
 
 import "../interfaces/IPKPNFTFacet.sol";
-import "../libraries/PkpToolRegistryStorage.sol";
-import "../libraries/PkpToolRegistryErrors.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
 
 /// @title PKP Tool Policy Base Contract
 /// @notice Base contract for PKP tool policy management, providing core functionality and access control

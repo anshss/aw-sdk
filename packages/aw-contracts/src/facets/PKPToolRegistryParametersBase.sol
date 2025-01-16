@@ -16,7 +16,7 @@ abstract contract PKPToolRegistryParametersBase is PKPToolRegistryBase {
 
     /// @notice Retrieves the storage layout for the contract
     /// @dev Overrides the base contract's layout function
-    /// @return PkpToolRegistryStorage.Layout storage reference to the contract's storage layout
+    /// @return PKPToolRegistryStorage.Layout storage reference to the contract's storage layout
     function _layout() internal pure override returns (PKPToolRegistryStorage.Layout storage) {
         return PKPToolRegistryStorage.layout();
     }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
-import "../src/PKPToolPolicyRegistry.sol";
+import "../src/PKPToolRegistry.sol";
 
 interface ICreateX {
     struct Values {
@@ -87,7 +87,7 @@ contract DeployPKPToolPolicyRegistry is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy the registry using CREATEX
-        bytes memory creationCode = type(PKPToolPolicyRegistry).creationCode;
+        bytes memory creationCode = type(PKPToolRegistry).creationCode;
         address actualAddress;
         try ICreateX(CREATEX).deployCreate3(salt, creationCode) returns (address deployed) {
             actualAddress = deployed;
@@ -109,6 +109,6 @@ contract DeployPKPToolPolicyRegistry is Script {
         }
         require(codeSize > 0, "Contract deployment failed");
         
-        console.log("PKPToolPolicyRegistry successfully deployed to:", actualAddress);
+        console.log("PKPToolRegistry successfully deployed to:", actualAddress);
     }
 } 

@@ -9,7 +9,7 @@ import "../libraries/PKPToolRegistryDelegateeEvents.sol";
 
 /// @title PKP Tool Policy Delegatee Management Facet
 /// @notice Diamond facet for managing delegatees in the PKP tool policy system
-/// @dev Inherits from PkpToolRegistryBase for common functionality
+/// @dev Inherits from PKPToolRegistryBase for common functionality
 /// @custom:security-contact security@litprotocol.com
 contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
@@ -79,7 +79,7 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
 
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PkpToolRegistryErrors.ZeroAddressCannotBeDelegatee();
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.ZeroAddressCannotBeDelegatee();
             
             // Add delegatee to PKP's set if not already present
             if (pkpData.delegatees.add(delegatee)) {
@@ -106,7 +106,7 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatees.length == 0) revert PkpToolRegistryErrors.EmptyDelegatees();
+        if (delegatees.length == 0) revert PKPToolRegistryErrors.EmptyDelegatees();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];

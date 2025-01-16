@@ -2,10 +2,10 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PkpToolRegistryPolicyBase.sol";
-import "../libraries/PkpToolRegistryStorage.sol";
-import "../libraries/PkpToolRegistryErrors.sol";
-import "../libraries/PkpToolRegistryPolicyEvents.sol";
+import "./PKPToolRegistryPolicyBase.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
+import "../libraries/PKPToolRegistryEvents.sol";
 
 /// @title PKP Tool Registry Blanket Policy Facet
 /// @notice Diamond facet for managing blanket (default) policies for PKP tools

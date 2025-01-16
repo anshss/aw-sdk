@@ -9,7 +9,7 @@ import "../libraries/PKPToolRegistryParameterEvents.sol";
 
 /// @title PKP Tool Policy Parameter Facet
 /// @notice Diamond facet for managing delegatee-specific parameters for PKP tool policies
-/// @dev Inherits from PkpToolRegistryParametersBase for common parameter management functionality
+/// @dev Inherits from PKPToolRegistryParametersBase for common parameter management functionality
 /// @custom:security-contact security@litprotocol.com
 contract PKPToolRegistryParameterFacet is PKPToolRegistryParametersBase {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
@@ -92,8 +92,8 @@ contract PKPToolRegistryParameterFacet is PKPToolRegistryParametersBase {
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
     ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
-        if (parameterNames.length != parameterValues.length) revert PkpToolRegistryErrors.ArrayLengthMismatch();
-        if (delegatee == address(0)) revert PkpToolRegistryErrors.InvalidDelegatee();
+        if (parameterNames.length != parameterValues.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -132,7 +132,7 @@ contract PKPToolRegistryParameterFacet is PKPToolRegistryParametersBase {
         address delegatee,
         string[] calldata parameterNames
     ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
-        if (delegatee == address(0)) revert PkpToolRegistryErrors.InvalidDelegatee();
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];

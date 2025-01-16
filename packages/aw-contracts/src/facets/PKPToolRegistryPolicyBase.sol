@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PkpToolRegistryBase.sol";
-import "../libraries/PkpToolRegistryStorage.sol";
-import "../libraries/PkpToolRegistryErrors.sol";
+import "./PKPToolRegistryBase.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
 
 /// @title PKP Tool Policy Base Contract
 /// @notice Base contract for managing tool policies in the PKP system
@@ -35,7 +35,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         address delegatee,
         string calldata policyIpfsCid
     ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
-        if (bytes(policyIpfsCid).length == 0) revert PkpToolRegistryErrors.EmptyPolicyIPFSCID();
+        if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
@@ -72,7 +72,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual {
-        if (bytes(toolIpfsCid).length == 0) revert PkpToolRegistryErrors.EmptyIPFSCID();
+        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);

@@ -82,11 +82,11 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         string[] calldata policyIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length || delegatees.length != policyIpfsCids.length) {
-            revert PKPToolPolicyErrors.ArrayLengthMismatch();
+            revert PKPToolRegistryErrors.ArrayLengthMismatch();
         }
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             _setToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i]);
             unchecked { ++i; }
         }
@@ -109,10 +109,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         string[] calldata toolIpfsCids,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             _removeToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
@@ -136,10 +136,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         string[] calldata toolIpfsCids,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             _enablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
@@ -163,10 +163,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         string[] calldata toolIpfsCids,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             _disablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
