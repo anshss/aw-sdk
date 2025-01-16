@@ -2,17 +2,17 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolPolicyParametersBase.sol";
-import "../libraries/PKPToolPolicyStorage.sol";
-import "../libraries/PKPToolPolicyErrors.sol";
-import "../libraries/PKPToolPolicyParameterEvents.sol";
+import "./PKPToolRegistryParametersBase.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
+import "../libraries/PKPToolRegistryParameterEvents.sol";
 
 /// @title PKP Tool Policy Parameter Facet
 /// @notice Diamond facet for managing delegatee-specific parameters for PKP tool policies
-/// @dev Inherits from PKPToolPolicyParametersBase for common parameter management functionality
+/// @dev Inherits from PkpToolRegistryParametersBase for common parameter management functionality
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
-    using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+contract PKPToolRegistryParameterFacet is PKPToolRegistryParametersBase {
+    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get all registered parameter names for a specific tool and delegatee
@@ -28,12 +28,12 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
         string calldata toolIpfsCid,
         address delegatee
     ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
         
         uint256 length = policy.parameterNames.length();
         parameterNames = new string[](length);
@@ -59,12 +59,12 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
         address delegatee,
         string[] calldata parameterNames
     ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
         
         parameterValues = new bytes[](parameterNames.length);
         for (uint256 i = 0; i < parameterNames.length;) {
@@ -92,13 +92,13 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
     ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
-        if (parameterNames.length != parameterValues.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        if (parameterNames.length != parameterValues.length) revert PkpToolRegistryErrors.ArrayLengthMismatch();
+        if (delegatee == address(0)) revert PkpToolRegistryErrors.InvalidDelegatee();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
 
         for (uint256 i = 0; i < parameterNames.length;) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
@@ -108,7 +108,7 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyParameterEvents.PolicyParametersSet(
+        emit PKPToolRegistryParameterEvents.PolicyParametersSet(
             pkpTokenId,
             toolIpfsCid,
             delegatee,
@@ -132,12 +132,12 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
         address delegatee,
         string[] calldata parameterNames
     ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        if (delegatee == address(0)) revert PkpToolRegistryErrors.InvalidDelegatee();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
 
         for (uint256 i = 0; i < parameterNames.length;) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
@@ -146,7 +146,7 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyParameterEvents.PolicyParametersRemoved(
+        emit PKPToolRegistryParameterEvents.PolicyParametersRemoved(
             pkpTokenId,
             toolIpfsCid,
             delegatee,

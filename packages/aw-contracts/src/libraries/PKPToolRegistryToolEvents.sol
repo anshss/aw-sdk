@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title PKP Tool Policy Tool Events Library
+/// @title PKP Tool Registry Tool Events Library
 /// @notice Events emitted during tool management operations
 /// @dev Contains events for registering, removing, enabling, and disabling tools
-library PKPToolPolicyToolEvents {
+library PKPToolRegistryToolEvents {
     /// @notice Emitted when new tools are registered for a PKP
     /// @dev Tools must be registered before they can be used in policies
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)

@@ -2,17 +2,17 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolPolicyPolicyBase.sol";
-import "../libraries/PKPToolPolicyStorage.sol";
-import "../libraries/PKPToolPolicyErrors.sol";
-import "../libraries/PKPToolPolicyPolicyEvents.sol";
+import "./PkpToolRegistryPolicyBase.sol";
+import "../libraries/PkpToolRegistryStorage.sol";
+import "../libraries/PkpToolRegistryErrors.sol";
+import "../libraries/PkpToolRegistryPolicyEvents.sol";
 
-/// @title PKP Tool Policy Blanket Policy Facet
+/// @title PKP Tool Registry Blanket Policy Facet
 /// @notice Diamond facet for managing blanket (default) policies for PKP tools
-/// @dev Inherits from PKPToolPolicyPolicyBase for common policy management functionality
+/// @dev Inherits from PKPToolRegistryPolicyBase for common policy management functionality
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
-    using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
+    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get the blanket policy IPFS CID for a specific tool
@@ -24,10 +24,10 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid
     ) external view returns (string memory policyIpfsCid) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
-        PKPToolPolicyStorage.Policy storage policy = tool.blanketPolicy;
+        PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = tool.blanketPolicy;
         return policy.enabled ? l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash] : "";
     }
 
@@ -46,13 +46,13 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
         string[] calldata toolIpfsCids,
         string[] calldata policyIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != policyIpfsCids.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != policyIpfsCids.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             _setToolPolicy(pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i]);
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids);
+        emit PKPToolRegistryPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids);
     }
 
     /// @notice Remove blanket policies from multiple tools
@@ -70,7 +70,7 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _removeToolPolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesRemoved(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryPolicyEvents.BlanketPoliciesRemoved(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Enable blanket policies for multiple tools
@@ -89,7 +89,7 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _enablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesEnabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryPolicyEvents.BlanketPoliciesEnabled(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Disable blanket policies for multiple tools
@@ -108,6 +108,6 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _disablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesDisabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryPolicyEvents.BlanketPoliciesDisabled(pkpTokenId, toolIpfsCids);
     }
 } 

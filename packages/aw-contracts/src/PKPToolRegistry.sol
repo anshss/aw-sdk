@@ -2,21 +2,21 @@
 pragma solidity ^0.8.24;
 
 import "./interfaces/IPKPNFTFacet.sol";
-import "./libraries/PKPToolPolicyStorage.sol";
-import "./libraries/PKPToolPolicyErrors.sol";
+import "./libraries/PKPToolRegistryStorage.sol";
+import "./libraries/PKPToolRegistryErrors.sol";
 
 /// @title PKP Tool Policy Registry
 /// @notice Core contract for managing programmable PKP tool policies using Lit Actions
 /// @dev Implements diamond storage pattern for upgradeable policy management
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolPolicyRegistry {
+contract PKPToolRegistry {
     /// @notice Initializes the registry with a PKP NFT contract reference
     /// @dev Sets up the diamond storage layout with the PKP NFT contract address
     /// @param _pkpNFT The address of the PKP NFT contract
     /// @custom:throws InvalidPKPTokenId if _pkpNFT is the zero address
     constructor(address _pkpNFT) {
-        if (_pkpNFT == address(0)) revert PKPToolPolicyErrors.InvalidPKPTokenId();
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        if (_pkpNFT == address(0)) revert PKPToolRegistryErrors.InvalidPKPTokenId();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         l.pkpNftContract = _pkpNFT;
     }
 }

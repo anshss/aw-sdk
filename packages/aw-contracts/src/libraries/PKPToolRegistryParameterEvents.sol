@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title PKP Tool Policy Parameter Events Library
+/// @title PKP Tool Registry Parameter Events Library
 /// @notice Events emitted during parameter management operations
 /// @dev Contains events for both blanket and delegatee-specific parameter operations
-library PKPToolPolicyParameterEvents {
+library PKPToolRegistryParameterEvents {
     /// @notice Emitted when parameters are set in a blanket policy
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
     /// @param toolIpfsCid The IPFS CID of the tool

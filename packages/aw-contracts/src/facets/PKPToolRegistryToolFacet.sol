@@ -2,17 +2,17 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolPolicyBase.sol";
-import "../libraries/PKPToolPolicyStorage.sol";
-import "../libraries/PKPToolPolicyErrors.sol";
-import "../libraries/PKPToolPolicyToolEvents.sol";
+import "./PKPToolRegistryBase.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
+import "../libraries/PKPToolRegistryToolEvents.sol";
 
 /// @title PKP Tool Policy Tool Management Facet
 /// @notice Diamond facet for managing tool registration and lifecycle in the PKP system
 /// @dev Inherits from PKPToolPolicyBase for common tool management functionality
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
-    using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
+    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
@@ -26,7 +26,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         view 
         returns (bool) 
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         return l.pkpStore[pkpTokenId].toolMap[_hashToolCid(toolIpfsCid)].enabled;
     }
 
@@ -39,8 +39,8 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         view
         returns (string[] memory toolIpfsCids)
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         
         uint256 length = pkpData.toolCids.length();
         toolIpfsCids = new string[](length);
@@ -69,8 +69,8 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             string[] memory blanketPolicyCids
         )
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         
         uint256 toolsLength = pkpData.toolCids.length();
         uint256 delegateesLength = pkpData.delegatees.length();
@@ -96,7 +96,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         // For each tool
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
             // Get blanket policy CID
             if (tool.blanketPolicy.enabled) {
@@ -108,7 +108,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             
             // Fill in policies for each delegatee
             for (uint256 j = 0; j < delegateesLength;) {
-                PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatees[j]];
+                PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatees[j]];
                 if (policy.enabled) {
                     delegateePolicyCids[i][j] = l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash];
                 }
@@ -133,15 +133,15 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             bool[] memory hasBlanketPolicy
         )
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         uint256 toolsLength = pkpData.toolCids.length();
         
         // Count tools with policies first
         uint256 count;
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             if (tool.blanketPolicy.enabled || tool.delegateesWithCustomPolicy.length() > 0) {
                 unchecked { ++count; }
             }
@@ -157,7 +157,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         uint256 index;
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
             if (tool.blanketPolicy.enabled || tool.delegateesWithCustomPolicy.length() > 0) {
                 toolsWithPolicy[index] = _getOriginalToolCid(toolCidHash);
@@ -186,15 +186,15 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         view
         returns (string[] memory toolsWithoutPolicy)
     {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         uint256 toolsLength = pkpData.toolCids.length();
         
         // Count tools without policies first
         uint256 count;
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             if (!tool.blanketPolicy.enabled && tool.delegateesWithCustomPolicy.length() == 0) {
                 unchecked { ++count; }
             }
@@ -206,7 +206,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         uint256 index;
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
             if (!tool.blanketPolicy.enabled && tool.delegateesWithCustomPolicy.length() == 0) {
                 toolsWithoutPolicy[index] = _getOriginalToolCid(toolCidHash);
@@ -229,15 +229,15 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _storeToolCid(toolIpfsCid);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
 
             // If tool already exists, revert
             if (tool.enabled) {
@@ -268,8 +268,8 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
@@ -287,7 +287,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             uint256 delegateesLength = pkpData.delegatees.length();
             for (uint256 j = 0; j < delegateesLength;) {
                 address delegatee = pkpData.delegatees.at(j);
-                PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
                 
                 // Remove tool from delegatee's permitted tools
                 delegateeData.permittedToolsForPkp[pkpTokenId].remove(toolCidHash);
@@ -300,7 +300,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyToolEvents.ToolsRemoved(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryToolEvents.ToolsRemoved(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Enable tools for a PKP
@@ -316,22 +316,22 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             if (!tool.enabled) revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
 
             tool.enabled = true;
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyToolEvents.ToolsEnabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryToolEvents.ToolsEnabled(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Disable tools for a PKP
@@ -347,21 +347,21 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             if (!tool.enabled) revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
 
             tool.enabled = false;
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyToolEvents.ToolsDisabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolRegistryToolEvents.ToolsDisabled(pkpTokenId, toolIpfsCids);
     }
 } 

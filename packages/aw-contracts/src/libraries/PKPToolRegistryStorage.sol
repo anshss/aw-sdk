@@ -3,17 +3,17 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-/// @title PKP Tool Policy Storage Library
-/// @notice Manages storage layout for PKP tool policies, delegatees, and parameters
+/// @title PKP Tool Registry Storage Library
+/// @notice Manages storage layout for PKP tool registry, delegatees, and parameters
 /// @dev Uses OpenZeppelin's EnumerableSet for efficient set operations and diamond storage pattern
-library PKPToolPolicyStorage {
+library PKPToolRegistryStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.UintSet;
 
     /// @dev Diamond storage slot for this library
     /// @notice Unique storage position to avoid storage collisions in the diamond
-    bytes32 internal constant STORAGE_SLOT = keccak256("lit.pkptoolpolicy.storage");
+    bytes32 internal constant STORAGE_SLOT = keccak256("lit.pkptoolregistry.storage");
 
     /// @notice Stores all tool-related data for a single PKP
     /// @dev Uses EnumerableSets for efficient membership checks and iteration

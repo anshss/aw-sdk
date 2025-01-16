@@ -2,17 +2,17 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolPolicyBase.sol";
-import "../libraries/PKPToolPolicyStorage.sol";
-import "../libraries/PKPToolPolicyErrors.sol";
-import "../libraries/PKPToolPolicyDelegateeEvents.sol";
+import "./PKPToolRegistryBase.sol";
+import "../libraries/PKPToolRegistryStorage.sol";
+import "../libraries/PKPToolRegistryErrors.sol";
+import "../libraries/PKPToolRegistryDelegateeEvents.sol";
 
 /// @title PKP Tool Policy Delegatee Management Facet
 /// @notice Diamond facet for managing delegatees in the PKP tool policy system
-/// @dev Inherits from PKPToolPolicyBase for common functionality
+/// @dev Inherits from PkpToolRegistryBase for common functionality
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
-    using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
+    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -22,8 +22,8 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     /// @param pkpTokenId The PKP token ID
     /// @return Array of delegatee addresses in no particular order
     function getDelegatees(uint256 pkpTokenId) external view returns (address[] memory) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         
         uint256 length = pkpData.delegatees.length();
         address[] memory result = new address[](length);
@@ -40,7 +40,7 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     /// @param delegatee The address to check
     /// @return bool True if the address is a delegatee, false otherwise
     function isPkpDelegatee(uint256 pkpTokenId, address delegatee) external view returns (bool) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         return l.pkpStore[pkpTokenId].delegatees.contains(delegatee);
     }
 
@@ -49,8 +49,8 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     /// @param delegatee The delegatee address to query
     /// @return Array of PKP token IDs in no particular order
     function getDelegatedPkps(address delegatee) external view returns (uint256[] memory) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
         
         uint256 length = delegateeData.delegatedPkps.length();
         uint256[] memory result = new uint256[](length);
@@ -72,26 +72,26 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
         uint256 pkpTokenId,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatees.length == 0) revert PKPToolPolicyErrors.EmptyDelegatees();
+        if (delegatees.length == 0) revert PKPToolRegistryErrors.EmptyDelegatees();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolPolicyErrors.ZeroAddressCannotBeDelegatee();
+            if (delegatee == address(0)) revert PkpToolRegistryErrors.ZeroAddressCannotBeDelegatee();
             
             // Add delegatee to PKP's set if not already present
             if (pkpData.delegatees.add(delegatee)) {
                 // Add PKP to delegatee's set
-                PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
                 delegateeData.delegatedPkps.add(pkpTokenId);
             }
 
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyDelegateeEvents.AddedDelegatees(pkpTokenId, delegatees);
+        emit PKPToolRegistryDelegateeEvents.AddedDelegatees(pkpTokenId, delegatees);
     }
 
     /// @notice Remove delegatees from a PKP
@@ -106,14 +106,14 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
         uint256 pkpTokenId,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatees.length == 0) revert PKPToolPolicyErrors.EmptyDelegatees();
+        if (delegatees.length == 0) revert PkpToolRegistryErrors.EmptyDelegatees();
 
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolPolicyErrors.ZeroAddressCannotBeDelegatee();
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.ZeroAddressCannotBeDelegatee();
 
             // Remove delegatee from PKP's set if present
             if (pkpData.delegatees.remove(delegatee)) {
@@ -121,14 +121,14 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
                 _cleanupDelegateePolicies(pkpTokenId, delegatee);
 
                 // Remove PKP from delegatee's set
-                PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
                 delegateeData.delegatedPkps.remove(pkpTokenId);
             }
 
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyDelegateeEvents.RemovedDelegatees(pkpTokenId, delegatees);
+        emit PKPToolRegistryDelegateeEvents.RemovedDelegatees(pkpTokenId, delegatees);
     }
 
     /// @notice Internal function to clean up policies when removing a delegatee
@@ -136,8 +136,8 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     /// @param pkpTokenId The PKP token ID
     /// @param delegatee The delegatee being removed
     function _cleanupDelegateePolicies(uint256 pkpTokenId, address delegatee) internal {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
         
         // Get all permitted tool CIDs for this PKP-delegatee pair
         EnumerableSet.Bytes32Set storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
@@ -150,7 +150,7 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
         // Remove all policies for this delegatee's permitted tools
         for (uint256 i = 0; i < permittedToolHashes.length;) {
             bytes32 toolCidHash = permittedToolHashes[i];
-            PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
+            PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
             // Remove from delegateesWithCustomPolicy if present
             if (tool.delegateesWithCustomPolicy.remove(delegatee)) {

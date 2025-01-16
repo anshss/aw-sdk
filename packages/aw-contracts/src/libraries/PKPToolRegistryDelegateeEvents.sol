@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title PKP Tool Policy Delegatee Events Library
+/// @title PKP Tool Registry Delegatee Events Library
 /// @notice Events emitted during delegatee management operations
 /// @dev Contains events for adding and removing delegatees from PKPs
-library PKPToolPolicyDelegateeEvents {
+library PKPToolRegistryDelegateeEvents {
     /// @notice Emitted when new delegatees are granted permissions for a PKP
     /// @dev Adding a delegatee allows them to use tools according to their policies
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)

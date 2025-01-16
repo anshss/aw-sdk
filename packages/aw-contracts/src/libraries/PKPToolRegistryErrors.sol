@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title PKP Tool Policy Error Library
-/// @notice Collection of custom errors used throughout the PKP tool policy system
+/// @title PKP Tool Registry Error Library
+/// @notice Collection of custom errors used throughout the PKP tool registry system
 /// @dev All errors are defined here to ensure consistency across the system
-library PKPToolPolicyErrors {
+library PKPToolRegistryErrors {
     /// @notice Thrown when a non-owner tries to perform an owner-only action
     error NotPKPOwner();
 

@@ -2,27 +2,27 @@
 pragma solidity ^0.8.24;
 
 import "../interfaces/IPKPNFTFacet.sol";
-import "../libraries/PKPToolPolicyStorage.sol";
-import "../libraries/PKPToolPolicyErrors.sol";
+import "../libraries/PkpToolRegistryStorage.sol";
+import "../libraries/PkpToolRegistryErrors.sol";
 
 /// @title PKP Tool Policy Base Contract
 /// @notice Base contract for PKP tool policy management, providing core functionality and access control
-/// @dev Abstract contract that implements common functionality for PKP tool policy facets
-abstract contract PKPToolPolicyBase {
+/// @dev Abstract contract that implements common functionality for PKP tool registry facets
+abstract contract PKPToolRegistryBase {
     /// @notice Retrieves the storage layout for the contract
     /// @dev Virtual function to allow derived contracts to override storage layout if needed
-    /// @return PKPToolPolicyStorage.Layout storage reference to the contract's storage layout
-    function _layout() internal pure virtual returns (PKPToolPolicyStorage.Layout storage) {
-        return PKPToolPolicyStorage.layout();
+    /// @return PKPToolRegistryStorage.Layout storage reference to the contract's storage layout
+    function _layout() internal pure virtual returns (PKPToolRegistryStorage.Layout storage) {
+        return PKPToolRegistryStorage.layout();
     }
 
     /// @notice Restricts function access to the owner of a specific PKP token
     /// @dev Reverts with NotPKPOwner if caller is not the owner of the specified PKP
     /// @param pkpTokenId The ID of the PKP token to check ownership for
     modifier onlyPKPOwner(uint256 pkpTokenId) {
-        PKPToolPolicyStorage.Layout storage layout = _layout();
+        PKPToolRegistryStorage.Layout storage layout = _layout();
         if (msg.sender != IPKPNFTFacet(layout.pkpNftContract).ownerOf(pkpTokenId)) {
-            revert PKPToolPolicyErrors.NotPKPOwner();
+            revert PKPToolRegistryErrors.NotPKPOwner();
         }
         _;
     }
@@ -35,15 +35,15 @@ abstract contract PKPToolPolicyBase {
         uint256 pkpTokenId,
         string memory toolIpfsCid
     ) {
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
         bytes32 hashedCid = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[hashedCid];
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[hashedCid];
 
         if (!toolInfo.enabled) {
-            revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
+            revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
         }
         _;
     }
@@ -61,7 +61,7 @@ abstract contract PKPToolPolicyBase {
     /// @param hashedCid The keccak256 hash of the IPFS CID to look up
     /// @return string The original IPFS CID string, or empty string if not found
     function _getOriginalToolCid(bytes32 hashedCid) internal view returns (string memory) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         return l.hashedToolCidToOriginalCid[hashedCid];
     }
 
@@ -71,7 +71,7 @@ abstract contract PKPToolPolicyBase {
     /// @return bytes32 The keccak256 hash of the stored CID
     function _storeToolCid(string memory toolIpfsCid) internal returns (bytes32) {
         bytes32 hashedCid = _hashToolCid(toolIpfsCid);
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         l.hashedToolCidToOriginalCid[hashedCid] = toolIpfsCid;
         return hashedCid;
     }
