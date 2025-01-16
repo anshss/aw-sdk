@@ -3,58 +3,87 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+/// @title PKP Tool Policy Storage Library
+/// @notice Manages storage layout for PKP tool policies, delegatees, and parameters
+/// @dev Uses OpenZeppelin's EnumerableSet for efficient set operations and diamond storage pattern
 library PKPToolPolicyStorage {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /// @dev Diamond storage slot for this library
+    /// @notice Unique storage position to avoid storage collisions in the diamond
     bytes32 internal constant STORAGE_SLOT = keccak256("lit.pkptoolpolicy.storage");
 
     /// @notice Stores all tool-related data for a single PKP
+    /// @dev Uses EnumerableSets for efficient membership checks and iteration
     struct PKPData {
-        EnumerableSet.AddressSet delegatees;               // Set of all delegatees
-        EnumerableSet.Bytes32Set toolCids;                 // Set of all registered tool CIDs (hashed)
-        mapping(bytes32 => ToolInfo) toolMap;              // Mapping from tool CID hash to its data
+        /// @notice Set of all delegatees that have been granted any permissions
+        EnumerableSet.AddressSet delegatees;
+        /// @notice Set of all registered tool CIDs (stored as keccak256 hashes)
+        EnumerableSet.Bytes32Set toolCids;
+        /// @notice Maps tool CID hashes to their complete information
+        mapping(bytes32 => ToolInfo) toolMap;
     }
 
-    /// @notice Represents a delegatee with associated PKPs
+    /// @notice Represents a delegatee with their associated PKPs and permissions
+    /// @dev Tracks both delegated PKPs and tool permissions per PKP
     struct Delegatee {
-        EnumerableSet.UintSet delegatedPkps;                                // Set of PKP token IDs the delegatee has been delegated some usage of
-        mapping(uint256 => EnumerableSet.Bytes32Set) permittedToolsForPkp;   // Mapping from PKP token ID to tool IPFS CIDs (hashed) the delegatee is permitted to use
+        /// @notice Set of PKP token IDs this delegatee has been granted access to
+        EnumerableSet.UintSet delegatedPkps;
+        /// @notice Maps PKP token IDs to the set of tool CIDs (hashed) the delegatee can use
+        mapping(uint256 => EnumerableSet.Bytes32Set) permittedToolsForPkp;
     }
 
     /// @notice Stores all information about a single tool for a PKP
+    /// @dev Includes both blanket and delegatee-specific policies
     struct ToolInfo {
-        bool enabled;                            // Whether this tool is enabled
-        Policy blanketPolicy;                    // The blanket policy for this tool
-        EnumerableSet.AddressSet delegateesWithCustomPolicy;  // Set of delegatees that have a custom policy
-        mapping(address => Policy) delegateeCustomPolicies;   // Delegatee-specific policies
+        /// @notice Whether this tool is currently enabled
+        bool enabled;
+        /// @notice The default policy that applies when no delegatee-specific policy exists
+        Policy blanketPolicy;
+        /// @notice Set of delegatees that have custom policies for this tool
+        EnumerableSet.AddressSet delegateesWithCustomPolicy;
+        /// @notice Maps delegatee addresses to their custom policies
+        mapping(address => Policy) delegateeCustomPolicies;
     }
 
-    /// @notice Represents a policy with its enabled state and IPFS CID
+    /// @notice Represents a policy with its configuration and parameters
+    /// @dev Uses EnumerableSet for parameter names to allow iteration
     struct Policy {
-        bool enabled;                           // Whether this policy is currently enabled
-        bytes32 policyIpfsCidHash;             // Hash of the policy IPFS CID
-        EnumerableSet.Bytes32Set parameterNames;   // Set of parameter names (hashed)
-        mapping(bytes32 => bytes) parameters;      // Mapping from hashed parameter names to values
+        /// @notice Whether this policy is currently active
+        bool enabled;
+        /// @notice Hash of the policy's IPFS CID for efficient storage and comparison
+        bytes32 policyIpfsCidHash;
+        /// @notice Set of parameter names (stored as keccak256 hashes)
+        EnumerableSet.Bytes32Set parameterNames;
+        /// @notice Maps parameter name hashes to their values
+        mapping(bytes32 => bytes) parameters;
     }
 
+    /// @notice Main storage layout for the entire system
+    /// @dev Uses diamond storage pattern for upgradeable contracts
     struct Layout {
-        // PKP NFT contract reference
+        /// @notice Address of the PKP NFT contract for ownership verification
         address pkpNftContract;
 
-        // Unified tool storage
+        /// @notice Maps PKP token IDs to their complete tool and policy data
         mapping(uint256 => PKPData) pkpStore;
 
-        // Delegatee management
+        /// @notice Maps delegatee addresses to their complete delegation data
         mapping(address => Delegatee) delegatees;
 
-        // String storage mappings
-        mapping(bytes32 => string) hashedToolCidToOriginalCid;      // Maps hashed tool CID to original IPFS CID string
-        mapping(bytes32 => string) hashedParameterNameToOriginalName;  // Maps hashed parameter name to original parameter name string
-        mapping(bytes32 => string) hashedPolicyCidToOriginalCid;    // Maps hashed policy CID to original IPFS CID string
+        /// @notice Maps hashed tool CIDs to their original IPFS CID strings
+        mapping(bytes32 => string) hashedToolCidToOriginalCid;
+        /// @notice Maps hashed parameter names to their original string names
+        mapping(bytes32 => string) hashedParameterNameToOriginalName;
+        /// @notice Maps hashed policy CIDs to their original IPFS CID strings
+        mapping(bytes32 => string) hashedPolicyCidToOriginalCid;
     }
 
+    /// @notice Retrieves the storage layout for this library
+    /// @dev Uses assembly to access the diamond storage slot
+    /// @return l The storage layout struct
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = STORAGE_SLOT;
         assembly {

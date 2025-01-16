@@ -7,15 +7,22 @@ import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 import "../libraries/PKPToolPolicyParameterEvents.sol";
 
+/// @title PKP Tool Policy Parameter Facet
+/// @notice Diamond facet for managing delegatee-specific parameters for PKP tool policies
+/// @dev Inherits from PKPToolPolicyParametersBase for common parameter management functionality
+/// @custom:security-contact security@litprotocol.com
 contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get all registered parameter names for a specific tool and delegatee
+    /// @dev Parameters are stored as hashed values but returned as original strings
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get parameters for
-    /// @return parameterNames Array of registered parameter names
+    /// @param delegatee The delegatee address to get parameters for (cannot be zero address)
+    /// @return parameterNames Array of registered parameter names in their original string form
+    /// @custom:throws InvalidDelegatee if delegatee is the zero address
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function getToolPolicyParameterNamesForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -38,11 +45,14 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
     }
 
     /// @notice Get specific parameter values for a delegatee
+    /// @dev Returns raw bytes values that must be interpreted by the caller
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get the parameters for
+    /// @param delegatee The delegatee address to get the parameters for (cannot be zero address)
     /// @param parameterNames The names of the parameters to get
-    /// @return parameterValues The values of the parameters
+    /// @return parameterValues Array of parameter values in bytes form
+    /// @custom:throws InvalidDelegatee if delegatee is the zero address
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function getToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -65,11 +75,16 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
     }
 
     /// @notice Set parameters for a specific tool and delegatee
+    /// @dev Only callable by PKP owner. Stores both parameter names and values
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to set the parameters for
+    /// @param delegatee The delegatee address to set the parameters for (cannot be zero address)
     /// @param parameterNames The names of the parameters to set
-    /// @param parameterValues The values to set for the parameters
+    /// @param parameterValues The values to set for the parameters in bytes form
+    /// @custom:throws ArrayLengthMismatch if parameterNames and parameterValues arrays have different lengths
+    /// @custom:throws InvalidDelegatee if delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function setToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -103,10 +118,14 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
     }
 
     /// @notice Remove parameters for a specific tool and delegatee
+    /// @dev Only callable by PKP owner. Removes both parameter names and values
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to remove the parameters for
+    /// @param delegatee The delegatee address to remove the parameters for (cannot be zero address)
     /// @param parameterNames The names of the parameters to remove
+    /// @custom:throws InvalidDelegatee if delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function removeToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,

@@ -6,19 +6,29 @@ import "./PKPToolPolicyBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 
+/// @title PKP Tool Policy Base Contract
+/// @notice Base contract for managing tool policies in the PKP system
+/// @dev Extends PKPToolPolicyBase to provide policy management functionality
+/// @custom:security-contact security@litprotocol.com
 abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    /// @notice Retrieves the storage layout for the contract
+    /// @dev Overrides the base contract's layout function
+    /// @return PKPToolPolicyStorage.Layout storage reference to the contract's storage layout
     function _layout() internal pure override returns (PKPToolPolicyStorage.Layout storage) {
         return PKPToolPolicyStorage.layout();
     }
 
     /// @notice Internal function to set a policy for a tool and delegatee
+    /// @dev Sets either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
+    /// @param delegatee The delegatee address (use address(0) for blanket policy)
     /// @param policyIpfsCid The IPFS CID of the policy to set
+    /// @custom:throws EmptyPolicyIPFSCID if policyIpfsCid is empty
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _setToolPolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -51,9 +61,12 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
     }
 
     /// @notice Internal function to remove a policy for a tool and delegatee
+    /// @dev Removes either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
+    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
+    /// @custom:throws NoPolicySet if attempting to remove a non-existent policy
     function _removeToolPolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -80,9 +93,13 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
     }
 
     /// @notice Internal function to enable a policy
+    /// @dev Enables either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
+    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
+    /// @custom:throws NoPolicySet if attempting to enable a non-existent policy
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _enablePolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -107,9 +124,13 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
     }
 
     /// @notice Internal function to disable a policy
+    /// @dev Disables either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
+    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
+    /// @custom:throws NoPolicySet if attempting to disable a non-existent policy
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _disablePolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,

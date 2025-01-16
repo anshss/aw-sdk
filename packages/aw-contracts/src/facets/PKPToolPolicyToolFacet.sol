@@ -7,11 +7,20 @@ import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 import "../libraries/PKPToolPolicyToolEvents.sol";
 
+/// @title PKP Tool Policy Tool Management Facet
+/// @notice Diamond facet for managing tool registration and lifecycle in the PKP system
+/// @dev Inherits from PKPToolPolicyBase for common tool management functionality
+/// @custom:security-contact security@litprotocol.com
 contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
+    /// @notice Check if a tool is registered and enabled for a PKP
+    /// @dev A tool must be both registered and enabled to be usable
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCid The IPFS CID of the tool to check
+    /// @return bool True if the tool is registered and enabled, false otherwise
     function isToolRegistered(uint256 pkpTokenId, string calldata toolIpfsCid) 
         external 
         view 
@@ -22,6 +31,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     }
 
     /// @notice Get all registered tools for a PKP token
+    /// @dev Returns all tools regardless of their enabled state
     /// @param pkpTokenId The PKP token ID
     /// @return toolIpfsCids Array of registered tool IPFS CIDs
     function getRegisteredTools(uint256 pkpTokenId)
@@ -43,6 +53,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     }
 
     /// @notice Get all registered tools and their policies for a PKP token
+    /// @dev Returns a comprehensive view of all tools, policies, and delegatees
     /// @param pkpTokenId The PKP token ID
     /// @return toolIpfsCids Array of registered tool IPFS CIDs
     /// @return delegateePolicyCids 2D array of policy IPFS CIDs: [tool][delegatee] -> policyIpfsCid
@@ -107,6 +118,12 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         }
     }
 
+    /// @notice Get all tools that have at least one policy set
+    /// @dev Returns tools with either blanket policies or delegatee-specific policies
+    /// @param pkpTokenId The PKP token ID
+    /// @return toolsWithPolicy Array of tool IPFS CIDs that have policies
+    /// @return delegateesWithPolicy 2D array of delegatee addresses for each tool
+    /// @return hasBlanketPolicy Array indicating if each tool has a blanket policy
     function getToolsWithPolicy(uint256 pkpTokenId)
         external
         view
@@ -160,6 +177,10 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         }
     }
 
+    /// @notice Get all tools that have no policies set
+    /// @dev Returns tools that have neither blanket policies nor delegatee-specific policies
+    /// @param pkpTokenId The PKP token ID
+    /// @return toolsWithoutPolicy Array of tool IPFS CIDs that have no policies
     function getToolsWithoutPolicy(uint256 pkpTokenId)
         external
         view
@@ -195,9 +216,13 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         }
     }
 
-    /// @notice Register tools for a PKP. For single tool operations, pass an array with one element.
+    /// @notice Register tools for a PKP
+    /// @dev Only callable by PKP owner. For single tool operations, pass an array with one element
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to register
+    /// @custom:throws EmptyIPFSCID if toolIpfsCids array is empty or any CID is empty
+    /// @custom:throws ToolAlreadyExists if any tool is already registered
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function registerTools(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
@@ -230,9 +255,13 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         emit PKPToolPolicyToolEvents.ToolsRegistered(pkpTokenId, toolIpfsCids);
     }
 
-    /// @notice Remove tools from a PKP and update all delegatees' permissions
+    /// @notice Remove tools from a PKP
+    /// @dev Only callable by PKP owner. Removes all policies and delegatee permissions for the tools
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to remove
+    /// @custom:throws EmptyIPFSCID if toolIpfsCids array is empty or any CID is empty
+    /// @custom:throws ToolNotFound if any tool is not registered
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function removeTools(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
@@ -274,9 +303,13 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         emit PKPToolPolicyToolEvents.ToolsRemoved(pkpTokenId, toolIpfsCids);
     }
 
-    /// @notice Enable tools for a PKP. For single tool operations, pass an array with one element.
+    /// @notice Enable tools for a PKP
+    /// @dev Only callable by PKP owner. For single tool operations, pass an array with one element
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to enable
+    /// @custom:throws EmptyIPFSCID if toolIpfsCids array is empty or any CID is empty
+    /// @custom:throws ToolNotFound if any tool is not registered
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function enableTools(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
@@ -301,9 +334,13 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         emit PKPToolPolicyToolEvents.ToolsEnabled(pkpTokenId, toolIpfsCids);
     }
 
-    /// @notice Disable tools for a PKP. For single tool operations, pass an array with one element.
+    /// @notice Disable tools for a PKP
+    /// @dev Only callable by PKP owner. For single tool operations, pass an array with one element
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to disable
+    /// @custom:throws EmptyIPFSCID if toolIpfsCids array is empty or any CID is empty
+    /// @custom:throws ToolNotFound if any tool is not registered
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function disableTools(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids

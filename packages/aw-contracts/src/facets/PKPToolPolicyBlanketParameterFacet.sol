@@ -7,14 +7,18 @@ import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 import "../libraries/PKPToolPolicyParameterEvents.sol";
 
+/// @title PKP Tool Policy Blanket Parameter Facet
+/// @notice Diamond facet for managing blanket (default) parameters for PKP tool policies
+/// @dev Inherits from PKPToolPolicyParametersBase for common parameter management functionality
 contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    /// @notice Get all registered parameter names for a blanket policy
-    /// @param pkpTokenId The PKP token ID
+    /// @notice Retrieves all registered parameter names from a tool's blanket policy
+    /// @dev Parameters are stored as hashed values but returned as original strings
+    /// @param pkpTokenId The ID of the PKP token
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @return parameterNames Array of registered parameter names
+    /// @return parameterNames Array of parameter names in their original string form
     function getBlanketToolPolicyParameterNames(
         uint256 pkpTokenId,
         string calldata toolIpfsCid
@@ -33,11 +37,12 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         }
     }
 
-    /// @notice Get specific parameter values from a blanket policy
-    /// @param pkpTokenId The PKP token ID
+    /// @notice Retrieves specific parameter values from a tool's blanket policy
+    /// @dev Returns raw bytes values that must be interpreted by the caller
+    /// @param pkpTokenId The ID of the PKP token
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param parameterNames The names of the parameters to get
-    /// @return parameterValues The values of the parameters
+    /// @param parameterNames Names of the parameters to retrieve
+    /// @return parameterValues Array of parameter values in bytes form
     function getBlanketToolPolicyParameters(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -56,11 +61,13 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         }
     }
 
-    /// @notice Set parameters for a blanket policy
-    /// @param pkpTokenId The PKP token ID
+    /// @notice Sets parameter values in a tool's blanket policy
+    /// @dev Only callable by PKP owner. Stores both parameter names and values
+    /// @param pkpTokenId The ID of the PKP token
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param parameterNames The names of the parameters to set
-    /// @param parameterValues The values to set for the parameters
+    /// @param parameterNames Names of the parameters to set
+    /// @param parameterValues Values to set for each parameter in bytes form
+    /// @custom:throws ArrayLengthMismatch if parameterNames and parameterValues arrays have different lengths
     function setBlanketToolPolicyParameters(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
@@ -90,10 +97,11 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         );
     }
 
-    /// @notice Remove parameters from a blanket policy
-    /// @param pkpTokenId The PKP token ID
+    /// @notice Removes parameters from a tool's blanket policy
+    /// @dev Only callable by PKP owner. Removes both parameter names and values
+    /// @param pkpTokenId The ID of the PKP token
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param parameterNames The names of the parameters to remove
+    /// @param parameterNames Names of the parameters to remove
     function removeBlanketToolPolicyParameters(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,

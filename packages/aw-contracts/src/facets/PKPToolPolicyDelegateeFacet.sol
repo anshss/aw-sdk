@@ -7,6 +7,10 @@ import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 import "../libraries/PKPToolPolicyDelegateeEvents.sol";
 
+/// @title PKP Tool Policy Delegatee Management Facet
+/// @notice Diamond facet for managing delegatees in the PKP tool policy system
+/// @dev Inherits from PKPToolPolicyBase for common functionality
+/// @custom:security-contact security@litprotocol.com
 contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -14,8 +18,9 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get all delegatees for a PKP
+    /// @dev Returns an array of all addresses that have been granted delegatee status
     /// @param pkpTokenId The PKP token ID
-    /// @return Array of delegatee addresses
+    /// @return Array of delegatee addresses in no particular order
     function getDelegatees(uint256 pkpTokenId) external view returns (address[] memory) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -30,17 +35,19 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     }
 
     /// @notice Check if an address is a delegatee of a PKP
+    /// @dev Verifies if the address has been granted delegatee status
     /// @param pkpTokenId The PKP token ID
     /// @param delegatee The address to check
-    /// @return True if the address is a delegatee
+    /// @return bool True if the address is a delegatee, false otherwise
     function isPkpDelegatee(uint256 pkpTokenId, address delegatee) external view returns (bool) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         return l.pkpStore[pkpTokenId].delegatees.contains(delegatee);
     }
 
     /// @notice Get all PKPs that have delegated to an address
-    /// @param delegatee The delegatee address
-    /// @return Array of PKP token IDs
+    /// @dev Returns all PKP token IDs that have granted delegatee status to this address
+    /// @param delegatee The delegatee address to query
+    /// @return Array of PKP token IDs in no particular order
     function getDelegatedPkps(address delegatee) external view returns (uint256[] memory) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
@@ -54,9 +61,13 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
         return result;
     }
 
-    /// @notice Add delegatees to a PKP. For single delegatee operations, pass an array with one element.
+    /// @notice Add delegatees to a PKP
+    /// @dev Only callable by PKP owner. For single delegatee operations, pass an array with one element
     /// @param pkpTokenId The PKP token ID
     /// @param delegatees Array of delegatee addresses to add
+    /// @custom:throws EmptyDelegatees if delegatees array is empty
+    /// @custom:throws ZeroAddressCannotBeDelegatee if any delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function addDelegatees(
         uint256 pkpTokenId,
         address[] calldata delegatees
@@ -83,9 +94,14 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
         emit PKPToolPolicyDelegateeEvents.AddedDelegatees(pkpTokenId, delegatees);
     }
 
-    /// @notice Remove delegatees from a PKP. For single delegatee operations, pass an array with one element.
+    /// @notice Remove delegatees from a PKP
+    /// @dev Only callable by PKP owner. For single delegatee operations, pass an array with one element
+    /// @dev Removes all policies and permissions for the delegatees being removed
     /// @param pkpTokenId The PKP token ID
     /// @param delegatees Array of delegatee addresses to remove
+    /// @custom:throws EmptyDelegatees if delegatees array is empty
+    /// @custom:throws ZeroAddressCannotBeDelegatee if any delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function removeDelegatees(
         uint256 pkpTokenId,
         address[] calldata delegatees
@@ -116,6 +132,7 @@ contract PKPToolPolicyDelegateeFacet is PKPToolPolicyBase {
     }
 
     /// @notice Internal function to clean up policies when removing a delegatee
+    /// @dev Removes all policies and permitted tools for a PKP-delegatee pair
     /// @param pkpTokenId The PKP token ID
     /// @param delegatee The delegatee being removed
     function _cleanupDelegateePolicies(uint256 pkpTokenId, address delegatee) internal {
