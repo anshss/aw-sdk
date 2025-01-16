@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./PKPToolPolicyBase.sol";
+import "./PKPToolPolicyParametersBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
-import "../libraries/PKPToolPolicyEvents.sol";
+import "../libraries/PKPToolPolicyParameterEvents.sol";
 
-contract PKPToolPolicyParameterFacet is PKPToolPolicyBase {
+contract PKPToolPolicyParameterFacet is PKPToolPolicyParametersBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+    using PKPToolPolicyParameterEvents for *;
 
     /// @notice Get all registered parameter names for a specific tool and delegatee
     /// @param pkpTokenId The PKP token ID
@@ -24,164 +25,97 @@ contract PKPToolPolicyParameterFacet is PKPToolPolicyBase {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
-        return toolInfo.policyParameterNames[delegatee];
+        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        return policy.parameterNames;
     }
 
-    /// @notice Get a specific parameter value for a delegatee
+    /// @notice Get specific parameter values for a delegatee
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get the parameter for
-    /// @param parameterName The name of the parameter to get
-    /// @return parameterValue The value of the parameter
-    function getToolPolicyParameterForDelegatee(
+    /// @param delegatee The delegatee address to get the parameters for
+    /// @param parameterNames The names of the parameters to get
+    /// @return parameterValues The values of the parameters
+    function getToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee,
-        string calldata parameterName
-    ) external view returns (bytes memory) {
+        string[] calldata parameterNames
+    ) external view returns (bytes[] memory) {
         if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
         _verifyToolRegistered(pkpTokenId, toolIpfsCid);
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
-        return toolInfo.policyParameters[delegatee][parameterName];
+        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        
+        bytes[] memory parameterValues = new bytes[](parameterNames.length);
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            parameterValues[i] = policy.parameters[parameterNames[i]];
+        }
+        return parameterValues;
     }
 
-    /// @notice Set a parameter for a specific tool and delegatee
+    /// @notice Set parameters for a specific tool and delegatee
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to set the parameter for
-    /// @param parameterName The name of the parameter to set
-    /// @param parameterValue The value to set for the parameter
-    function setToolPolicyParameterForDelegatee(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee,
-        string calldata parameterName,
-        bytes calldata parameterValue
-    ) public onlyPKPOwner(pkpTokenId) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
-
-        // Register parameter name if not already registered
-        string[] storage parameterNames = toolInfo.policyParameterNames[delegatee];
-        bool found;
-        for (uint256 i; i < parameterNames.length;) {
-            if (keccak256(bytes(parameterNames[i])) == keccak256(bytes(parameterName))) {
-                found = true;
-                break;
-            }
-            unchecked { ++i; }
-        }
-        if (!found) {
-            parameterNames.push(parameterName);
-        }
-
-        // Set parameter value
-        toolInfo.policyParameters[delegatee][parameterName] = parameterValue;
-
-        emit PKPToolPolicyEvents.PolicyParameterSet(
-            pkpTokenId,
-            toolIpfsCid,
-            delegatee,
-            parameterName,
-            parameterValue
-        );
-    }
-
-    /// @notice Remove a parameter for a specific tool and delegatee
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to remove the parameter for
-    /// @param parameterName The name of the parameter to remove
-    function removeToolPolicyParameterForDelegatee(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee,
-        string calldata parameterName
-    ) public onlyPKPOwner(pkpTokenId) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
-
-        // Remove parameter name
-        string[] storage parameterNames = toolInfo.policyParameterNames[delegatee];
-        for (uint256 i; i < parameterNames.length;) {
-            if (keccak256(bytes(parameterNames[i])) == keccak256(bytes(parameterName))) {
-                // Move last element to this position (unless we're already at the end)
-                if (i != parameterNames.length - 1) {
-                    parameterNames[i] = parameterNames[parameterNames.length - 1];
-                }
-                parameterNames.pop();
-                break;
-            }
-            unchecked { ++i; }
-        }
-
-        // Delete parameter value
-        delete toolInfo.policyParameters[delegatee][parameterName];
-
-        emit PKPToolPolicyEvents.PolicyParameterRemoved(
-            pkpTokenId,
-            toolIpfsCid,
-            delegatee,
-            parameterName
-        );
-    }
-
-    /// @notice Set multiple parameters for a specific tool and delegatee
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to set parameters for
-    /// @param parameterNames Array of parameter names to set
-    /// @param parameterValues Array of parameter values to set
-    function batchSetToolPolicyParametersForDelegatee(
+    /// @param delegatee The delegatee address to set the parameters for
+    /// @param parameterNames The names of the parameters to set
+    /// @param parameterValues The values to set for the parameters
+    function setToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee,
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
-    ) external onlyPKPOwner(pkpTokenId) {
-        if (parameterNames.length != parameterValues.length) {
-            revert PKPToolPolicyErrors.ArrayLengthMismatch();
+    ) public onlyPKPOwner(pkpTokenId) {
+        require(parameterNames.length == parameterValues.length, "Mismatched parameter names and values");
+        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            _setParameter(policy, parameterNames[i], parameterValues[i]);
         }
 
-        for (uint256 i; i < parameterNames.length;) {
-            setToolPolicyParameterForDelegatee(
-                pkpTokenId,
-                toolIpfsCid,
-                delegatee,
-                parameterNames[i],
-                parameterValues[i]
-            );
-            unchecked { ++i; }
-        }
+        emit PKPToolPolicyParameterEvents.PolicyParametersSet(
+            pkpTokenId,
+            toolIpfsCid,
+            delegatee,
+            parameterNames,
+            parameterValues
+        );
     }
 
-    /// @notice Remove multiple parameters for a specific tool and delegatee
+    /// @notice Remove parameters for a specific tool and delegatee
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to remove parameters for
-    /// @param parameterNames Array of parameter names to remove
-    function batchRemoveToolPolicyParametersForDelegatee(
+    /// @param delegatee The delegatee address to remove the parameters for
+    /// @param parameterNames The names of the parameters to remove
+    function removeToolPolicyParametersForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee,
         string[] calldata parameterNames
-    ) external onlyPKPOwner(pkpTokenId) {
-        for (uint256 i; i < parameterNames.length;) {
-            removeToolPolicyParameterForDelegatee(
-                pkpTokenId,
-                toolIpfsCid,
-                delegatee,
-                parameterNames[i]
-            );
-            unchecked { ++i; }
+    ) public onlyPKPOwner(pkpTokenId) {
+        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            _removeParameter(policy, parameterNames[i]);
         }
+
+        emit PKPToolPolicyParameterEvents.PolicyParametersRemoved(
+            pkpTokenId,
+            toolIpfsCid,
+            delegatee,
+            parameterNames
+        );
     }
 } 

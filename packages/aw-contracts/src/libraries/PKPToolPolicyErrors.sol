@@ -6,11 +6,13 @@ library PKPToolPolicyErrors {
     error EmptyIPFSCID();
     error EmptyPolicyIPFSCID();
     error ToolNotFound(string toolIpfsCid);
+    error ToolAlreadyExists(string toolIpfsCid);
     error InvalidPolicyParameter();
     error NoPolicySet();
     error ArrayLengthMismatch();
     error InvalidPKPTokenId();
     error EmptyDelegatees();
+    error InvalidDelegatee();
 
     error ZeroAddressCannotBeDelegatee();
     error DelegateeAlreadyExists(uint256 pkpTokenId, address delegatee);

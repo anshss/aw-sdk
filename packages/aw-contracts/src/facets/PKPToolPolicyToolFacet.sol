@@ -15,7 +15,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         returns (bool) 
     {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        return l.pkpStore[pkpTokenId].toolMap[toolIpfsCid].isRegistered;
+        return l.pkpStore[pkpTokenId].toolMap[toolIpfsCid].enabled;
     }
 
     /// @notice Get all registered tools for a PKP token
@@ -49,14 +49,13 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
     {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        address[] memory allDelegatees = l.pkpDelegatees[pkpTokenId];
         
         uint256 toolsLength = pkpData.toolCids.length;
-        uint256 delegateesLength = allDelegatees.length;
+        uint256 delegateesLength = pkpData.delegatees.length;
 
         toolIpfsCids = pkpData.toolCids;
         blanketPolicies = new string[](toolsLength);
-        delegatees = allDelegatees;
+        delegatees = pkpData.delegatees;
         delegateesPolicies = new string[][](toolsLength);
 
         // For each tool
@@ -65,14 +64,14 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCid];
             
             // Get blanket policy
-            blanketPolicies[i] = tool.blanketPolicy;
+            blanketPolicies[i] = tool.blanketPolicy.ipfsCid;
             
             // Initialize policy array for this tool
             delegateesPolicies[i] = new string[](delegateesLength);
             
             // Fill in policies for each delegatee
             for (uint256 j; j < delegateesLength;) {
-                delegateesPolicies[i][j] = tool.delegateePolicies[allDelegatees[j]];
+                delegateesPolicies[i][j] = tool.delegateeCustomPolicies[delegatees[j]].ipfsCid;
                 unchecked { ++j; }
             }
             unchecked { ++i; }
@@ -96,7 +95,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         uint256 count;
         for (uint256 i; i < toolsLength;) {
             PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[pkpData.toolCids[i]];
-            if (bytes(tool.blanketPolicy).length > 0 || tool.delegateesWithPolicy.length > 0) {
+            if (bytes(tool.blanketPolicy.ipfsCid).length > 0 || tool.delegateesWithCustomPolicy.length > 0) {
                 unchecked { ++count; }
             }
             unchecked { ++i; }
@@ -113,10 +112,10 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             string memory toolCid = pkpData.toolCids[i];
             PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCid];
             
-            if (bytes(tool.blanketPolicy).length > 0 || tool.delegateesWithPolicy.length > 0) {
+            if (bytes(tool.blanketPolicy.ipfsCid).length > 0 || tool.delegateesWithCustomPolicy.length > 0) {
                 toolsWithPolicy[index] = toolCid;
-                delegateesWithPolicy[index] = tool.delegateesWithPolicy;
-                hasBlanketPolicy[index] = bytes(tool.blanketPolicy).length > 0;
+                delegateesWithPolicy[index] = tool.delegateesWithCustomPolicy;
+                hasBlanketPolicy[index] = bytes(tool.blanketPolicy.ipfsCid).length > 0;
                 unchecked { ++index; }
             }
             unchecked { ++i; }
@@ -136,7 +135,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         uint256 count;
         for (uint256 i; i < toolsLength;) {
             PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[pkpData.toolCids[i]];
-            if (bytes(tool.blanketPolicy).length == 0 && tool.delegateesWithPolicy.length == 0) {
+            if (bytes(tool.blanketPolicy.ipfsCid).length == 0 && tool.delegateesWithCustomPolicy.length == 0) {
                 unchecked { ++count; }
             }
             unchecked { ++i; }
@@ -149,7 +148,7 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
             string memory toolCid = pkpData.toolCids[i];
             PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolCid];
             
-            if (bytes(tool.blanketPolicy).length == 0 && tool.delegateesWithPolicy.length == 0) {
+            if (bytes(tool.blanketPolicy.ipfsCid).length == 0 && tool.delegateesWithCustomPolicy.length == 0) {
                 toolsWithoutPolicy[index] = toolCid;
                 unchecked { ++index; }
             }
@@ -157,81 +156,155 @@ contract PKPToolPolicyToolFacet is PKPToolPolicyBase {
         }
     }
 
-    function setTool(uint256 pkpTokenId, string calldata toolIpfsCid) external onlyPKPOwner(pkpTokenId) {
-        _setTool(pkpTokenId, toolIpfsCid);
-    }
-
-    function removeTool(uint256 pkpTokenId, string calldata toolIpfsCid) external onlyPKPOwner(pkpTokenId) {
-        _removeTool(pkpTokenId, toolIpfsCid);
-    }
-
-    function setToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
-        for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _setTool(pkpTokenId, toolIpfsCids[i]);
-            unchecked { ++i; }
-        }
-    }
-
-    function removeToolBatch(uint256 pkpTokenId, string[] calldata toolIpfsCids) external onlyPKPOwner(pkpTokenId) {
-        for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _removeTool(pkpTokenId, toolIpfsCids[i]);
-            unchecked { ++i; }
-        }
-    }
-
-    function _setTool(uint256 pkpTokenId, string calldata toolIpfsCid) internal {
-        if (bytes(toolIpfsCid).length == 0) {
-            revert PKPToolPolicyErrors.EmptyIPFSCID();
-        }
+    /// @notice Register tools for a PKP. For single tool operations, pass an array with one element.
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids Array of tool IPFS CIDs to register
+    function registerTools(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolIpfsCid];
 
-        // If tool already exists, do nothing
-        if (tool.isRegistered) {
-            return;
-        }
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string memory toolIpfsCid = toolIpfsCids[i];
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
-        // Add new tool
-        tool.isRegistered = true;
-        tool.toolCid = toolIpfsCid;
-        pkpData.toolCids.push(toolIpfsCid);
-        
-        emit PKPToolPolicyEvents.ToolRegistered(pkpTokenId, toolIpfsCid);
-    }
+            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolIpfsCid];
 
-    function _removeTool(uint256 pkpTokenId, string calldata toolIpfsCid) internal {
-        if (bytes(toolIpfsCid).length == 0) {
-            revert PKPToolPolicyErrors.EmptyIPFSCID();
-        }
-
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolIpfsCid];
-
-        // Verify tool exists
-        if (!tool.isRegistered) {
-            revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
-        }
-
-        // Find and remove from toolCids array
-        string[] storage tools = pkpData.toolCids;
-        for (uint256 i = 0; i < tools.length;) {
-            if (keccak256(bytes(tools[i])) == keccak256(bytes(toolIpfsCid))) {
-                // Move last element to this position (unless we're already at the end)
-                if (i != tools.length - 1) {
-                    tools[i] = tools[tools.length - 1];
-                }
-                tools.pop();
-                break;
+            // If tool already exists, revert
+            if (tool.enabled) {
+                revert PKPToolPolicyErrors.ToolAlreadyExists(toolIpfsCid);
             }
+
+            // Add to tools array if not already present
+            if (pkpData.toolCidIndices[toolIpfsCid] == 0) {
+                pkpData.toolCids.push(toolIpfsCid);
+                pkpData.toolCidIndices[toolIpfsCid] = pkpData.toolCids.length;
+            }
+
+            tool.enabled = true;
             unchecked { ++i; }
         }
 
-        // Delete tool info
-        delete pkpData.toolMap[toolIpfsCid];
-        
-        emit PKPToolPolicyEvents.ToolRemoved(pkpTokenId, toolIpfsCid);
+        emit PKPToolPolicyToolEvents.ToolsRegistered(pkpTokenId, toolIpfsCids);
+    }
+
+    /// @notice Remove tools from a PKP and update all delegatees' permissions
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids Array of tool IPFS CIDs to remove
+    function removeTools(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string memory toolIpfsCid = toolIpfsCids[i];
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+            // 1. Remove tool from PKP's tool list using swap-and-pop
+            uint256 toolIndex = pkpData.toolCidIndices[toolIpfsCid];
+            if (toolIndex == 0) revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
+
+            // Convert from 1-based to 0-based indexing
+            toolIndex--;
+            string[] storage tools = pkpData.toolCids;
+            if (toolIndex < tools.length - 1) {
+                string memory lastTool = tools[tools.length - 1];
+                tools[toolIndex] = lastTool;
+                pkpData.toolCidIndices[lastTool] = toolIndex + 1;
+            }
+            tools.pop();
+            delete pkpData.toolCidIndices[toolIpfsCid];
+
+            // 2. Update all delegatees' permissions for this tool
+            address[] storage delegatees = pkpData.delegatees;
+            for (uint256 j = 0; j < delegatees.length;) {
+                address delegatee = delegatees[j];
+                PKPToolPolicyStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+                
+                // Remove tool from delegatee's permitted tools using swap-and-pop
+                uint256 permittedIndex = delegateeData.permittedToolIndices[pkpTokenId][toolIpfsCid];
+                if (permittedIndex != 0) {
+                    // Convert from 1-based to 0-based indexing
+                    permittedIndex--;
+                    string[] storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
+                    
+                    if (permittedIndex < permittedTools.length - 1) {
+                        string memory lastPermittedTool = permittedTools[permittedTools.length - 1];
+                        permittedTools[permittedIndex] = lastPermittedTool;
+                        delegateeData.permittedToolIndices[pkpTokenId][lastPermittedTool] = permittedIndex + 1;
+                    }
+                    permittedTools.pop();
+                    delete delegateeData.permittedToolIndices[pkpTokenId][toolIpfsCid];
+                }
+                unchecked { ++j; }
+            }
+
+            // 3. Delete the tool info and all its policies
+            delete pkpData.toolMap[toolIpfsCid];
+
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyToolEvents.ToolsRemoved(pkpTokenId, toolIpfsCids);
+    }
+
+    /// @notice Enable tools for a PKP. For single tool operations, pass an array with one element.
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids Array of tool IPFS CIDs to enable
+    function enableTools(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string memory toolIpfsCid = toolIpfsCids[i];
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolIpfsCid];
+            if (!tool.enabled) revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
+
+            tool.enabled = true;
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyToolEvents.ToolsEnabled(pkpTokenId, toolIpfsCids);
+    }
+
+    /// @notice Disable tools for a PKP. For single tool operations, pass an array with one element.
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids Array of tool IPFS CIDs to disable
+    function disableTools(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string memory toolIpfsCid = toolIpfsCids[i];
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
+
+            PKPToolPolicyStorage.ToolInfo storage tool = pkpData.toolMap[toolIpfsCid];
+            if (!tool.enabled) revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
+
+            tool.enabled = false;
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyToolEvents.ToolsDisabled(pkpTokenId, toolIpfsCids);
     }
 } 

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./PKPToolPolicyBase.sol";
+import "./PKPToolPolicyPolicyBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 import "../libraries/PKPToolPolicyEvents.sol";
 
-contract PKPToolPolicyPolicyFacet is PKPToolPolicyBase {
+contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
 
     /// @notice Get the effective policy IPFS CID for a tool and delegatee, considering both delegatee-specific and blanket policies
@@ -24,14 +24,17 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyBase {
         PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
         
         // First try delegatee-specific policy
-        policyIpfsCid = tool.delegateePolicies[delegatee];
-        
-        if (bytes(policyIpfsCid).length > 0) {
-            return (policyIpfsCid, true);
+        PKPToolPolicyStorage.Policy storage delegateePolicy = tool.delegateeCustomPolicies[delegatee];
+        if (delegateePolicy.enabled) {
+            return (delegateePolicy.ipfsCid, true);
         }
 
         // If no delegatee-specific policy, return blanket policy
-        return (tool.blanketPolicy, false);
+        if (tool.blanketPolicy.enabled) {
+            return (tool.blanketPolicy.ipfsCid, false);
+        }
+
+        return ("", false);
     }
 
     /// @notice Get the policy IPFS CID for a specific tool and delegatee
@@ -39,145 +42,90 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyBase {
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address to get the policy for
     /// @return policyIpfsCid The policy IPFS CID for this delegatee, or empty string if not set
-    function getToolPolicyForDelegatee(
+    function getCustomToolPolicyForDelegatee(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
     ) external view returns (string memory policyIpfsCid) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
-        return tool.delegateePolicies[delegatee];
+        PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+        return policy.enabled ? policy.ipfsCid : "";
     }
 
-    /// @notice Set a policy for a specific tool and delegatee
+    /// @notice Set policies for specific tools and delegatees
     /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to set the policy for
-    /// @param policyIpfsCid The IPFS CID of the policy to set
-    function setToolPolicyForDelegatee(
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools
+    /// @param delegatees The array of delegatee addresses to set the policies for
+    /// @param policyIpfsCids The array of IPFS CIDs of the policies to set
+    function setCustomToolPoliciesForDelegatees(
         uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee,
-        string calldata policyIpfsCid
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees,
+        string[] calldata policyIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        _setToolPolicy(pkpTokenId, toolIpfsCid, delegatee, policyIpfsCid);
-    }
-
-    /// @notice Remove a delegatee-specific policy for a tool
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address whose policy should be removed
-    function removeToolPolicyForDelegatee(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee
-    ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatee == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
-        _removeToolPolicy(pkpTokenId, toolIpfsCid, delegatee);
-    }
-
-    /// @notice Get the blanket policy IPFS CID for a specific tool
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @return policyIpfsCid The blanket policy IPFS CID, or empty string if not set
-    function getBlanketToolPolicy(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid
-    ) external view returns (string memory policyIpfsCid) {
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
-        return tool.blanketPolicy;
-    }
-
-    /// @notice Set a blanket policy for a tool (applies when no delegatee-specific policy exists)
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param policyIpfsCid The IPFS CID of the policy to set
-    function setBlanketToolPolicy(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        string calldata policyIpfsCid
-    ) external onlyPKPOwner(pkpTokenId) {
-        _setToolPolicy(pkpTokenId, toolIpfsCid, address(0), policyIpfsCid);
-    }
-
-    /// @notice Remove a blanket policy for a tool
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    function removeBlanketToolPolicy(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid
-    ) external onlyPKPOwner(pkpTokenId) {
-        _removeToolPolicy(pkpTokenId, toolIpfsCid, address(0));
-    }
-
-    /// @notice Internal function to set a policy for a tool and delegatee
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
-    /// @param policyIpfsCid The IPFS CID of the policy to set
-    function _setToolPolicy(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee,
-        string calldata policyIpfsCid
-    ) internal {
-        if (bytes(policyIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyPolicyIPFSCID();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
-
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
-
-        if (delegatee == address(0)) {
-            // Set blanket policy
-            tool.blanketPolicy = policyIpfsCid;
-        } else {
-            // Set delegatee-specific policy
-            if (bytes(tool.delegateePolicies[delegatee]).length == 0) {
-                // First time setting policy for this delegatee
-                tool.delegateesWithPolicy.push(delegatee);
-            }
-            tool.delegateePolicies[delegatee] = policyIpfsCid;
+        if (toolIpfsCids.length != delegatees.length || delegatees.length != policyIpfsCids.length) {
+            revert PKPToolPolicyErrors.ArrayLengthMismatch();
         }
 
-        emit PKPToolPolicyEvents.ToolPolicySet(pkpTokenId, toolIpfsCid, delegatee, policyIpfsCid);
-    }
-
-    /// @notice Internal function to remove a policy for a tool and delegatee
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (can be address(0) for blanket policy)
-    function _removeToolPolicy(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee
-    ) internal {
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
-
-        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
-
-        if (delegatee == address(0)) {
-            // Remove blanket policy
-            delete tool.blanketPolicy;
-        } else {
-            // Remove delegatee-specific policy
-            if (bytes(tool.delegateePolicies[delegatee]).length > 0) {
-                // Remove from delegateesWithPolicy array
-                address[] storage delegatees = tool.delegateesWithPolicy;
-                for (uint256 i = 0; i < delegatees.length;) {
-                    if (delegatees[i] == delegatee) {
-                        delegatees[i] = delegatees[delegatees.length - 1];
-                        delegatees.pop();
-                        break;
-                    }
-                    unchecked { ++i; }
-                }
-                delete tool.delegateePolicies[delegatee];
-            }
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            _setToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i]);
+            unchecked { ++i; }
         }
 
-        emit PKPToolPolicyEvents.ToolPolicyRemoved(pkpTokenId, toolIpfsCid, delegatee);
+        emit PKPToolPolicyPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids);
+    }
+
+    /// @notice Remove delegatee-specific policies for tools
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools
+    /// @param delegatees The array of delegatee addresses whose policies should be removed
+    function removeCustomToolPoliciesForDelegatees(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            _removeToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyPolicyEvents.ToolPoliciesRemoved(pkpTokenId, toolIpfsCids, delegatees);
+    }
+
+    function enableCustomToolPoliciesForDelegatees(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            _enablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyPolicyEvents.PoliciesEnabled(pkpTokenId, toolIpfsCids, delegatees);
+    }
+
+    function disableCustomToolPoliciesForDelegatees(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            if (delegatees[i] == address(0)) revert PKPToolPolicyErrors.InvalidDelegatee();
+            _disablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            unchecked { ++i; }
+        }
+
+        emit PKPToolPolicyPolicyEvents.PoliciesDisabled(pkpTokenId, toolIpfsCids, delegatees);
     }
 } 

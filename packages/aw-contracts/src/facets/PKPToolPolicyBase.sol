@@ -6,7 +6,7 @@ import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 
 abstract contract PKPToolPolicyBase {
-    function _layout() internal pure returns (PKPToolPolicyStorage.Layout storage) {
+    function _layout() internal pure virtual returns (PKPToolPolicyStorage.Layout storage) {
         return PKPToolPolicyStorage.layout();
     }
 
@@ -24,7 +24,7 @@ abstract contract PKPToolPolicyBase {
     function _verifyToolRegistered(
         uint256 pkpTokenId,
         string memory toolIpfsCid
-    ) internal view {
+    ) internal view virtual {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
