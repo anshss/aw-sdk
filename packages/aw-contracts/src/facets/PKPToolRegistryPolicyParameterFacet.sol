@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolRegistryParametersBase.sol";
+import "./PKPToolRegistryPolicyParametersBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
 import "../libraries/PKPToolRegistryErrors.sol";
 import "../libraries/PKPToolRegistryParameterEvents.sol";
@@ -11,7 +11,7 @@ import "../libraries/PKPToolRegistryParameterEvents.sol";
 /// @notice Diamond facet for managing delegatee-specific parameters for PKP tool policies
 /// @dev Inherits from PKPToolRegistryParametersBase for common parameter management functionality
 /// @custom:security-contact security@litprotocol.com
-contract PKPToolRegistryParameterFacet is PKPToolRegistryParametersBase {
+contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersBase {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 

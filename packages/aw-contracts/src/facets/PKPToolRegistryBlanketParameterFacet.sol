@@ -2,15 +2,16 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolRegistryParametersBase.sol";
+import "./PKPToolRegistryPolicyParametersBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
 import "../libraries/PKPToolRegistryErrors.sol";
 import "../libraries/PKPToolRegistryParameterEvents.sol";
 
 /// @title PKP Tool Registry Blanket Parameter Facet
 /// @notice Diamond facet for managing blanket (default) parameters for PKP tool registry
-/// @dev Inherits from PKPToolRegistryParametersBase for common parameter management functionality
-contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryParametersBase {
+/// @dev Inherits from PKPToolRegistryPolicyParametersBase for common parameter management functionality
+/// @custom:security-contact security@litprotocol.com
+contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParametersBase {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 

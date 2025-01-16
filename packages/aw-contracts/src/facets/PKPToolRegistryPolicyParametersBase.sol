@@ -10,7 +10,7 @@ import "../libraries/PKPToolRegistryErrors.sol";
 /// @notice Base contract for managing policy parameters in the PKP tool registry system
 /// @dev Extends PKPToolRegistryBase to provide parameter management functionality
 /// @custom:security-contact security@litprotocol.com
-abstract contract PKPToolRegistryParametersBase is PKPToolRegistryBase {
+abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
