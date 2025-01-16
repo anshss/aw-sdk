@@ -10,11 +10,13 @@ library PKPToolRegistryPolicyEvents {
     /// @param toolIpfsCids Array of tool IPFS CIDs for which policies were set
     /// @param delegatees Array of delegatee addresses for whom policies were set
     /// @param policyIpfsCids Array of policy IPFS CIDs that were set
+    /// @param enablePolicies Whether the policies were enabled by default
     event ToolPoliciesSet(
         uint256 indexed pkpTokenId,
         string[] toolIpfsCids,
         address[] delegatees,
-        string[] policyIpfsCids
+        string[] policyIpfsCids,
+        bool enablePolicies
     );
 
     /// @notice Emitted when multiple delegatee-specific policies are removed

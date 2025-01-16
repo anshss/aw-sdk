@@ -27,13 +27,15 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address (use address(0) for blanket policy)
     /// @param policyIpfsCid The IPFS CID of the policy to set
+    /// @param enablePolicy Whether to enable the policy when set
     /// @custom:throws EmptyPolicyIPFSCID if policyIpfsCid is empty
     /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _setToolPolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee,
-        string calldata policyIpfsCid
+        string calldata policyIpfsCid,
+        bool enablePolicy
     ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
         if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
 
@@ -44,17 +46,17 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         if (delegatee == address(0)) {
             // Set blanket policy
-            tool.blanketPolicy.enabled = true;
+            tool.blanketPolicy.enabled = enablePolicy;
             tool.blanketPolicy.policyIpfsCidHash = policyIpfsCidHash;
             l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
         } else {
             // Set delegatee-specific policy
             PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (!policy.enabled) {
-                // First time setting policy for this delegatee
+            if (!tool.delegateesWithCustomPolicy.contains(delegatee)) {
+                // First time ever setting policy for this delegatee
                 tool.delegateesWithCustomPolicy.add(delegatee);
             }
-            policy.enabled = true;
+            policy.enabled = enablePolicy;
             policy.policyIpfsCidHash = policyIpfsCidHash;
             l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
         }
@@ -85,10 +87,9 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         } else {
             // Remove delegatee-specific policy if it exists
             PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (policy.enabled) {
-                tool.delegateesWithCustomPolicy.remove(delegatee);
-                delete tool.delegateeCustomPolicies[delegatee];
-            }
+            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+            tool.delegateesWithCustomPolicy.remove(delegatee);
+            delete tool.delegateeCustomPolicies[delegatee];
         }
     }
 

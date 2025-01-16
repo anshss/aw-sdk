@@ -69,6 +69,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
     /// @param toolIpfsCids The array of IPFS CIDs of the tools
     /// @param delegatees The array of delegatee addresses to set the policies for
     /// @param policyIpfsCids The array of IPFS CIDs of the policies to set
+    /// @param enablePolicies Whether to enable the policies when set
     /// @custom:throws ArrayLengthMismatch if array lengths don't match
     /// @custom:throws InvalidDelegatee if any delegatee is the zero address
     /// @custom:throws NotPKPOwner if caller is not the PKP owner
@@ -79,7 +80,8 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids,
         address[] calldata delegatees,
-        string[] calldata policyIpfsCids
+        string[] calldata policyIpfsCids,
+        bool enablePolicies
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length || delegatees.length != policyIpfsCids.length) {
             revert PKPToolRegistryErrors.ArrayLengthMismatch();
@@ -87,11 +89,11 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            _setToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i]);
+            _setToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i], enablePolicies);
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids);
+        emit PKPToolRegistryPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids, enablePolicies);
     }
 
     /// @notice Remove delegatee-specific policies for tools
