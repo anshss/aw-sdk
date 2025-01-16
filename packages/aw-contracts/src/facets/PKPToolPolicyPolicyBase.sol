@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolPolicyBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
 
 abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
+    using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     function _layout() internal pure override returns (PKPToolPolicyStorage.Layout storage) {
         return PKPToolPolicyStorage.layout();
     }
@@ -20,27 +24,29 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
         string calldata toolIpfsCid,
         address delegatee,
         string calldata policyIpfsCid
-    ) internal virtual {
+    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
         if (bytes(policyIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyPolicyIPFSCID();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
+        bytes32 policyIpfsCidHash = keccak256(bytes(policyIpfsCid));
 
         if (delegatee == address(0)) {
             // Set blanket policy
             tool.blanketPolicy.enabled = true;
-            tool.blanketPolicy.ipfsCid = policyIpfsCid;
+            tool.blanketPolicy.policyIpfsCidHash = policyIpfsCidHash;
+            l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
         } else {
             // Set delegatee-specific policy
             PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
             if (!policy.enabled) {
                 // First time setting policy for this delegatee
-                tool.delegateesWithCustomPolicy.push(delegatee);
-                tool.delegateeCustomPolicyIndices[delegatee] = tool.delegateesWithCustomPolicy.length;
+                tool.delegateesWithCustomPolicy.add(delegatee);
             }
             policy.enabled = true;
-            policy.ipfsCid = policyIpfsCid;
+            policy.policyIpfsCidHash = policyIpfsCidHash;
+            l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
         }
     }
 
@@ -56,26 +62,18 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         if (delegatee == address(0)) {
             // Remove blanket policy
-            if (bytes(tool.blanketPolicy.ipfsCid).length == 0) revert PKPToolPolicyErrors.NoPolicySet();
+            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolPolicyErrors.NoPolicySet();
             delete tool.blanketPolicy;
         } else {
             // Remove delegatee-specific policy if it exists
             PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
             if (policy.enabled) {
-                // Remove from delegateesWithCustomPolicy array using index
-                uint256 index = tool.delegateeCustomPolicyIndices[delegatee] - 1;
-                address[] storage delegatees = tool.delegateesWithCustomPolicy;
-                if (index < delegatees.length - 1) {
-                    address lastDelegatee = delegatees[delegatees.length - 1];
-                    delegatees[index] = lastDelegatee;
-                    tool.delegateeCustomPolicyIndices[lastDelegatee] = index + 1;
-                }
-                delegatees.pop();
-                delete tool.delegateeCustomPolicyIndices[delegatee];
+                tool.delegateesWithCustomPolicy.remove(delegatee);
                 delete tool.delegateeCustomPolicies[delegatee];
             }
         }
@@ -89,21 +87,21 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) internal virtual {
+    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         if (delegatee == address(0)) {
             // Enable blanket policy
-            if (bytes(tool.blanketPolicy.ipfsCid).length == 0) revert PKPToolPolicyErrors.NoPolicySet();
+            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolPolicyErrors.NoPolicySet();
             tool.blanketPolicy.enabled = true;
         } else {
             // Enable delegatee-specific policy
             PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (bytes(policy.ipfsCid).length == 0) revert PKPToolPolicyErrors.NoPolicySet();
+            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolPolicyErrors.NoPolicySet();
             policy.enabled = true;
         }
     }
@@ -116,21 +114,21 @@ abstract contract PKPToolPolicyPolicyBase is PKPToolPolicyBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) internal virtual {
+    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
 
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         if (delegatee == address(0)) {
             // Disable blanket policy
-            if (bytes(tool.blanketPolicy.ipfsCid).length == 0) revert PKPToolPolicyErrors.NoPolicySet();
+            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolPolicyErrors.NoPolicySet();
             tool.blanketPolicy.enabled = false;
         } else {
             // Disable delegatee-specific policy
             PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (bytes(policy.ipfsCid).length == 0) revert PKPToolPolicyErrors.NoPolicySet();
+            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolPolicyErrors.NoPolicySet();
             policy.enabled = false;
         }
     }

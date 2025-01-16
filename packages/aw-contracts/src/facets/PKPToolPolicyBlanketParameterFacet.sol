@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolPolicyParametersBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
@@ -8,7 +9,7 @@ import "../libraries/PKPToolPolicyParameterEvents.sol";
 
 contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
-    using PKPToolPolicyParameterEvents for *;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get all registered parameter names for a blanket policy
     /// @param pkpTokenId The PKP token ID
@@ -17,12 +18,19 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
     function getBlanketToolPolicyParameterNames(
         uint256 pkpTokenId,
         string calldata toolIpfsCid
-    ) external view returns (string[] memory) {
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
-        return toolInfo.blanketPolicy.parameterNames;
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        
+        uint256 length = toolInfo.blanketPolicy.parameterNames.length();
+        parameterNames = new string[](length);
+        for (uint256 i = 0; i < length;) {
+            bytes32 paramNameHash = toolInfo.blanketPolicy.parameterNames.at(i);
+            parameterNames[i] = l.hashedParameterNameToOriginalName[paramNameHash];
+            unchecked { ++i; }
+        }
     }
 
     /// @notice Get specific parameter values from a blanket policy
@@ -34,17 +42,18 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         string[] calldata parameterNames
-    ) external view returns (bytes[] memory) {
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
         
-        bytes[] memory parameterValues = new bytes[](parameterNames.length);
-        for (uint256 i = 0; i < parameterNames.length; i++) {
-            parameterValues[i] = toolInfo.blanketPolicy.parameters[parameterNames[i]];
+        parameterValues = new bytes[](parameterNames.length);
+        for (uint256 i = 0; i < parameterNames.length;) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            parameterValues[i] = toolInfo.blanketPolicy.parameters[paramNameHash];
+            unchecked { ++i; }
         }
-        return parameterValues;
     }
 
     /// @notice Set parameters for a blanket policy
@@ -57,22 +66,25 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         string calldata toolIpfsCid,
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
-    ) public onlyPKPOwner(pkpTokenId) {
-        require(parameterNames.length == parameterValues.length, "Mismatched parameter names and values");
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+        if (parameterNames.length != parameterValues.length) revert PKPToolPolicyErrors.ArrayLengthMismatch();
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
         PKPToolPolicyStorage.Policy storage policy = toolInfo.blanketPolicy;
 
-        for (uint256 i = 0; i < parameterNames.length; i++) {
-            _setParameter(policy, parameterNames[i], parameterValues[i]);
+        for (uint256 i = 0; i < parameterNames.length;) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            l.hashedParameterNameToOriginalName[paramNameHash] = parameterNames[i];
+            policy.parameterNames.add(paramNameHash);
+            policy.parameters[paramNameHash] = parameterValues[i];
+            unchecked { ++i; }
         }
 
-        emit PKPToolPolicyParameterEvents.PolicyParametersSet(
+        emit PKPToolPolicyParameterEvents.BlanketPolicyParametersSet(
             pkpTokenId,
             toolIpfsCid,
-            address(0),
             parameterNames,
             parameterValues
         );
@@ -86,21 +98,23 @@ contract PKPToolPolicyBlanketParameterFacet is PKPToolPolicyParametersBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         string[] calldata parameterNames
-    ) public onlyPKPOwner(pkpTokenId) {
-        _verifyToolRegistered(pkpTokenId, toolIpfsCid);
+    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
         PKPToolPolicyStorage.Policy storage policy = toolInfo.blanketPolicy;
 
-        for (uint256 i = 0; i < parameterNames.length; i++) {
-            _removeParameter(policy, parameterNames[i]);
+        for (uint256 i = 0; i < parameterNames.length;) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            policy.parameterNames.remove(paramNameHash);
+            delete policy.parameters[paramNameHash];
+            unchecked { ++i; }
         }
 
-        emit PKPToolPolicyParameterEvents.PolicyParametersRemoved(
+        emit PKPToolPolicyParameterEvents.BlanketPolicyParametersRemoved(
             pkpTokenId,
             toolIpfsCid,
-            address(0),
             parameterNames
         );
     }

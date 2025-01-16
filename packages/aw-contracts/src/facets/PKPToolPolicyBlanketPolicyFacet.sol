@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolPolicyPolicyBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
@@ -8,6 +9,7 @@ import "../libraries/PKPToolPolicyEvents.sol";
 
 contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get the blanket policy IPFS CID for a specific tool
     /// @param pkpTokenId The PKP token ID
@@ -18,9 +20,10 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
         string calldata toolIpfsCid
     ) external view returns (string memory policyIpfsCid) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
         PKPToolPolicyStorage.Policy storage policy = tool.blanketPolicy;
-        return policy.enabled ? policy.ipfsCid : "";
+        return policy.enabled ? l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash] : "";
     }
 
     function setBlanketToolPolicies(
@@ -34,7 +37,7 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _setToolPolicy(pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i]);
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids);
+        emit PKPToolPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids);
     }
 
     function removeBlanketToolPolicies(
@@ -45,7 +48,7 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _removeToolPolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesRemoved(pkpTokenId, toolIpfsCids);
+        emit PKPToolPolicyEvents.BlanketPoliciesRemoved(pkpTokenId, toolIpfsCids);
     }
 
     function enableBlanketPolicies(
@@ -56,10 +59,10 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _enablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesEnabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolPolicyEvents.BlanketPoliciesEnabled(pkpTokenId, toolIpfsCids);
     }
 
-    function disableBlanketPolicyBatch(
+    function disableBlanketPolicies(
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
@@ -67,6 +70,6 @@ contract PKPToolPolicyBlanketPolicyFacet is PKPToolPolicyPolicyBase {
             _disablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
-        emit PKPToolPolicyPolicyEvents.BlanketPoliciesDisabled(pkpTokenId, toolIpfsCids);
+        emit PKPToolPolicyEvents.BlanketPoliciesDisabled(pkpTokenId, toolIpfsCids);
     }
 } 

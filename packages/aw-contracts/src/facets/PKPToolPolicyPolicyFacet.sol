@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolPolicyPolicyBase.sol";
 import "../libraries/PKPToolPolicyStorage.sol";
 import "../libraries/PKPToolPolicyErrors.sol";
@@ -8,6 +9,7 @@ import "../libraries/PKPToolPolicyEvents.sol";
 
 contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
     using PKPToolPolicyStorage for PKPToolPolicyStorage.Layout;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get the effective policy IPFS CID for a tool and delegatee, considering both delegatee-specific and blanket policies
     /// @param pkpTokenId The PKP token ID
@@ -21,17 +23,18 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
         address delegatee
     ) external view returns (string memory policyIpfsCid, bool isDelegateeSpecific) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
         
         // First try delegatee-specific policy
         PKPToolPolicyStorage.Policy storage delegateePolicy = tool.delegateeCustomPolicies[delegatee];
         if (delegateePolicy.enabled) {
-            return (delegateePolicy.ipfsCid, true);
+            return (l.hashedPolicyCidToOriginalCid[delegateePolicy.policyIpfsCidHash], true);
         }
 
         // If no delegatee-specific policy, return blanket policy
         if (tool.blanketPolicy.enabled) {
-            return (tool.blanketPolicy.ipfsCid, false);
+            return (l.hashedPolicyCidToOriginalCid[tool.blanketPolicy.policyIpfsCidHash], false);
         }
 
         return ("", false);
@@ -48,9 +51,9 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
         address delegatee
     ) external view returns (string memory policyIpfsCid) {
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
-        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[ _hashToolCid(toolIpfsCid)];
         PKPToolPolicyStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        return policy.enabled ? policy.ipfsCid : "";
+        return policy.enabled ? l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash] : "";
     }
 
     /// @notice Set policies for specific tools and delegatees
@@ -74,7 +77,7 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids);
+        emit PKPToolPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids);
     }
 
     /// @notice Remove delegatee-specific policies for tools
@@ -94,7 +97,7 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyPolicyEvents.ToolPoliciesRemoved(pkpTokenId, toolIpfsCids, delegatees);
+        emit PKPToolPolicyEvents.ToolPoliciesRemoved(pkpTokenId, toolIpfsCids, delegatees);
     }
 
     function enableCustomToolPoliciesForDelegatees(
@@ -110,7 +113,7 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyPolicyEvents.PoliciesEnabled(pkpTokenId, toolIpfsCids, delegatees);
+        emit PKPToolPolicyEvents.PoliciesEnabled(pkpTokenId, toolIpfsCids, delegatees);
     }
 
     function disableCustomToolPoliciesForDelegatees(
@@ -126,6 +129,6 @@ contract PKPToolPolicyPolicyFacet is PKPToolPolicyPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolPolicyPolicyEvents.PoliciesDisabled(pkpTokenId, toolIpfsCids, delegatees);
+        emit PKPToolPolicyEvents.PoliciesDisabled(pkpTokenId, toolIpfsCids, delegatees);
     }
 } 

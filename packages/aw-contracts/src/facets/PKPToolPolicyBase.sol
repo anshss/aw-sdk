@@ -18,21 +18,48 @@ abstract contract PKPToolPolicyBase {
         _;
     }
 
-    /// @notice Internal function to verify a tool is registered
+    /// @notice Modifier to verify a tool is registered
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool to verify
-    function _verifyToolRegistered(
+    modifier verifyToolRegistered(
         uint256 pkpTokenId,
         string memory toolIpfsCid
-    ) internal view virtual {
+    ) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolPolicyErrors.EmptyIPFSCID();
 
+        bytes32 hashedCid = _hashToolCid(toolIpfsCid);
         PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
         PKPToolPolicyStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolIpfsCid];
+        PKPToolPolicyStorage.ToolInfo storage toolInfo = pkpData.toolMap[hashedCid];
 
         if (!toolInfo.enabled) {
             revert PKPToolPolicyErrors.ToolNotFound(toolIpfsCid);
         }
+        _;
+    }
+
+    /// @notice Internal function to hash a tool's IPFS CID
+    /// @param toolIpfsCid The IPFS CID to hash
+    /// @return The keccak256 hash of the IPFS CID
+    function _hashToolCid(string memory toolIpfsCid) internal pure returns (bytes32) {
+        return keccak256(bytes(toolIpfsCid));
+    }
+
+    /// @notice Internal function to get the original tool CID from its hash
+    /// @param hashedCid The hashed CID to look up
+    /// @return The original IPFS CID string
+    function _getOriginalToolCid(bytes32 hashedCid) internal view returns (string memory) {
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        return l.hashedToolCidToOriginalCid[hashedCid];
+    }
+
+    /// @notice Internal function to store a tool CID and its hash
+    /// @param toolIpfsCid The IPFS CID to store
+    /// @return The hash of the stored CID
+    function _storeToolCid(string memory toolIpfsCid) internal returns (bytes32) {
+        bytes32 hashedCid = _hashToolCid(toolIpfsCid);
+        PKPToolPolicyStorage.Layout storage l = PKPToolPolicyStorage.layout();
+        l.hashedToolCidToOriginalCid[hashedCid] = toolIpfsCid;
+        return hashedCid;
     }
 } 
