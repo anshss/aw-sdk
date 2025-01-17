@@ -130,7 +130,7 @@ contract DeployPKPToolRegistry is Script {
     /// @param network Network name for logging
     /// @param pkpNFTAddress PKP NFT contract address
     /// @return address The address of the deployed registry
-    function deployToNetwork(string memory network, address pkpNFTAddress) internal returns (address) {
+    function deployToNetwork(string memory network, address pkpNFTAddress) public returns (address) {
         // Validate PKP NFT address
         if (pkpNFTAddress == address(0)) {
             revert MissingEnvironmentVariable(string.concat(network, " PKP NFT contract address"));
@@ -153,7 +153,7 @@ contract DeployPKPToolRegistry is Script {
 
         // Deploy the Diamond with the diamondCut facet and owner
         PKPToolRegistry diamond = new PKPToolRegistry(
-            msg.sender, // contract owner
+            vm.addr(deployerPrivateKey), // contract owner
             diamondCutFacetAddress,
             pkpNFTAddress
         );
@@ -175,7 +175,7 @@ contract DeployPKPToolRegistry is Script {
     /// @dev Returns the function selectors for each facet
     /// @param facetName The name of the facet to get selectors for
     /// @return selectors Array of function selectors for the facet
-    function getFunctionSelectors(string memory facetName) internal pure returns (bytes4[] memory) {
+    function getFunctionSelectors(string memory facetName) public pure returns (bytes4[] memory) {
         if (equal(facetName, "DiamondLoupeFacet")) {
             return getDiamondLoupeFacetSelectors();
         }
@@ -203,7 +203,7 @@ contract DeployPKPToolRegistry is Script {
         return new bytes4[](0);
     }
 
-    function getDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getDiamondLoupeFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](5);
         selectors[0] = IDiamondLoupe.facets.selector;
         selectors[1] = IDiamondLoupe.facetFunctionSelectors.selector;
@@ -213,14 +213,14 @@ contract DeployPKPToolRegistry is Script {
         return selectors;
     }
 
-    function getOwnershipFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getOwnershipFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](2);
         selectors[0] = IERC173.owner.selector;
         selectors[1] = IERC173.transferOwnership.selector;
         return selectors;
     }
 
-    function getPolicyFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getPolicyFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](6);
         selectors[0] = PKPToolRegistryPolicyFacet.getEffectiveToolPolicyForDelegatee.selector;
         selectors[1] = PKPToolRegistryPolicyFacet.getCustomToolPolicyForDelegatee.selector;
@@ -231,8 +231,8 @@ contract DeployPKPToolRegistry is Script {
         return selectors;
     }
 
-    function getToolFacetSelectors() internal pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](9);
+    function getToolFacetSelectors() public pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](10);
         selectors[0] = PKPToolRegistryToolFacet.isToolRegistered.selector;
         selectors[1] = PKPToolRegistryToolFacet.getRegisteredTools.selector;
         selectors[2] = PKPToolRegistryToolFacet.getRegisteredToolsAndPolicies.selector;
@@ -242,10 +242,11 @@ contract DeployPKPToolRegistry is Script {
         selectors[6] = PKPToolRegistryToolFacet.removeTools.selector;
         selectors[7] = PKPToolRegistryToolFacet.enableTools.selector;
         selectors[8] = PKPToolRegistryToolFacet.disableTools.selector;
+        selectors[9] = PKPToolRegistryToolFacet.getPKPNFTContract.selector;
         return selectors;
     }
 
-    function getDelegateeFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getDelegateeFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](5);
         selectors[0] = PKPToolRegistryDelegateeFacet.getDelegatees.selector;
         selectors[1] = PKPToolRegistryDelegateeFacet.isPkpDelegatee.selector;
@@ -255,7 +256,7 @@ contract DeployPKPToolRegistry is Script {
         return selectors;
     }
 
-    function getBlanketPolicyFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getBlanketPolicyFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](5);
         selectors[0] = PKPToolRegistryBlanketPolicyFacet.getBlanketToolPolicy.selector;
         selectors[1] = PKPToolRegistryBlanketPolicyFacet.setBlanketToolPolicies.selector;
@@ -265,7 +266,7 @@ contract DeployPKPToolRegistry is Script {
         return selectors;
     }
 
-    function getBlanketParameterFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getBlanketParameterFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameterNames.selector;
         selectors[1] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameters.selector;
@@ -274,7 +275,7 @@ contract DeployPKPToolRegistry is Script {
         return selectors;
     }
 
-    function getPolicyParameterFacetSelectors() internal pure returns (bytes4[] memory) {
+    function getPolicyParameterFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameterNamesForDelegatee.selector;
         selectors[1] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParametersForDelegatee.selector;

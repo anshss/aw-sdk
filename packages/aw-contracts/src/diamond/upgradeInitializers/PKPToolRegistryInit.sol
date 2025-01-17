@@ -11,13 +11,13 @@ import "../../libraries/PKPToolRegistryErrors.sol";
 
 contract PKPToolRegistryInit {
     /// @notice Initialize the PKPToolRegistry Diamond
-    /// @param _pkpNFT The address of the PKP NFT contract
-    function init(address _pkpNFT) external {
-        if (_pkpNFT == address(0)) revert PKPToolRegistryErrors.InvalidPKPTokenId();
+    /// @param _pkpNftContract The address of the PKP NFT contract
+    function init(address _pkpNftContract) external {
+        if (_pkpNftContract == address(0)) revert PKPToolRegistryErrors.InvalidPKPTokenId();
         
         // Initialize PKPToolRegistry storage
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        l.pkpNftContract = _pkpNFT;
+        l.pkpNftContract = _pkpNftContract;
 
         // Initialize ERC165 data
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
