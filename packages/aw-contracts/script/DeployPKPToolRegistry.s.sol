@@ -3,9 +3,24 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 import "../src/PKPToolRegistry.sol";
+import "../src/diamond/facets/DiamondCutFacet.sol";
+import "../src/diamond/facets/DiamondLoupeFacet.sol";
+import "../src/diamond/facets/OwnershipFacet.sol";
+import "../src/diamond/upgradeInitializers/PKPToolRegistryInit.sol";
+import "../src/facets/PKPToolRegistryPolicyFacet.sol";
+import "../src/facets/PKPToolRegistryToolFacet.sol";
+import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
+import "../src/facets/PKPToolRegistryBlanketPolicyFacet.sol";
+import "../src/facets/PKPToolRegistryBlanketParameterFacet.sol";
+import "../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
+import "../src/diamond/interfaces/IDiamondCut.sol";
+import "../src/diamond/interfaces/IDiamondLoupe.sol";
+import "../src/diamond/interfaces/IERC165.sol";
+import "../src/diamond/interfaces/IERC173.sol";
+import "../src/diamond/interfaces/IDiamond.sol";
 
 /// @title PKP Tool Registry Deployment Script
-/// @notice Foundry script for deploying the PKP Tool Registry to multiple networks
+/// @notice Foundry script for deploying the PKP Tool Registry Diamond to multiple networks
 /// @dev Uses environment variables for private key and PKP NFT contract addresses
 /// @custom:env PKP_TOOL_REGISTRY_DEPLOYER_PRIVATE_KEY - Private key of the deployer
 /// @custom:env DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS - PKP NFT contract address on Datil Dev
@@ -15,10 +30,105 @@ contract DeployPKPToolRegistry is Script {
     /// @notice Error thrown when required environment variables are missing
     error MissingEnvironmentVariable(string name);
 
-    /// @notice Deploys the PKP Tool Registry to a specific network
-    /// @dev Broadcasts transactions using the deployer's private key
-    /// @param network The name of the network for logging purposes
-    /// @param pkpNFTAddress The address of the PKP NFT contract on the target network
+    /// @notice Deploy facets for the diamond
+    /// @return facets Array of deployed facet addresses and their cut data
+    /// @return diamondCutFacetAddress Address of the DiamondCutFacet
+    function deployFacets() internal returns (IDiamond.FacetCut[] memory, address) {
+        // Deploy facets
+        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
+        DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
+        OwnershipFacet ownershipFacet = new OwnershipFacet();
+        PKPToolRegistryPolicyFacet policyFacet = new PKPToolRegistryPolicyFacet();
+        PKPToolRegistryToolFacet toolFacet = new PKPToolRegistryToolFacet();
+        PKPToolRegistryDelegateeFacet delegateeFacet = new PKPToolRegistryDelegateeFacet();
+        PKPToolRegistryBlanketPolicyFacet blanketPolicyFacet = new PKPToolRegistryBlanketPolicyFacet();
+        PKPToolRegistryBlanketParameterFacet blanketParameterFacet = new PKPToolRegistryBlanketParameterFacet();
+        PKPToolRegistryPolicyParameterFacet policyParameterFacet = new PKPToolRegistryPolicyParameterFacet();
+
+        // Build cut struct for adding facets
+        IDiamond.FacetCut[] memory cut = new IDiamond.FacetCut[](8);
+
+        // Add DiamondLoupeFacet
+        cut[0] = IDiamond.FacetCut({
+            facetAddress: address(diamondLoupeFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getDiamondLoupeFacetSelectors()
+        });
+
+        // Add OwnershipFacet
+        cut[1] = IDiamond.FacetCut({
+            facetAddress: address(ownershipFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getOwnershipFacetSelectors()
+        });
+
+        // Add PolicyFacet
+        cut[2] = IDiamond.FacetCut({
+            facetAddress: address(policyFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getPolicyFacetSelectors()
+        });
+
+        // Add ToolFacet
+        cut[3] = IDiamond.FacetCut({
+            facetAddress: address(toolFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getToolFacetSelectors()
+        });
+
+        // Add DelegateeFacet
+        cut[4] = IDiamond.FacetCut({
+            facetAddress: address(delegateeFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getDelegateeFacetSelectors()
+        });
+
+        // Add BlanketPolicyFacet
+        cut[5] = IDiamond.FacetCut({
+            facetAddress: address(blanketPolicyFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getBlanketPolicyFacetSelectors()
+        });
+
+        // Add BlanketParameterFacet
+        cut[6] = IDiamond.FacetCut({
+            facetAddress: address(blanketParameterFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getBlanketParameterFacetSelectors()
+        });
+
+        // Add PolicyParameterFacet
+        cut[7] = IDiamond.FacetCut({
+            facetAddress: address(policyParameterFacet),
+            action: IDiamond.FacetCutAction.Add,
+            functionSelectors: getPolicyParameterFacetSelectors()
+        });
+
+        return (cut, address(diamondCutFacet));
+    }
+
+    /// @notice Log deployment details
+    /// @param network Network name
+    /// @param diamond Diamond contract address
+    /// @param pkpNFTAddress PKP NFT contract address
+    /// @param facets Array of deployed facet addresses
+    function logDeployment(
+        string memory network,
+        address diamond,
+        address pkpNFTAddress,
+        IDiamond.FacetCut[] memory facets
+    ) internal view {
+        console.log("PKPToolRegistry Diamond deployed for", network, "to:", address(diamond));
+        console.log("Using PKP NFT contract:", pkpNFTAddress);
+        for (uint256 i = 0; i < facets.length;) {
+            console.log(string.concat("Facet ", vm.toString(i), ":"), facets[i].facetAddress);
+            unchecked { ++i; }
+        }
+    }
+
+    /// @notice Deploy to a specific network
+    /// @param network Network name for logging
+    /// @param pkpNFTAddress PKP NFT contract address
     /// @return address The address of the deployed registry
     function deployToNetwork(string memory network, address pkpNFTAddress) internal returns (address) {
         // Validate PKP NFT address
@@ -35,39 +145,176 @@ contract DeployPKPToolRegistry is Script {
         // Start broadcasting transactions
         vm.startBroadcast(deployerPrivateKey);
 
-        // Deploy the registry
-        PKPToolRegistry registry = new PKPToolRegistry(pkpNFTAddress);
+        // Deploy facets and get cut data
+        (IDiamond.FacetCut[] memory cut, address diamondCutFacetAddress) = deployFacets();
+
+        // Deploy initialization contract
+        PKPToolRegistryInit initContract = new PKPToolRegistryInit();
+
+        // Deploy the Diamond with the diamondCut facet and owner
+        PKPToolRegistry diamond = new PKPToolRegistry(
+            msg.sender, // contract owner
+            diamondCutFacetAddress,
+            pkpNFTAddress
+        );
+
+        // Execute diamond cut to add facets
+        bytes memory initCalldata = abi.encodeWithSelector(PKPToolRegistryInit.init.selector, pkpNFTAddress);
+        IDiamondCut(address(diamond)).diamondCut(cut, address(initContract), initCalldata);
         
         // Stop broadcasting transactions
         vm.stopBroadcast();
 
-        // Log the deployment
-        console.log("PKPToolRegistry deployed for", network, "to:", address(registry));
-        console.log("Using PKP NFT contract:", pkpNFTAddress);
+        // Log deployment details
+        logDeployment(network, address(diamond), pkpNFTAddress, cut);
 
-        return address(registry);
+        return address(diamond);
     }
 
-    /// @notice Main entry point - deploys the registry to all networks
-    /// @dev Deploys to Datil Dev, Datil Test, and Datil networks in sequence
-    function run() external {
-        // Deploy for Datil Dev
-        address datilDevPkpNFT = vm.envAddress("DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS");
-        address datilDevRegistry = deployToNetwork("Datil Dev", datilDevPkpNFT);
+    /// @notice Get function selectors for a facet
+    /// @dev Returns the function selectors for each facet
+    /// @param facetName The name of the facet to get selectors for
+    /// @return selectors Array of function selectors for the facet
+    function getFunctionSelectors(string memory facetName) internal pure returns (bytes4[] memory) {
+        if (equal(facetName, "DiamondLoupeFacet")) {
+            return getDiamondLoupeFacetSelectors();
+        }
+        if (equal(facetName, "OwnershipFacet")) {
+            return getOwnershipFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryPolicyFacet")) {
+            return getPolicyFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryToolFacet")) {
+            return getToolFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryDelegateeFacet")) {
+            return getDelegateeFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryBlanketPolicyFacet")) {
+            return getBlanketPolicyFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryBlanketParameterFacet")) {
+            return getBlanketParameterFacetSelectors();
+        }
+        if (equal(facetName, "PKPToolRegistryPolicyParameterFacet")) {
+            return getPolicyParameterFacetSelectors();
+        }
+        return new bytes4[](0);
+    }
 
-        // Deploy for Datil Test
-        address datilTestPkpNFT = vm.envAddress("DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS");
-        address datilTestRegistry = deployToNetwork("Datil Test", datilTestPkpNFT);
+    function getDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](5);
+        selectors[0] = IDiamondLoupe.facets.selector;
+        selectors[1] = IDiamondLoupe.facetFunctionSelectors.selector;
+        selectors[2] = IDiamondLoupe.facetAddresses.selector;
+        selectors[3] = IDiamondLoupe.facetAddress.selector;
+        selectors[4] = IERC165.supportsInterface.selector;
+        return selectors;
+    }
 
-        // Deploy for Datil
-        address datilPkpNFT = vm.envAddress("DATIL_PKP_NFT_CONTRACT_ADDRESS");
-        address datilRegistry = deployToNetwork("Datil", datilPkpNFT);
+    function getOwnershipFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](2);
+        selectors[0] = IERC173.owner.selector;
+        selectors[1] = IERC173.transferOwnership.selector;
+        return selectors;
+    }
 
-        // Log summary of all deployments
-        console.log("\nDeployment Summary:");
-        console.log("------------------");
-        console.log("Datil Dev Registry:", datilDevRegistry);
-        console.log("Datil Test Registry:", datilTestRegistry);
-        console.log("Datil Registry:", datilRegistry);
+    function getPolicyFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](6);
+        selectors[0] = PKPToolRegistryPolicyFacet.getEffectiveToolPolicyForDelegatee.selector;
+        selectors[1] = PKPToolRegistryPolicyFacet.getCustomToolPolicyForDelegatee.selector;
+        selectors[2] = PKPToolRegistryPolicyFacet.setCustomToolPoliciesForDelegatees.selector;
+        selectors[3] = PKPToolRegistryPolicyFacet.removeCustomToolPoliciesForDelegatees.selector;
+        selectors[4] = PKPToolRegistryPolicyFacet.enableCustomToolPoliciesForDelegatees.selector;
+        selectors[5] = PKPToolRegistryPolicyFacet.disableCustomToolPoliciesForDelegatees.selector;
+        return selectors;
+    }
+
+    function getToolFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](9);
+        selectors[0] = PKPToolRegistryToolFacet.isToolRegistered.selector;
+        selectors[1] = PKPToolRegistryToolFacet.getRegisteredTools.selector;
+        selectors[2] = PKPToolRegistryToolFacet.getRegisteredToolsAndPolicies.selector;
+        selectors[3] = PKPToolRegistryToolFacet.getToolsWithPolicy.selector;
+        selectors[4] = PKPToolRegistryToolFacet.getToolsWithoutPolicy.selector;
+        selectors[5] = PKPToolRegistryToolFacet.registerTools.selector;
+        selectors[6] = PKPToolRegistryToolFacet.removeTools.selector;
+        selectors[7] = PKPToolRegistryToolFacet.enableTools.selector;
+        selectors[8] = PKPToolRegistryToolFacet.disableTools.selector;
+        return selectors;
+    }
+
+    function getDelegateeFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](5);
+        selectors[0] = PKPToolRegistryDelegateeFacet.getDelegatees.selector;
+        selectors[1] = PKPToolRegistryDelegateeFacet.isPkpDelegatee.selector;
+        selectors[2] = PKPToolRegistryDelegateeFacet.getDelegatedPkps.selector;
+        selectors[3] = PKPToolRegistryDelegateeFacet.addDelegatees.selector;
+        selectors[4] = PKPToolRegistryDelegateeFacet.removeDelegatees.selector;
+        return selectors;
+    }
+
+    function getBlanketPolicyFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](5);
+        selectors[0] = PKPToolRegistryBlanketPolicyFacet.getBlanketToolPolicy.selector;
+        selectors[1] = PKPToolRegistryBlanketPolicyFacet.setBlanketToolPolicies.selector;
+        selectors[2] = PKPToolRegistryBlanketPolicyFacet.removeBlanketToolPolicies.selector;
+        selectors[3] = PKPToolRegistryBlanketPolicyFacet.enableBlanketPolicies.selector;
+        selectors[4] = PKPToolRegistryBlanketPolicyFacet.disableBlanketPolicies.selector;
+        return selectors;
+    }
+
+    function getBlanketParameterFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameterNames.selector;
+        selectors[1] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameters.selector;
+        selectors[2] = PKPToolRegistryBlanketParameterFacet.setBlanketToolPolicyParameters.selector;
+        selectors[3] = PKPToolRegistryBlanketParameterFacet.removeBlanketToolPolicyParameters.selector;
+        return selectors;
+    }
+
+    function getPolicyParameterFacetSelectors() internal pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameterNamesForDelegatee.selector;
+        selectors[1] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParametersForDelegatee.selector;
+        selectors[2] = PKPToolRegistryPolicyParameterFacet.setToolPolicyParametersForDelegatee.selector;
+        selectors[3] = PKPToolRegistryPolicyParameterFacet.removeToolPolicyParametersForDelegatee.selector;
+        return selectors;
+    }
+
+    /// @notice Compare two strings
+    /// @dev Helper function to compare strings
+    /// @param a First string
+    /// @param b Second string
+    /// @return bool True if strings are equal
+    function equal(string memory a, string memory b) internal pure returns (bool) {
+        return keccak256(bytes(a)) == keccak256(bytes(b));
+    }
+
+    /// @notice Deploy to Datil Dev network
+    function deployToDatilDev() public returns (address) {
+        address pkpNFTAddress = vm.envAddress("DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS");
+        return deployToNetwork("Datil Dev", pkpNFTAddress);
+    }
+
+    /// @notice Deploy to Datil Test network
+    function deployToDatilTest() public returns (address) {
+        address pkpNFTAddress = vm.envAddress("DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS");
+        return deployToNetwork("Datil Test", pkpNFTAddress);
+    }
+
+    /// @notice Deploy to Datil network
+    function deployToDatil() public returns (address) {
+        address pkpNFTAddress = vm.envAddress("DATIL_PKP_NFT_CONTRACT_ADDRESS");
+        return deployToNetwork("Datil", pkpNFTAddress);
+    }
+
+    /// @notice Main deployment function
+    function run() public {
+        // Deploy to all networks
+        deployToDatilDev();
+        deployToDatilTest();
+        deployToDatil();
     }
 } 

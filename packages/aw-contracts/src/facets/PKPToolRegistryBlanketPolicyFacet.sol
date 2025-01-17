@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./PKPToolRegistryPolicyBase.sol";
+import "../abstract/PKPToolRegistryPolicyBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
 import "../libraries/PKPToolRegistryErrors.sol";
 import "../libraries/PKPToolRegistryEvents.sol";
