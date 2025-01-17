@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../aw-tool-sign-ecdsa"
+    },
+    {
+      "path": "../aw-tool-uniswap-swap"
+    },
+    {
+      "path": "../aw-tool-erc20-transfer"
+    },
+    {
+      "path": "../aw-tool-registry"
+    },
+    {
+      "path": "../aw-tool"
+    },
+    {
+      "path": "../aw-signer"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
