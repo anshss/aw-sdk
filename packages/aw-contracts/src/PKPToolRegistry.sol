@@ -79,23 +79,3 @@ contract PKPToolRegistry {
         revert("Diamond: Does not accept direct ETH transfers");
     }
 }
-
-/// @notice Policy Format
-/// @dev Each policy is a Lit Action that must conform to the following format:
-/// - Must be stored on IPFS with a valid CIDv0
-/// - Must return { response: boolean } indicating authorization
-/// - Can access on-chain parameters via bytes4(keccak256(parameterName))
-/// - Can integrate with external services for complex authorization logic
-
-/// @notice Policy Precedence Rules
-/// @dev The system follows these rules when evaluating policies:
-/// 1. Delegatee-specific policies take precedence over blanket policies
-/// 2. Blanket policies (delegatee = address(0)) apply as fallback
-/// 3. If no policy exists, access is denied by default
-
-/// @notice IPFS Requirements
-/// @dev All IPFS CIDs in the system must:
-/// 1. Be valid IPFS CID v0 format
-/// 2. Not be empty strings
-/// 3. Point to either tool code or policy code
-/// 4. Be accessible on the IPFS network
