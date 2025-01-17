@@ -324,9 +324,11 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            if (!tool.enabled) revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            }
 
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             tool.enabled = true;
             unchecked { ++i; }
         }
@@ -355,9 +357,11 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            if (!tool.enabled) revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            }
 
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             tool.enabled = false;
             unchecked { ++i; }
         }
