@@ -204,17 +204,61 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test error cases for setting parameters
-    function test_errorCases() public {
+    /// @notice Test removing multiple parameters at once
+    function test_removeMultipleParameters() public {
         vm.startPrank(deployer);
 
+        // First set some parameters
+        string[] memory parameterNames = new string[](2);
+        parameterNames[0] = TEST_PARAM_NAME;
+        parameterNames[1] = TEST_PARAM_NAME_2;
+        bytes[] memory parameterValues = new bytes[](2);
+        parameterValues[0] = TEST_PARAM_VALUE;
+        parameterValues[1] = TEST_PARAM_VALUE_2;
+
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            parameterNames,
+            parameterValues
+        );
+
+        // Remove both parameters
+        string[] memory paramsToRemove = new string[](2);
+        paramsToRemove[0] = TEST_PARAM_NAME;
+        paramsToRemove[1] = TEST_PARAM_NAME_2;
+
+        // Expect the PolicyParametersRemoved event
+        vm.expectEmit(true, false, false, true);
+        emit PolicyParametersRemoved(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, TEST_DELEGATEE, paramsToRemove);
+
+        // Remove the parameters
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).removeToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramsToRemove
+        );
+
+        // Verify parameters were removed
+        string[] memory storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE
+        );
+        assertEq(storedParamNames.length, 0, "Parameters should be empty after removal");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that non-owner cannot set parameters
+    function test_revert_whenNonOwnerSetsParameters() public {
         string[] memory parameterNames = new string[](1);
         parameterNames[0] = TEST_PARAM_NAME;
         bytes[] memory parameterValues = new bytes[](1);
         parameterValues[0] = TEST_PARAM_VALUE;
 
-        // Test non-owner cannot set parameters
-        vm.stopPrank();
         vm.startPrank(nonOwner);
         vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
         PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
@@ -225,9 +269,17 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
             parameterValues
         );
         vm.stopPrank();
+    }
+
+    /// @notice Test that parameters cannot be set for zero address delegatee
+    function test_revert_whenDelegateeIsZeroAddress() public {
         vm.startPrank(deployer);
 
-        // Test cannot set parameters for zero address delegatee
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = TEST_PARAM_VALUE;
+
         vm.expectRevert(PKPToolRegistryErrors.InvalidDelegatee.selector);
         PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
             TEST_PKP_TOKEN_ID,
@@ -237,20 +289,76 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
             parameterValues
         );
 
-        // Test cannot set parameters with array length mismatch
-        bytes[] memory mismatchedValues = new bytes[](2);
-        mismatchedValues[0] = TEST_PARAM_VALUE;
-        mismatchedValues[1] = TEST_PARAM_VALUE_2;
+        vm.stopPrank();
+    }
+
+    /// @notice Test that parameters cannot be set with mismatched array lengths
+    function test_revert_whenArrayLengthsMismatch() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](2);
+        parameterValues[0] = TEST_PARAM_VALUE;
+        parameterValues[1] = TEST_PARAM_VALUE_2;
+
         vm.expectRevert(PKPToolRegistryErrors.ArrayLengthMismatch.selector);
         PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE,
             parameterNames,
-            mismatchedValues
+            parameterValues
         );
 
-        // Test cannot set parameters for non-existent tool
+        vm.stopPrank();
+    }
+
+    /// @notice Test that non-delegatees can set parameters (silent fail)
+    function test_whenNotDelegatee() public {
+        vm.startPrank(deployer);
+
+        // Register tool first
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Try to set parameters for a non-delegatee
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = TEST_PARAM_VALUE;
+
+        // Should succeed silently
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE_2,
+            parameterNames,
+            parameterValues
+        );
+
+        // Verify parameters were set
+        string[] memory storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE_2
+        );
+        assertEq(storedParamNames.length, 1, "Parameter should be set");
+        assertEq(storedParamNames[0], TEST_PARAM_NAME, "Wrong parameter name");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that parameters cannot be set for non-existent tools
+    function test_revert_whenToolDoesNotExist() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = TEST_PARAM_VALUE;
+
         vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, "QmNONEXISTENT"));
         PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
             TEST_PKP_TOKEN_ID,
@@ -258,6 +366,100 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
             TEST_DELEGATEE,
             parameterNames,
             parameterValues
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that empty parameter names are not allowed
+    function test_revert_whenEmptyParameterName() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = ""; // Empty parameter name
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = TEST_PARAM_VALUE;
+
+        vm.expectRevert(PKPToolRegistryErrors.InvalidPolicyParameter.selector);
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            parameterNames,
+            parameterValues
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that duplicate parameter names are not allowed
+    function test_revert_whenDuplicateParameterNames() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](2);
+        parameterNames[0] = TEST_PARAM_NAME;
+        parameterNames[1] = TEST_PARAM_NAME; // Duplicate name
+        bytes[] memory parameterValues = new bytes[](2);
+        parameterValues[0] = TEST_PARAM_VALUE;
+        parameterValues[1] = TEST_PARAM_VALUE_2;
+
+        vm.expectRevert(PKPToolRegistryErrors.InvalidPolicyParameter.selector);
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            parameterNames,
+            parameterValues
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that empty parameter values are valid
+    function test_emptyParameterValuesAreValid() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = ""; // Empty value
+
+        // Should not revert
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            parameterNames,
+            parameterValues
+        );
+
+        // Verify parameter was set with empty value
+        string[] memory paramNames = new string[](1);
+        paramNames[0] = TEST_PARAM_NAME;
+        bytes[] memory storedValues = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramNames
+        );
+        assertEq(storedValues[0].length, 0, "Parameter value should be empty");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test removing non-existent parameters succeeds silently
+    function test_removeNonExistentParameters() public {
+        vm.startPrank(deployer);
+
+        string[] memory paramsToRemove = new string[](1);
+        paramsToRemove[0] = "nonexistent";
+
+        // Should not revert
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).removeToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramsToRemove
         );
 
         vm.stopPrank();
