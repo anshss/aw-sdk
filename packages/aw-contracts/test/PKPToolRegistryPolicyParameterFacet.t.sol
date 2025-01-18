@@ -114,6 +114,51 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
         vm.stopPrank();
     }
 
+    /// @notice Test that parameters can be pre-configured for future delegatees
+    function test_whenNotDelegatee() public {
+        vm.startPrank(deployer);
+
+        // Try to set parameters for a future delegatee
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = TEST_PARAM_VALUE;
+
+        // Should succeed (pre-configuration)
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE_2,
+            parameterNames,
+            parameterValues
+        );
+
+        // Verify parameters were set
+        string[] memory storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE_2
+        );
+        assertEq(storedParamNames.length, 1, "Parameter should be pre-configured");
+        assertEq(storedParamNames[0], TEST_PARAM_NAME, "Wrong parameter name");
+
+        // Now add them as a delegatee
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = TEST_DELEGATEE_2;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Verify parameters persist after adding as delegatee
+        storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE_2
+        );
+        assertEq(storedParamNames.length, 1, "Parameter should persist");
+        assertEq(storedParamNames[0], TEST_PARAM_NAME, "Wrong parameter name");
+
+        vm.stopPrank();
+    }
+
     /// @notice Test setting multiple parameters for a delegatee
     function test_setMultipleParameters() public {
         vm.startPrank(deployer);
@@ -310,42 +355,6 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
             parameterNames,
             parameterValues
         );
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test that non-delegatees can set parameters (silent fail)
-    function test_whenNotDelegatee() public {
-        vm.startPrank(deployer);
-
-        // Register tool first
-        string[] memory toolIpfsCids = new string[](1);
-        toolIpfsCids[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
-
-        // Try to set parameters for a non-delegatee
-        string[] memory parameterNames = new string[](1);
-        parameterNames[0] = TEST_PARAM_NAME;
-        bytes[] memory parameterValues = new bytes[](1);
-        parameterValues[0] = TEST_PARAM_VALUE;
-
-        // Should succeed silently
-        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE_2,
-            parameterNames,
-            parameterValues
-        );
-
-        // Verify parameters were set
-        string[] memory storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE_2
-        );
-        assertEq(storedParamNames.length, 1, "Parameter should be set");
-        assertEq(storedParamNames[0], TEST_PARAM_NAME, "Wrong parameter name");
 
         vm.stopPrank();
     }
