@@ -50,7 +50,6 @@ contract PKPToolRegistryToolFacetTest is Test {
         mockPkpNft.setOwner(TEST_PKP_TOKEN_ID, deployer);
     }
 
-
     /// @notice Test getting PKP NFT contract address
     function test_getPKPNFTContract() public {
         address pkpNftContract = PKPToolRegistryToolFacet(address(diamond)).getPKPNFTContract();
@@ -113,21 +112,8 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test registering with empty IPFS CID should revert
-    function test_revert_registerEmptyIPFSCID() public {
-        vm.startPrank(deployer);
-
-        string[] memory toolIpfsCids = new string[](1);
-        toolIpfsCids[0] = ""; // Empty CID
-
-        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test registering duplicate tool should revert
-    function test_revert_registerDuplicateTool() public {
+    /// @notice Test registering duplicate tool should not duplicate the registration
+    function test_registerDuplicateTool() public {
         vm.startPrank(deployer);
 
         string[] memory toolIpfsCids = new string[](1);
@@ -136,8 +122,29 @@ contract PKPToolRegistryToolFacetTest is Test {
         // Register first time
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
-        // Try to register same tool again
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyExists.selector, TEST_TOOL_CID));
+        // Register same tool again - should succeed but not duplicate
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, false);
+
+        // Verify tool is still registered once and maintains original enabled state
+        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        assertEq(registeredTools.length, 1, "Should only be registered once");
+        assertEq(registeredTools[0], TEST_TOOL_CID, "Wrong tool CID registered");
+
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should still be registered");
+        assertTrue(isEnabled, "Tool should maintain original enabled state");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test registering with empty IPFS CID should revert
+    function test_revert_registerEmptyIPFSCID() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = ""; // Empty CID
+
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
@@ -213,6 +220,29 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
+    /// @notice Test removing non-existent tool should succeed silently
+    function test_removeNonExistentTool() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+
+        // Verify tool doesn't exist initially
+        (bool isRegisteredBefore, bool isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredBefore, "Tool should not exist initially");
+        assertFalse(isEnabledBefore, "Tool should not be enabled initially");
+
+        // Remove non-existent tool - should succeed silently
+        PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify state hasn't changed
+        (bool isRegisteredAfter, bool isEnabledAfter) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredAfter, "Tool should still not exist");
+        assertFalse(isEnabledAfter, "Tool should still not be enabled");
+
+        vm.stopPrank();
+    }
+
     /// @notice Test removing with empty IPFS CID should revert
     function test_revert_removeEmptyIPFSCID() public {
         vm.startPrank(deployer);
@@ -221,19 +251,6 @@ contract PKPToolRegistryToolFacetTest is Test {
         toolIpfsCids[0] = ""; // Empty CID
 
         vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
-        PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test removing non-existent tool should revert
-    function test_revert_removeNonExistentTool() public {
-        vm.startPrank(deployer);
-
-        string[] memory toolIpfsCids = new string[](1);
-        toolIpfsCids[0] = TEST_TOOL_CID;
-
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -316,6 +333,29 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
+    /// @notice Test enabling non-existent tool should succeed silently
+    function test_enableNonExistentTool() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+
+        // Verify tool doesn't exist initially
+        (bool isRegisteredBefore, bool isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredBefore, "Tool should not exist initially");
+        assertFalse(isEnabledBefore, "Tool should not be enabled initially");
+
+        // Enable non-existent tool - should succeed silently
+        PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify state hasn't changed
+        (bool isRegisteredAfter, bool isEnabledAfter) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredAfter, "Tool should still not exist");
+        assertFalse(isEnabledAfter, "Tool should still not be enabled");
+
+        vm.stopPrank();
+    }
+
     /// @notice Test disabling a single tool
     function test_disableSingleTool() public {
         vm.startPrank(deployer);
@@ -376,6 +416,29 @@ contract PKPToolRegistryToolFacetTest is Test {
         assertTrue(isRegistered2, "Tool 2 should still be registered");
         assertFalse(isEnabled1, "Tool 1 should be disabled");
         assertFalse(isEnabled2, "Tool 2 should be disabled");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test disabling non-existent tool should succeed silently
+    function test_disableNonExistentTool() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+
+        // Verify tool doesn't exist initially
+        (bool isRegisteredBefore, bool isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredBefore, "Tool should not exist initially");
+        assertFalse(isEnabledBefore, "Tool should not be enabled initially");
+
+        // Disable non-existent tool - should succeed silently
+        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify state hasn't changed
+        (bool isRegisteredAfter, bool isEnabledAfter) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegisteredAfter, "Tool should still not exist");
+        assertFalse(isEnabledAfter, "Tool should still not be enabled");
 
         vm.stopPrank();
     }

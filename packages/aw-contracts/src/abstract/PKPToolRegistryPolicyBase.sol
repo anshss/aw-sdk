@@ -36,7 +36,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         address delegatee,
         string calldata policyIpfsCid,
         bool enablePolicy
-    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -74,7 +74,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) internal virtual {
+    ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -106,7 +106,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -138,7 +138,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) internal virtual verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();

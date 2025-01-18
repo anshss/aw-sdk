@@ -27,7 +27,7 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
-    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
+    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
         if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
@@ -58,7 +58,7 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         string calldata toolIpfsCid,
         address delegatee,
         string[] calldata parameterNames
-    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
+    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
         if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
@@ -91,7 +91,7 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         address delegatee,
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
-    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) public onlyPKPOwner(pkpTokenId) verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (parameterNames.length != parameterValues.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
         if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -131,7 +131,7 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         string calldata toolIpfsCid,
         address delegatee,
         string[] calldata parameterNames
-    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) public onlyPKPOwner(pkpTokenId) verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);

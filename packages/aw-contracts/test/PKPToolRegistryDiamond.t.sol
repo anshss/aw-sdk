@@ -304,18 +304,42 @@ contract PKPToolRegistryDiamondTest is Test {
         vm.stopPrank();
     }
 
+    /// @notice Test duplicate tool registration behavior
+    function test_duplicateToolRegistration() public {
+        vm.startPrank(deployer);
+        
+        // Test duplicate tool registration (should succeed as per current implementation)
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = "duplicate-test-tool";
+        
+        // First registration
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
+        
+        // Second registration should succeed
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
+        
+        // Verify the tool is still registered and enabled
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[0]);
+        assertTrue(isRegistered && isEnabled, "Tool should remain registered and enabled after duplicate registration");
+        
+        vm.stopPrank();
+    }
+
     /// @notice Test error cases
     function test_errorCases() public {
         vm.startPrank(deployer);
         
-        // Test duplicate tool registration
-        string[] memory toolIpfsCids = new string[](1);
-        toolIpfsCids[0] = "error-test-tool";
+        // Test registering tool with empty IPFS CID
+        string[] memory emptyToolIpfsCids = new string[](1);
+        emptyToolIpfsCids[0] = "";
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, emptyToolIpfsCids, true);
         
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyExists.selector, "error-test-tool"));
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
-        
+        // Test registering empty array of tools
+        string[] memory noTools = new string[](0);
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, noTools, true);
+
         // Test policy setting for non-existent tool
         string[] memory nonExistentTools = new string[](1);
         nonExistentTools[0] = "non-existent-tool";
@@ -332,24 +356,37 @@ contract PKPToolRegistryDiamondTest is Test {
             nonExistentTools,
             delegatees,
             policyIpfsCids,
-            true // enable policies
+            true
         );
+
+        // Test removing non-existent tool (should revert)
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).removeTools(1, noTools);
+
+        // Test removing tool with empty IPFS CID
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).removeTools(1, emptyToolIpfsCids);
         
         // Test removing non-existent delegatee
-        // First verify the delegatee doesn't exist
         address nonExistentDelegateePure = makeAddr("non-existent-delegatee-pure");
         assertFalse(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, nonExistentDelegateePure), "Delegatee should not exist");
         
-        // Now try to remove it - this should succeed silently
+        // Test removing non-existent delegatee (should succeed silently)
         address[] memory nonExistentDelegateesArray = new address[](1);
         nonExistentDelegateesArray[0] = nonExistentDelegateePure;
-        
-        // Since the delegatee doesn't exist, removing it should have no effect
         PKPToolRegistryDelegateeFacet(address(diamond)).removeDelegatees(1, nonExistentDelegateesArray);
-        
-        // Verify it still doesn't exist
         assertFalse(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, nonExistentDelegateePure), "Delegatee should still not exist");
-        
+
+        vm.stopPrank();
+
+        address nonOwner = makeAddr("non-owner");
+        vm.startPrank(nonOwner);
+        // Test unauthorized access (non-owner trying to register tools)
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = "unauthorized-test-tool";
+        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
+
         vm.stopPrank();
     }
 

@@ -118,7 +118,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test adding delegatee with empty array
-    function test_addEmptyDelegatees() public {
+    function test_revert_addEmptyDelegatees() public {
         vm.startPrank(deployer);
 
         address[] memory delegatees = new address[](0);
@@ -130,7 +130,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test adding zero address as delegatee
-    function test_addZeroAddressDelegatee() public {
+    function test_revert_addZeroAddressDelegatee() public {
         vm.startPrank(deployer);
 
         address[] memory delegatees = new address[](1);
@@ -143,7 +143,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test non-owner adding delegatee
-    function test_addDelegateeNonOwner() public {
+    function test_revert_addDelegateeNonOwner() public {
         vm.startPrank(nonOwner);
 
         address[] memory delegatees = new address[](1);
@@ -222,7 +222,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test removing delegatee with empty array
-    function test_removeEmptyDelegatees() public {
+    function test_revert_removeEmptyDelegatees() public {
         vm.startPrank(deployer);
 
         address[] memory delegatees = new address[](0);
@@ -234,7 +234,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test removing zero address as delegatee
-    function test_removeZeroAddressDelegatee() public {
+    function test_revert_removeZeroAddressDelegatee() public {
         vm.startPrank(deployer);
 
         address[] memory delegatees = new address[](1);
@@ -247,7 +247,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
     }
 
     /// @notice Test non-owner removing delegatee
-    function test_removeDelegateeNonOwner() public {
+    function test_revert_removeDelegateeNonOwner() public {
         vm.startPrank(nonOwner);
 
         address[] memory delegatees = new address[](1);
@@ -272,42 +272,6 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test delegatee with multiple PKPs
-    function test_delegateeWithMultiplePKPs() public {
-        vm.startPrank(deployer);
-
-        // Add same delegatee to multiple PKPs
-        address[] memory delegatees = new address[](1);
-        delegatees[0] = TEST_DELEGATEE;
-
-        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
-        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID_2, delegatees);
-
-        // Verify delegatee is added to both PKPs
-        assertTrue(
-            PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(TEST_PKP_TOKEN_ID, TEST_DELEGATEE),
-            "Delegatee should be added to first PKP"
-        );
-        assertTrue(
-            PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(TEST_PKP_TOKEN_ID_2, TEST_DELEGATEE),
-            "Delegatee should be added to second PKP"
-        );
-
-        // Verify both PKPs are in delegatee's list
-        uint256[] memory delegatedPkps = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatedPkps(TEST_DELEGATEE);
-        assertEq(delegatedPkps.length, 2, "Wrong number of delegated PKPs");
-        assertTrue(
-            delegatedPkps[0] == TEST_PKP_TOKEN_ID || delegatedPkps[1] == TEST_PKP_TOKEN_ID,
-            "First PKP should be in delegated list"
-        );
-        assertTrue(
-            delegatedPkps[0] == TEST_PKP_TOKEN_ID_2 || delegatedPkps[1] == TEST_PKP_TOKEN_ID_2,
-            "Second PKP should be in delegated list"
-        );
-
-        vm.stopPrank();
-    }
-
     /// @notice Test adding same delegatee twice
     function test_addDelegateeTwice() public {
         vm.startPrank(deployer);
@@ -325,6 +289,59 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
         uint256[] memory delegatedPkps = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatedPkps(TEST_DELEGATEE);
         assertEq(delegatedPkps.length, 1, "Should only have one delegated PKP");
         assertEq(delegatedPkps[0], TEST_PKP_TOKEN_ID, "Wrong PKP token ID");
+
+        // Verify getDelegatees also shows only one entry
+        address[] memory retrievedDelegatees = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatees(TEST_PKP_TOKEN_ID);
+        assertEq(retrievedDelegatees.length, 1, "Should only have one delegatee");
+        assertEq(retrievedDelegatees[0], TEST_DELEGATEE, "Wrong delegatee address");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test adding delegatee to multiple PKPs
+    function test_addDelegateeToPKPs() public {
+        vm.startPrank(deployer);
+
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = TEST_DELEGATEE;
+
+        // Add to first PKP
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Add to second PKP
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID_2, delegatees);
+
+        // Verify delegatee is added to both PKPs
+        assertTrue(
+            PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(TEST_PKP_TOKEN_ID, TEST_DELEGATEE),
+            "Delegatee should be added to first PKP"
+        );
+        assertTrue(
+            PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(TEST_PKP_TOKEN_ID_2, TEST_DELEGATEE),
+            "Delegatee should be added to second PKP"
+        );
+
+        // Verify both PKPs are in delegatee's list
+        uint256[] memory delegatedPkps = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatedPkps(TEST_DELEGATEE);
+        assertEq(delegatedPkps.length, 2, "Wrong number of delegated PKPs");
+        assertTrue(
+            delegatedPkps[0] == TEST_PKP_TOKEN_ID,
+            "First PKP should be in delegated list"
+        );
+        assertTrue(
+            delegatedPkps[1] == TEST_PKP_TOKEN_ID_2,
+            "Second PKP should be in delegated list"
+        );
+
+        // Verify getDelegatees for first PKP
+        address[] memory retrievedDelegatees1 = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatees(TEST_PKP_TOKEN_ID);
+        assertEq(retrievedDelegatees1.length, 1, "First PKP should have one delegatee");
+        assertEq(retrievedDelegatees1[0], TEST_DELEGATEE, "Wrong delegatee for first PKP");
+
+        // Verify getDelegatees for second PKP
+        address[] memory retrievedDelegatees2 = PKPToolRegistryDelegateeFacet(address(diamond)).getDelegatees(TEST_PKP_TOKEN_ID_2);
+        assertEq(retrievedDelegatees2.length, 1, "Second PKP should have one delegatee");
+        assertEq(retrievedDelegatees2[0], TEST_DELEGATEE, "Wrong delegatee for second PKP");
 
         vm.stopPrank();
     }

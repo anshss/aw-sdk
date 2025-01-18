@@ -23,7 +23,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
     function getBlanketToolPolicyParameterNames(
         uint256 pkpTokenId,
         string calldata toolIpfsCid
-    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
+    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (string[] memory parameterNames) {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -49,7 +49,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         string[] calldata parameterNames
-    ) external view verifyToolRegistered(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
+    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (bytes[] memory parameterValues) {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -76,7 +76,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         string calldata toolIpfsCid,
         string[] calldata parameterNames,
         bytes[] calldata parameterValues
-    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) public onlyPKPOwner(pkpTokenId) verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (parameterNames.length != parameterValues.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
@@ -109,7 +109,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         string[] calldata parameterNames
-    ) public onlyPKPOwner(pkpTokenId) verifyToolRegistered(pkpTokenId, toolIpfsCid) {
+    ) public onlyPKPOwner(pkpTokenId) verifyToolExists(pkpTokenId, toolIpfsCid) {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];

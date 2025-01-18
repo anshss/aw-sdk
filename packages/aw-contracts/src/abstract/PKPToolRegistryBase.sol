@@ -4,6 +4,9 @@ pragma solidity ^0.8.24;
 import "../interfaces/IPKPNFTFacet.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
 import "../libraries/PKPToolRegistryErrors.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
+using EnumerableSet for EnumerableSet.Bytes32Set;
 
 /// @title PKP Tool Policy Base Contract
 /// @notice Base contract for PKP tool policy management, providing core functionality and access control
@@ -27,11 +30,11 @@ abstract contract PKPToolRegistryBase {
         _;
     }
 
-    /// @notice Verifies that a tool is registered and enabled for a specific PKP
-    /// @dev Reverts with EmptyIPFSCID if CID is empty or ToolNotFound if tool is not enabled
+    /// @notice Verifies that a tool exists (is registered) for a specific PKP
+    /// @dev Reverts with EmptyIPFSCID if CID is empty or ToolNotFound if tool doesn't exist
     /// @param pkpTokenId The ID of the PKP token to check the tool for
     /// @param toolIpfsCid The IPFS CID of the tool to verify
-    modifier verifyToolRegistered(
+    modifier verifyToolExists(
         uint256 pkpTokenId,
         string memory toolIpfsCid
     ) {
@@ -40,9 +43,8 @@ abstract contract PKPToolRegistryBase {
         bytes32 hashedCid = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[hashedCid];
 
-        if (!toolInfo.enabled) {
+        if (!pkpData.toolCids.contains(hashedCid)) {
             revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
         }
         _;

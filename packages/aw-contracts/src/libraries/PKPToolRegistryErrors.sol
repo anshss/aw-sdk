@@ -14,14 +14,6 @@ library PKPToolRegistryErrors {
     /// @notice Thrown when an empty IPFS CID is provided for a policy
     error EmptyPolicyIPFSCID();
 
-    /// @notice Thrown when attempting to access a tool that doesn't exist
-    /// @param toolIpfsCid The IPFS CID of the tool that wasn't found
-    error ToolNotFound(string toolIpfsCid);
-
-    /// @notice Thrown when attempting to register a tool that's already registered
-    /// @param toolIpfsCid The IPFS CID of the tool that already exists
-    error ToolAlreadyExists(string toolIpfsCid);
-
     /// @notice Thrown when a policy parameter is invalid or malformed
     error InvalidPolicyParameter();
 
@@ -52,4 +44,8 @@ library PKPToolRegistryErrors {
     /// @param pkpTokenId The ID of the PKP token
     /// @param delegatee The address of the delegatee that wasn't found
     error DelegateeNotFound(uint256 pkpTokenId, address delegatee);
+
+    /// @notice Thrown when attempting to access a tool that isn't registered
+    /// @param toolIpfsCid The IPFS CID of the tool that wasn't found
+    error ToolNotFound(string toolIpfsCid);
 } 

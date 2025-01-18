@@ -229,7 +229,6 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCids Array of tool IPFS CIDs to register
     /// @custom:throws EmptyIPFSCID if toolIpfsCids array is empty or any CID is empty
-    /// @custom:throws ToolAlreadyExists if any tool is already registered
     /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function registerTools(
         uint256 pkpTokenId,
@@ -247,15 +246,11 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
 
             bytes32 toolCidHash = _storeToolCid(toolIpfsCid);
             
-            // Check if tool already exists using toolCids set
-            if (pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolAlreadyExists(toolIpfsCid);
+            // Add to tools set and set enabled state if not already present
+            if (pkpData.toolCids.add(toolCidHash)) {
+                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+                tool.enabled = enabled;
             }
-
-            // Add to tools set and set enabled state
-            pkpData.toolCids.add(toolCidHash);
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            tool.enabled = enabled;
 
             unchecked { ++i; }
         }
@@ -284,26 +279,23 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            
+            // Only process removal if tool exists
+            if (pkpData.toolCids.remove(toolCidHash)) {
+                // Update all delegatees' permissions for this tool
+                uint256 delegateesLength = pkpData.delegatees.length();
+                for (uint256 j = 0; j < delegateesLength;) {
+                    address delegatee = pkpData.delegatees.at(j);
+                    PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+                    
+                    // Remove tool from delegatee's permitted tools
+                    delegateeData.permittedToolsForPkp[pkpTokenId].remove(toolCidHash);
+                    unchecked { ++j; }
+                }
+
+                // Delete the tool info and all its policies
+                delete pkpData.toolMap[toolCidHash];
             }
-
-            // 1. Remove tool from PKP's tool set
-            pkpData.toolCids.remove(toolCidHash);
-
-            // 2. Update all delegatees' permissions for this tool
-            uint256 delegateesLength = pkpData.delegatees.length();
-            for (uint256 j = 0; j < delegateesLength;) {
-                address delegatee = pkpData.delegatees.at(j);
-                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-                
-                // Remove tool from delegatee's permitted tools
-                delegateeData.permittedToolsForPkp[pkpTokenId].remove(toolCidHash);
-                unchecked { ++j; }
-            }
-
-            // 3. Delete the tool info and all its policies
-            delete pkpData.toolMap[toolCidHash];
 
             unchecked { ++i; }
         }
@@ -332,12 +324,13 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            
+            // Only enable if tool exists
+            if (pkpData.toolCids.contains(toolCidHash)) {
+                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+                tool.enabled = true;
             }
 
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            tool.enabled = true;
             unchecked { ++i; }
         }
 
@@ -365,12 +358,13 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
             bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-            if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            
+            // Only disable if tool exists
+            if (pkpData.toolCids.contains(toolCidHash)) {
+                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+                tool.enabled = false;
             }
 
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            tool.enabled = false;
             unchecked { ++i; }
         }
 
