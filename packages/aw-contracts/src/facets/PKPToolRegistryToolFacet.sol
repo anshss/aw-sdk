@@ -245,7 +245,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = _storeToolCid(toolIpfsCid);
             
             // Check if tool already exists using toolCids set
             if (pkpData.toolCids.contains(toolCidHash)) {

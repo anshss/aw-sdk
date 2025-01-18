@@ -66,7 +66,7 @@ contract PKPToolRegistryBlanketParameterFacetTest is Test {
         vm.startPrank(deployer);
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
         vm.stopPrank();
     }
 

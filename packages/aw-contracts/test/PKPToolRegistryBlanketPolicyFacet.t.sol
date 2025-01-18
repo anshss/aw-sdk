@@ -68,12 +68,11 @@ contract PKPToolRegistryBlanketPolicyFacetTest is Test {
         mockPkpNft.setOwner(TEST_PKP_TOKEN_ID, deployer);
         mockPkpNft.setOwner(TEST_PKP_TOKEN_ID_2, deployer);
 
-        // Register tools for testing
+        // Register a tool for testing
         vm.startPrank(deployer);
-        string[] memory toolIpfsCids = new string[](2);
+        string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
-        toolIpfsCids[1] = TEST_TOOL_CID_2;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
         vm.stopPrank();
     }
 

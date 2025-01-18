@@ -20,7 +20,7 @@ import "../src/facets/PKPToolRegistryBlanketParameterFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
 import "../src/libraries/PKPToolRegistryStorage.sol";
 import "../src/libraries/PKPToolRegistryErrors.sol";
-import "../src/diamond/libraries/LibDiamond.sol";
+import { LibDiamond, NotContractOwner } from "../src/diamond/libraries/LibDiamond.sol";
 import "./mocks/MockPKPNFT.sol";
 
 /// @title PKP Tool Registry Diamond Test
@@ -160,7 +160,7 @@ contract PKPToolRegistryDiamondTest is Test {
         // Test Tool Registration
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = "test-tool";
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
         
         // Test tool listing
         string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(1);
@@ -203,9 +203,9 @@ contract PKPToolRegistryDiamondTest is Test {
         
         // Register tools
         string[] memory toolIpfsCids = new string[](2);
-        toolIpfsCids[0] = "tool-1";
-        toolIpfsCids[1] = "tool-2";
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids);
+        toolIpfsCids[0] = "test-tool-1";
+        toolIpfsCids[1] = "test-tool-2";
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
         
         // Add delegatees
         address delegatee1 = makeAddr("delegatee1");
@@ -232,9 +232,14 @@ contract PKPToolRegistryDiamondTest is Test {
             true // enable policies
         );
         
+        // Register tools again for second PKP
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(2, toolIpfsCids, true);
+
         // Verify all storage values are maintained
-        assertTrue(PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[0]), "Tool 1 storage corrupted");
-        assertTrue(PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[1]), "Tool 2 storage corrupted");
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[0]);
+        assertTrue(isRegistered && isEnabled, "Tool 1 storage corrupted");
+        (isRegistered, isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[1]);
+        assertTrue(isRegistered && isEnabled, "Tool 2 storage corrupted");
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, delegatee1), "Delegatee 1 storage corrupted");
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(2, delegatee2), "Delegatee 2 storage corrupted");
         
@@ -256,7 +261,7 @@ contract PKPToolRegistryDiamondTest is Test {
         // Set up initial state
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = "upgrade-test-tool";
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
         
         address delegatee = makeAddr("upgrade-test-delegatee");
         address[] memory delegatees = new address[](1);
@@ -288,7 +293,8 @@ contract PKPToolRegistryDiamondTest is Test {
         IDiamondCut(address(diamond)).diamondCut(cut, address(0), "");
         
         // Verify state is preserved
-        assertTrue(PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[0]), "Tool registration not preserved");
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(1, toolIpfsCids[0]);
+        assertTrue(isRegistered && isEnabled, "Tool registration not preserved");
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, delegatee), "Delegatee not preserved");
         
         (string memory policy, bool isDelegateeSpecific) = PKPToolRegistryPolicyFacet(address(diamond)).getEffectiveToolPolicyForDelegatee(1, toolIpfsCids[0], delegatee);
@@ -306,9 +312,9 @@ contract PKPToolRegistryDiamondTest is Test {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = "error-test-tool";
         
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
         vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyExists.selector, "error-test-tool"));
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(1, toolIpfsCids, true);
         
         // Test policy setting for non-existent tool
         string[] memory nonExistentTools = new string[](1);
