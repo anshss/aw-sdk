@@ -88,9 +88,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
             revert PKPToolRegistryErrors.ArrayLengthMismatch();
         }
 
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            _setToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i], enablePolicies);
+            _setToolPolicy(l, pkpTokenId, toolIpfsCids[i], delegatees[i], policyIpfsCids[i], enablePolicies);
             unchecked { ++i; }
         }
 
@@ -114,9 +115,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            _removeToolPolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            _removeToolPolicy(l, pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
 
@@ -141,9 +143,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            _enablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            _enablePolicy(l, pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
 
@@ -168,9 +171,10 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             if (delegatees[i] == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            _disablePolicy(pkpTokenId, toolIpfsCids[i], delegatees[i]);
+            _disablePolicy(l, pkpTokenId, toolIpfsCids[i], delegatees[i]);
             unchecked { ++i; }
         }
 

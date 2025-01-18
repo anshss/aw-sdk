@@ -50,8 +50,9 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != policyIpfsCids.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
 
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _setToolPolicy(pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i], enablePolicies);
+            _setToolPolicy(l, pkpTokenId, toolIpfsCids[i], address(0), policyIpfsCids[i], enablePolicies);
             unchecked { ++i; }
         }
         emit PKPToolRegistryPolicyEvents.BlanketPoliciesSet(pkpTokenId, toolIpfsCids, policyIpfsCids, enablePolicies);
@@ -68,8 +69,9 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _removeToolPolicy(pkpTokenId, toolIpfsCids[i], address(0));
+            _removeToolPolicy(l, pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
         emit PKPToolRegistryPolicyEvents.BlanketPoliciesRemoved(pkpTokenId, toolIpfsCids);
@@ -87,8 +89,9 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _enablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
+            _enablePolicy(l, pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
         emit PKPToolRegistryPolicyEvents.BlanketPoliciesEnabled(pkpTokenId, toolIpfsCids);
@@ -106,8 +109,9 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         for (uint256 i = 0; i < toolIpfsCids.length;) {
-            _disablePolicy(pkpTokenId, toolIpfsCids[i], address(0));
+            _disablePolicy(l, pkpTokenId, toolIpfsCids[i], address(0));
             unchecked { ++i; }
         }
         emit PKPToolRegistryPolicyEvents.BlanketPoliciesDisabled(pkpTokenId, toolIpfsCids);

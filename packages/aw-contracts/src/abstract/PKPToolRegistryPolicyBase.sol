@@ -23,6 +23,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
     /// @notice Internal function to set a policy for a tool and delegatee
     /// @dev Sets either a blanket policy or a delegatee-specific policy based on the delegatee address
+    /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address (use address(0) for blanket policy)
@@ -31,6 +32,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     /// @custom:throws EmptyPolicyIPFSCID if policyIpfsCid is empty
     /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _setToolPolicy(
+        PKPToolRegistryStorage.Layout storage l,
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee,
@@ -39,7 +41,6 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
 
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
         bytes32 policyIpfsCidHash = keccak256(bytes(policyIpfsCid));
@@ -65,19 +66,20 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
     /// @notice Internal function to remove a policy for a tool and delegatee
     /// @dev Removes either a blanket policy or a delegatee-specific policy based on the delegatee address
+    /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address (use address(0) for blanket policy)
     /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
     /// @custom:throws NoPolicySet if attempting to remove a non-existent policy
     function _removeToolPolicy(
+        PKPToolRegistryStorage.Layout storage l,
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
@@ -96,6 +98,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
     /// @notice Internal function to enable a policy
     /// @dev Enables either a blanket policy or a delegatee-specific policy based on the delegatee address
+    /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address (use address(0) for blanket policy)
@@ -103,13 +106,13 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     /// @custom:throws NoPolicySet if attempting to enable a non-existent policy
     /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _enablePolicy(
+        PKPToolRegistryStorage.Layout storage l,
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
@@ -128,6 +131,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
     /// @notice Internal function to disable a policy
     /// @dev Disables either a blanket policy or a delegatee-specific policy based on the delegatee address
+    /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
     /// @param delegatee The delegatee address (use address(0) for blanket policy)
@@ -135,13 +139,13 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     /// @custom:throws NoPolicySet if attempting to disable a non-existent policy
     /// @custom:throws ToolNotFound if tool is not registered or enabled
     function _disablePolicy(
+        PKPToolRegistryStorage.Layout storage l,
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
