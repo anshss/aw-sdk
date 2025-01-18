@@ -62,12 +62,16 @@ contract PKPToolRegistryToolFacetTest is Test {
         emit ToolsRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Register the tool
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Verify registration
         string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 1, "Wrong number of registered tools");
         assertEq(registeredTools[0], TEST_TOOL_CID, "Wrong tool CID registered");
+
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should be registered");
+        assertTrue(isEnabled, "Tool should be enabled");
 
         vm.stopPrank();
     }
@@ -85,7 +89,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         emit ToolsRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Register the tools
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Verify registration
         string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
@@ -93,48 +97,54 @@ contract PKPToolRegistryToolFacetTest is Test {
         assertEq(registeredTools[0], TEST_TOOL_CID, "Wrong first tool CID registered");
         assertEq(registeredTools[1], TEST_TOOL_CID_2, "Wrong second tool CID registered");
 
+        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
+            (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids[i]);
+            assertTrue(isRegistered, "Tool should be registered");
+            assertTrue(isEnabled, "Tool should be enabled");
+        }
+
         vm.stopPrank();
     }
 
-    /// @notice Test registering with empty IPFS CID
-    function test_registerEmptyIPFSCID() public {
+    /// @notice Test registering with empty IPFS CID should revert
+    function test_revert_registerEmptyIPFSCID() public {
         vm.startPrank(deployer);
 
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = ""; // Empty CID
 
         vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
     }
 
-    /// @notice Test registering duplicate tool
-    function test_registerDuplicateTool() public {
+    /// @notice Test registering duplicate tool should revert
+    function test_revert_registerDuplicateTool() public {
         vm.startPrank(deployer);
 
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
         // Register first time
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Try to register same tool again
         vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyExists.selector, TEST_TOOL_CID));
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
     }
 
-    /// @notice Test non-owner registration attempt
-    function test_registerNonOwner() public {
+    /// @notice Test non-owner registration attempt should revert
+    function test_revert_registerNonOwner() public {
         vm.startPrank(nonOwner);
 
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
         vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
     }
@@ -146,7 +156,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         // First register a tool
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Expect the ToolsRemoved event
         vm.expectEmit(true, false, false, true);
@@ -159,6 +169,10 @@ contract PKPToolRegistryToolFacetTest is Test {
         string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 0, "Tool was not removed");
 
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertFalse(isRegistered, "Tool should not be registered");
+        assertFalse(isEnabled, "Tool should not be enabled");
+
         vm.stopPrank();
     }
 
@@ -170,7 +184,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         string[] memory toolIpfsCids = new string[](2);
         toolIpfsCids[0] = TEST_TOOL_CID;
         toolIpfsCids[1] = TEST_TOOL_CID_2;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Expect the ToolsRemoved event
         vm.expectEmit(true, false, false, true);
@@ -183,11 +197,17 @@ contract PKPToolRegistryToolFacetTest is Test {
         string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 0, "Tools were not removed");
 
+        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
+            (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids[i]);
+            assertFalse(isRegistered, "Tool should not be registered");
+            assertFalse(isEnabled, "Tool should not be enabled");
+        }
+
         vm.stopPrank();
     }
 
-    /// @notice Test removing with empty IPFS CID
-    function test_removeEmptyIPFSCID() public {
+    /// @notice Test removing with empty IPFS CID should revert
+    function test_revert_removeEmptyIPFSCID() public {
         vm.startPrank(deployer);
 
         string[] memory toolIpfsCids = new string[](1);
@@ -199,8 +219,8 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test removing non-existent tool
-    function test_removeNonExistentTool() public {
+    /// @notice Test removing non-existent tool should revert
+    function test_revert_removeNonExistentTool() public {
         vm.startPrank(deployer);
 
         string[] memory toolIpfsCids = new string[](1);
@@ -212,8 +232,8 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test non-owner removal attempt
-    function test_removeNonOwner() public {
+    /// @notice Test non-owner removal attempt should revert
+    function test_revert_removeNonOwner() public {
         vm.startPrank(nonOwner);
 
         string[] memory toolIpfsCids = new string[](1);
@@ -229,21 +249,15 @@ contract PKPToolRegistryToolFacetTest is Test {
     function test_enableSingleTool() public {
         vm.startPrank(deployer);
 
-        // First register a tool
+        // First register a tool (disabled)
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, false);
 
-        // Verify tool is registered and enabled
-        bool isEnabled = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
-        assertTrue(isEnabled, "Tool should be enabled after registration");
-
-        // Disable the tool
-        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        // Verify tool is disabled
-        isEnabled = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
-        assertFalse(isEnabled, "Tool should be disabled");
+        // Verify tool is registered but disabled
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should be registered");
+        assertFalse(isEnabled, "Tool should be disabled after registration");
 
         // Expect the ToolsEnabled event
         vm.expectEmit(true, false, false, true);
@@ -252,9 +266,10 @@ contract PKPToolRegistryToolFacetTest is Test {
         // Enable the tool
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
-        // Verify tool is enabled again
-        isEnabled = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
-        assertTrue(isEnabled, "Tool should be enabled after enabling");
+        // Verify tool is enabled
+        (isRegistered, isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should still be registered");
+        assertTrue(isEnabled, "Tool should be enabled");
 
         vm.stopPrank();
     }
@@ -263,10 +278,15 @@ contract PKPToolRegistryToolFacetTest is Test {
     function test_disableSingleTool() public {
         vm.startPrank(deployer);
 
-        // First register a tool
+        // First register a tool (enabled)
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Verify tool is registered and enabled
+        (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should be registered");
+        assertTrue(isEnabled, "Tool should be enabled after registration");
 
         // Expect the ToolsDisabled event
         vm.expectEmit(true, false, false, true);
@@ -274,6 +294,11 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         // Disable the tool
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify tool is disabled but still registered
+        (isRegistered, isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        assertTrue(isRegistered, "Tool should still be registered");
+        assertFalse(isEnabled, "Tool should be disabled");
 
         vm.stopPrank();
     }

@@ -20,14 +20,22 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
     /// @dev A tool must be both registered and enabled to be usable
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool to check
-    /// @return bool True if the tool is registered and enabled, false otherwise
+    /// @return isRegistered True if the tool is registered, false otherwise
+    /// @return isEnabled True if the tool is enabled, false otherwise
     function isToolRegistered(uint256 pkpTokenId, string calldata toolIpfsCid) 
         external 
         view 
-        returns (bool) 
+        returns (bool isRegistered, bool isEnabled) 
     {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        return l.pkpStore[pkpTokenId].toolMap[_hashToolCid(toolIpfsCid)].enabled;
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        
+        // Check if tool exists in the set
+        isRegistered = pkpData.toolCids.contains(toolCidHash);
+        
+        // Check if it's enabled
+        isEnabled = isRegistered && pkpData.toolMap[toolCidHash].enabled;
     }
 
     /// @notice Get all registered tools for a PKP token
@@ -225,7 +233,8 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
     /// @custom:throws NotPKPOwner if caller is not the PKP owner
     function registerTools(
         uint256 pkpTokenId,
-        string[] calldata toolIpfsCids
+        string[] calldata toolIpfsCids,
+        bool enabled
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
@@ -236,18 +245,17 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-            bytes32 toolCidHash = _storeToolCid(toolIpfsCid);
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-
-            // If tool already exists, revert
-            if (tool.enabled) {
+            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            
+            // Check if tool already exists using toolCids set
+            if (pkpData.toolCids.contains(toolCidHash)) {
                 revert PKPToolRegistryErrors.ToolAlreadyExists(toolIpfsCid);
             }
 
-            // Add to tools set if not already present
-            if (pkpData.toolCids.add(toolCidHash)) {
-                tool.enabled = true;
-            }
+            // Add to tools set and set enabled state
+            pkpData.toolCids.add(toolCidHash);
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            tool.enabled = enabled;
 
             unchecked { ++i; }
         }
