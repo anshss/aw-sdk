@@ -13,6 +13,7 @@ import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
 import "../src/facets/PKPToolRegistryBlanketPolicyFacet.sol";
 import "../src/facets/PKPToolRegistryBlanketParameterFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
+import "../src/abstract/PKPToolRegistryBase.sol";
 import "../src/diamond/interfaces/IDiamondCut.sol";
 import "../src/diamond/interfaces/IDiamondLoupe.sol";
 import "../src/diamond/interfaces/IERC165.sol";
@@ -242,7 +243,7 @@ contract DeployPKPToolRegistry is Script {
         selectors[6] = PKPToolRegistryToolFacet.removeTools.selector;
         selectors[7] = PKPToolRegistryToolFacet.enableTools.selector;
         selectors[8] = PKPToolRegistryToolFacet.disableTools.selector;
-        selectors[9] = PKPToolRegistryToolFacet.getPKPNFTContract.selector;
+        selectors[9] = PKPToolRegistryBase.getPKPNFTContract.selector;
         return selectors;
     }
 

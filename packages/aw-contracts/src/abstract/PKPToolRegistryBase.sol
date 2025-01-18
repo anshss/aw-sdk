@@ -48,6 +48,14 @@ abstract contract PKPToolRegistryBase {
         _;
     }
 
+    /// @notice Get the PKP NFT contract address
+    /// @dev Returns the address of the PKP NFT contract used for ownership verification
+    /// @return address The address of the PKP NFT contract
+    function getPKPNFTContract() external view returns (address) {
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        return l.pkpNftContract;
+    }
+
     /// @notice Computes the keccak256 hash of a tool's IPFS CID
     /// @dev Used for efficient storage and lookup of tool data
     /// @param toolIpfsCid The IPFS CID to hash

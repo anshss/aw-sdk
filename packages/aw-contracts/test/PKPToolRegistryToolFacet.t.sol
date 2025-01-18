@@ -50,6 +50,13 @@ contract PKPToolRegistryToolFacetTest is Test {
         mockPkpNft.setOwner(TEST_PKP_TOKEN_ID, deployer);
     }
 
+
+    /// @notice Test getting PKP NFT contract address
+    function test_getPKPNFTContract() public {
+        address pkpNftContract = PKPToolRegistryToolFacet(address(diamond)).getPKPNFTContract();
+        assertEq(pkpNftContract, address(mockPkpNft), "Wrong PKP NFT contract address");
+    }
+
     /// @notice Test registering a single tool
     function test_registerSingleTool() public {
         vm.startPrank(deployer);
@@ -274,6 +281,41 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
+    /// @notice Test enabling multiple tools
+    function test_enableMultipleTools() public {
+        vm.startPrank(deployer);
+
+        // Register tools first (disabled)
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, false);
+
+        // Verify tools are registered but disabled
+        (bool isRegistered1, bool isEnabled1) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        (bool isRegistered2, bool isEnabled2) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID_2);
+        assertTrue(isRegistered1, "Tool 1 should be registered");
+        assertTrue(isRegistered2, "Tool 2 should be registered");
+        assertFalse(isEnabled1, "Tool 1 should be disabled");
+        assertFalse(isEnabled2, "Tool 2 should be disabled");
+
+        // Enable the tools
+        vm.expectEmit(true, false, false, true);
+        emit ToolsEnabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify tools are enabled
+        (isRegistered1, isEnabled1) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        (isRegistered2, isEnabled2) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID_2);
+        assertTrue(isRegistered1, "Tool 1 should still be registered");
+        assertTrue(isRegistered2, "Tool 2 should still be registered");
+        assertTrue(isEnabled1, "Tool 1 should be enabled");
+        assertTrue(isEnabled2, "Tool 2 should be enabled");
+
+        vm.stopPrank();
+    }
+
     /// @notice Test disabling a single tool
     function test_disableSingleTool() public {
         vm.startPrank(deployer);
@@ -303,9 +345,38 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test getting PKP NFT contract address
-    function test_getPKPNFTContract() public {
-        address pkpNftContract = PKPToolRegistryToolFacet(address(diamond)).getPKPNFTContract();
-        assertEq(pkpNftContract, address(mockPkpNft), "Wrong PKP NFT contract address");
+    /// @notice Test disabling multiple tools
+    function test_disableMultipleTools() public {
+        vm.startPrank(deployer);
+
+        // Register tools first (enabled)
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Verify tools are registered and enabled
+        (bool isRegistered1, bool isEnabled1) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        (bool isRegistered2, bool isEnabled2) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID_2);
+        assertTrue(isRegistered1, "Tool 1 should be registered");
+        assertTrue(isRegistered2, "Tool 2 should be registered");
+        assertTrue(isEnabled1, "Tool 1 should be enabled");
+        assertTrue(isEnabled2, "Tool 2 should be enabled");
+
+        // Disable the tools
+        vm.expectEmit(true, false, false, true);
+        emit ToolsDisabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify tools are disabled
+        (isRegistered1, isEnabled1) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        (isRegistered2, isEnabled2) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID_2);
+        assertTrue(isRegistered1, "Tool 1 should still be registered");
+        assertTrue(isRegistered2, "Tool 2 should still be registered");
+        assertFalse(isEnabled1, "Tool 1 should be disabled");
+        assertFalse(isEnabled2, "Tool 2 should be disabled");
+
+        vm.stopPrank();
     }
 } 
