@@ -107,8 +107,8 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
             // Get blanket policy CID
-            if (tool.blanketPolicy.enabled) {
-                blanketPolicyCids[i] = l.hashedPolicyCidToOriginalCid[tool.blanketPolicy.policyIpfsCidHash];
+            if (tool.blanketPolicy[0].enabled) {
+                blanketPolicyCids[i] = l.hashedPolicyCidToOriginalCid[tool.blanketPolicy[0].policyIpfsCidHash];
             }
             
             // Initialize policy array for this tool
@@ -150,7 +150,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            if (tool.blanketPolicy.enabled || tool.delegateesWithCustomPolicy.length() > 0) {
+            if (tool.blanketPolicy[0].enabled || tool.delegateesWithCustomPolicy.length() > 0) {
                 unchecked { ++count; }
             }
             unchecked { ++i; }
@@ -167,7 +167,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
-            if (tool.blanketPolicy.enabled || tool.delegateesWithCustomPolicy.length() > 0) {
+            if (tool.blanketPolicy[0].enabled || tool.delegateesWithCustomPolicy.length() > 0) {
                 toolsWithPolicy[index] = _getOriginalToolCid(toolCidHash);
                 
                 // Get delegatees with custom policy
@@ -178,7 +178,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
                     unchecked { ++j; }
                 }
                 
-                hasBlanketPolicy[index] = tool.blanketPolicy.enabled;
+                hasBlanketPolicy[index] = tool.blanketPolicy[0].enabled;
                 unchecked { ++index; }
             }
             unchecked { ++i; }
@@ -203,7 +203,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolsLength;) {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-            if (!tool.blanketPolicy.enabled && tool.delegateesWithCustomPolicy.length() == 0) {
+            if (!tool.blanketPolicy[0].enabled && tool.delegateesWithCustomPolicy.length() == 0) {
                 unchecked { ++count; }
             }
             unchecked { ++i; }
@@ -216,7 +216,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             bytes32 toolCidHash = pkpData.toolCids.at(i);
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
             
-            if (!tool.blanketPolicy.enabled && tool.delegateesWithCustomPolicy.length() == 0) {
+            if (!tool.blanketPolicy[0].enabled && tool.delegateesWithCustomPolicy.length() == 0) {
                 toolsWithoutPolicy[index] = _getOriginalToolCid(toolCidHash);
                 unchecked { ++index; }
             }

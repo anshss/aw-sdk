@@ -41,7 +41,7 @@ library PKPToolRegistryStorage {
         /// @notice Whether this tool is currently enabled
         bool enabled;
         /// @notice The default policy that applies when no delegatee-specific policy exists
-        Policy blanketPolicy;
+        mapping(uint256 => Policy) blanketPolicy; // Use mapping for future extensibility
         /// @notice Set of delegatees that have custom policies for this tool
         EnumerableSet.AddressSet delegateesWithCustomPolicy;
         /// @notice Maps delegatee addresses to their custom policies

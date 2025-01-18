@@ -28,11 +28,12 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
         
-        uint256 length = toolInfo.blanketPolicy.parameterNames.length();
+        uint256 length = blanketPolicy.parameterNames.length();
         parameterNames = new string[](length);
         for (uint256 i = 0; i < length;) {
-            bytes32 paramNameHash = toolInfo.blanketPolicy.parameterNames.at(i);
+            bytes32 paramNameHash = blanketPolicy.parameterNames.at(i);
             parameterNames[i] = l.hashedParameterNameToOriginalName[paramNameHash];
             unchecked { ++i; }
         }
@@ -53,11 +54,12 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
         
         parameterValues = new bytes[](parameterNames.length);
         for (uint256 i = 0; i < parameterNames.length;) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
-            parameterValues[i] = toolInfo.blanketPolicy.parameters[paramNameHash];
+            parameterValues[i] = blanketPolicy.parameters[paramNameHash];
             unchecked { ++i; }
         }
     }
@@ -80,13 +82,13 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolRegistryStorage.Policy storage policy = toolInfo.blanketPolicy;
+        PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
 
         for (uint256 i = 0; i < parameterNames.length;) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
             l.hashedParameterNameToOriginalName[paramNameHash] = parameterNames[i];
-            policy.parameterNames.add(paramNameHash);
-            policy.parameters[paramNameHash] = parameterValues[i];
+            blanketPolicy.parameterNames.add(paramNameHash);
+            blanketPolicy.parameters[paramNameHash] = parameterValues[i];
             unchecked { ++i; }
         }
 
@@ -112,12 +114,12 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
         PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolRegistryStorage.Policy storage policy = toolInfo.blanketPolicy;
+        PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
 
         for (uint256 i = 0; i < parameterNames.length;) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
-            policy.parameterNames.remove(paramNameHash);
-            delete policy.parameters[paramNameHash];
+            blanketPolicy.parameterNames.remove(paramNameHash);
+            delete blanketPolicy.parameters[paramNameHash];
             unchecked { ++i; }
         }
 

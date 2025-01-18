@@ -46,8 +46,9 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         if (delegatee == address(0)) {
             // Set blanket policy
-            tool.blanketPolicy.enabled = enablePolicy;
-            tool.blanketPolicy.policyIpfsCidHash = policyIpfsCidHash;
+            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
+            blanketPolicy.enabled = enablePolicy;
+            blanketPolicy.policyIpfsCidHash = policyIpfsCidHash;
             l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
         } else {
             // Set delegatee-specific policy
@@ -82,8 +83,8 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         if (delegatee == address(0)) {
             // Remove blanket policy
-            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            delete tool.blanketPolicy;
+            if (tool.blanketPolicy[0].policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+            delete tool.blanketPolicy[0];
         } else {
             // Remove delegatee-specific policy if it exists
             PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
@@ -114,8 +115,9 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         if (delegatee == address(0)) {
             // Enable blanket policy
-            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            tool.blanketPolicy.enabled = true;
+            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
+            if (blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+            blanketPolicy.enabled = true;
         } else {
             // Enable delegatee-specific policy
             PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
@@ -145,8 +147,9 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         if (delegatee == address(0)) {
             // Disable blanket policy
-            if (tool.blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            tool.blanketPolicy.enabled = false;
+            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
+            if (blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+            blanketPolicy.enabled = false;
         } else {
             // Disable delegatee-specific policy
             PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];

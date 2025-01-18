@@ -27,7 +27,7 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
-        PKPToolRegistryStorage.Policy storage policy = tool.blanketPolicy;
+        PKPToolRegistryStorage.Policy storage policy = tool.blanketPolicy[0];
         return policy.enabled ? l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash] : "";
     }
 

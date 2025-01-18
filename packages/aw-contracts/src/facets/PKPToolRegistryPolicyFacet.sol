@@ -37,10 +37,11 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         if (delegateePolicy.enabled) {
             return (l.hashedPolicyCidToOriginalCid[delegateePolicy.policyIpfsCidHash], true);
         }
-
-        // If no delegatee-specific policy, return blanket policy
-        if (tool.blanketPolicy.enabled) {
-            return (l.hashedPolicyCidToOriginalCid[tool.blanketPolicy.policyIpfsCidHash], false);
+        
+        // Fall back to blanket policy if it exists
+        PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
+        if (blanketPolicy.enabled) {
+            return (l.hashedPolicyCidToOriginalCid[blanketPolicy.policyIpfsCidHash], false);
         }
 
         return ("", false);
