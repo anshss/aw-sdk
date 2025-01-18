@@ -23,17 +23,24 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
 
     /// @notice Internal function to set a parameter in a policy
     /// @dev Stores both the parameter value and maintains a set of parameter names
+    /// @param l The pre-loaded storage layout
     /// @param policy The policy to set the parameter in
     /// @param parameterName The name of the parameter to set (will be hashed for storage)
     /// @param parameterValue The value to set for the parameter (stored as bytes)
     /// @custom:throws InvalidPolicyParameter if parameter name or value is invalid
     function _setParameter(
+        PKPToolRegistryStorage.Layout storage l,
         PKPToolRegistryStorage.Policy storage policy,
         string calldata parameterName,
         bytes calldata parameterValue
     ) internal {
+        // Validate parameter name is not empty
+        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameter();
+
         bytes32 paramNameHash = keccak256(bytes(parameterName));
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        
+        // Check for duplicate parameter name
+        if (policy.parameterNames.contains(paramNameHash)) revert PKPToolRegistryErrors.InvalidPolicyParameter();
         
         // Store original parameter name in the mapping
         l.hashedParameterNameToOriginalName[paramNameHash] = parameterName;

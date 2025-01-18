@@ -85,10 +85,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
 
         for (uint256 i = 0; i < parameterNames.length;) {
-            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
-            l.hashedParameterNameToOriginalName[paramNameHash] = parameterNames[i];
-            blanketPolicy.parameterNames.add(paramNameHash);
-            blanketPolicy.parameters[paramNameHash] = parameterValues[i];
+            _setParameter(l, blanketPolicy, parameterNames[i], parameterValues[i]);
             unchecked { ++i; }
         }
 
@@ -117,9 +114,7 @@ contract PKPToolRegistryBlanketParameterFacet is PKPToolRegistryPolicyParameters
         PKPToolRegistryStorage.Policy storage blanketPolicy = toolInfo.blanketPolicy[0];
 
         for (uint256 i = 0; i < parameterNames.length;) {
-            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
-            blanketPolicy.parameterNames.remove(paramNameHash);
-            delete blanketPolicy.parameters[paramNameHash];
+            _removeParameter(blanketPolicy, parameterNames[i]);
             unchecked { ++i; }
         }
 
