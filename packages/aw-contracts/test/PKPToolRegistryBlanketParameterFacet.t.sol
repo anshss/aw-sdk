@@ -397,26 +397,28 @@ contract PKPToolRegistryBlanketParameterFacetTest is Test {
     }
 
     /// @notice Test empty parameter values are valid
-    function test_emptyParameterValuesAreValid() public {
+    function test_revert_whenParameterValueIsEmpty() public {
         vm.startPrank(deployer);
+
+        // Register tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Try to set empty parameter value
         string[] memory parameterNames = new string[](1);
         parameterNames[0] = TEST_PARAM_NAME;
-        bytes[] memory emptyValues = new bytes[](1);
-        emptyValues[0] = "";
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = "";
 
+        vm.expectRevert(PKPToolRegistryErrors.InvalidPolicyParameter.selector);
         PKPToolRegistryBlanketParameterFacet(address(diamond)).setBlanketToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             parameterNames,
-            emptyValues
+            parameterValues
         );
 
-        bytes[] memory retrievedValues = PKPToolRegistryBlanketParameterFacet(address(diamond)).getBlanketToolPolicyParameters(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            parameterNames
-        );
-        assertEq(retrievedValues[0], "", "Empty parameter value should be valid");
         vm.stopPrank();
     }
 } 

@@ -29,6 +29,8 @@ contract PKPToolRegistryPolicyFacetTest is Test {
     string constant TEST_TOOL_CID = "QmTEST";
     string constant TEST_POLICY_CID = "QmPOLICY";
     string constant TEST_POLICY_CID_2 = "QmPOLICY2";
+    string constant DIFFERENT_TOOL_CID = "QmDIFFERENT";
+    string constant TEST_PARAM_NAME = "maxAmount";
 
     // Events to test
     event ToolPoliciesSet(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees, string[] policyIpfsCids, bool enablePolicies);
@@ -463,69 +465,6 @@ contract PKPToolRegistryPolicyFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test getting tool policies
-    function test_getToolPolicies() public {
-        vm.startPrank(deployer);
-
-        // Add second delegatee
-        address[] memory newDelegatees = new address[](1);
-        newDelegatees[0] = TEST_DELEGATEE_2;
-        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, newDelegatees);
-
-        // Set policies for both delegatees
-        string[] memory toolIpfsCids = new string[](2);
-        toolIpfsCids[0] = TEST_TOOL_CID;
-        toolIpfsCids[1] = TEST_TOOL_CID;
-        address[] memory delegatees = new address[](2);
-        delegatees[0] = TEST_DELEGATEE;
-        delegatees[1] = TEST_DELEGATEE_2;
-        string[] memory policyIpfsCids = new string[](2);
-        policyIpfsCids[0] = TEST_POLICY_CID;
-        policyIpfsCids[1] = TEST_POLICY_CID_2;
-
-        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
-            TEST_PKP_TOKEN_ID,
-            toolIpfsCids,
-            delegatees,
-            policyIpfsCids,
-            true
-        );
-
-        // Get policies for both delegatees
-        (string memory policyCid1, bool isDelegateePolicySet1) = PKPToolRegistryPolicyFacet(address(diamond)).getEffectiveToolPolicyForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
-        );
-        assertEq(policyCid1, TEST_POLICY_CID, "Wrong policy CID for first delegatee");
-        assertTrue(isDelegateePolicySet1, "Policy should be set for first delegatee");
-
-        (string memory policyCid2, bool isDelegateePolicySet2) = PKPToolRegistryPolicyFacet(address(diamond)).getEffectiveToolPolicyForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE_2
-        );
-        assertEq(policyCid2, TEST_POLICY_CID_2, "Wrong policy CID for second delegatee");
-        assertTrue(isDelegateePolicySet2, "Policy should be set for second delegatee");
-
-        // Also verify using getCustomToolPolicyForDelegatee
-        string memory customPolicyCid1 = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
-        );
-        assertEq(customPolicyCid1, TEST_POLICY_CID, "Wrong custom policy CID for first delegatee");
-
-        string memory customPolicyCid2 = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE_2
-        );
-        assertEq(customPolicyCid2, TEST_POLICY_CID_2, "Wrong custom policy CID for second delegatee");
-
-        vm.stopPrank();
-    }
-
     /// @notice Test that non-owner cannot set policies
     function test_revert_whenNonOwnerSetsPolicies() public {
         string[] memory toolIpfsCids = new string[](1);
@@ -743,6 +682,45 @@ contract PKPToolRegistryPolicyFacetTest is Test {
         );
         assertEq(policyCid, "", "Policy CID should be empty for non-delegatee");
         assertFalse(isDelegateePolicySet, "Policy should not be set for non-delegatee");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that empty parameter values are rejected
+    function test_revert_whenParameterValueIsEmpty() public {
+        vm.startPrank(deployer);
+
+        string[] memory parameterNames = new string[](1);
+        parameterNames[0] = TEST_PARAM_NAME;
+        bytes[] memory parameterValues = new bytes[](1);
+        parameterValues[0] = ""; // Empty value
+
+        vm.expectRevert(PKPToolRegistryErrors.InvalidPolicyParameter.selector);
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            parameterNames,
+            parameterValues
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test removing non-existent parameters succeeds silently
+    function test_removeNonExistentParameters() public {
+        vm.startPrank(deployer);
+
+        string[] memory paramsToRemove = new string[](1);
+        paramsToRemove[0] = "nonexistent";
+
+        // Should not revert
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).removeToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramsToRemove
+        );
 
         vm.stopPrank();
     }

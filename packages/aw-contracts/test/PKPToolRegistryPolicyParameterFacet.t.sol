@@ -425,33 +425,28 @@ contract PKPToolRegistryPolicyParameterFacetTest is Test {
     }
 
     /// @notice Test that empty parameter values are valid
-    function test_emptyParameterValuesAreValid() public {
+    function test_revert_whenParameterValueIsEmpty() public {
         vm.startPrank(deployer);
 
+        // Register tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Try to set empty parameter value
         string[] memory parameterNames = new string[](1);
         parameterNames[0] = TEST_PARAM_NAME;
         bytes[] memory parameterValues = new bytes[](1);
-        parameterValues[0] = ""; // Empty value
+        parameterValues[0] = "";
 
-        // Should not revert
+        vm.expectRevert(PKPToolRegistryErrors.InvalidPolicyParameter.selector);
         PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
-            TEST_DELEGATEE,
+            address(1),
             parameterNames,
             parameterValues
         );
-
-        // Verify parameter was set with empty value
-        string[] memory paramNames = new string[](1);
-        paramNames[0] = TEST_PARAM_NAME;
-        bytes[] memory storedValues = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParametersForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            paramNames
-        );
-        assertEq(storedValues[0].length, 0, "Parameter value should be empty");
 
         vm.stopPrank();
     }

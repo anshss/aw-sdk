@@ -37,6 +37,9 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         // Validate parameter name is not empty
         if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameter();
 
+        // Validate parameter value is not empty
+        if (parameterValue.length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameter();
+
         bytes32 paramNameHash = keccak256(bytes(parameterName));
         
         // Check for duplicate parameter name
