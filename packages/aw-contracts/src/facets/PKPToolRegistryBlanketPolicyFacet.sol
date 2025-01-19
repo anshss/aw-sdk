@@ -16,10 +16,10 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Get the blanket policy IPFS CID for a specific tool
-    /// @dev Returns empty string if no policy is set or if policy is disabled
+    /// @dev Returns empty string if no policy is set
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @return policyIpfsCid The blanket policy IPFS CID, or empty string if not set/disabled
+    /// @return policyIpfsCid The blanket policy IPFS CID, or empty string if not set
     function getBlanketToolPolicy(
         uint256 pkpTokenId,
         string calldata toolIpfsCid
@@ -28,7 +28,7 @@ contract PKPToolRegistryBlanketPolicyFacet is PKPToolRegistryPolicyBase {
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
         PKPToolRegistryStorage.Policy storage policy = tool.blanketPolicy[0];
-        return policy.enabled ? l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash] : "";
+        return l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash];
     }
 
     /// @notice Set blanket policies for multiple tools

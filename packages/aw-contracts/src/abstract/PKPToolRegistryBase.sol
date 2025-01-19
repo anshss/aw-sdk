@@ -65,24 +65,4 @@ abstract contract PKPToolRegistryBase {
     function _hashToolCid(string memory toolIpfsCid) internal pure returns (bytes32) {
         return keccak256(bytes(toolIpfsCid));
     }
-
-    /// @notice Retrieves the original IPFS CID for a given hash
-    /// @dev Used to convert from storage-optimized hash back to human-readable CID
-    /// @param hashedCid The keccak256 hash of the IPFS CID to look up
-    /// @return string The original IPFS CID string, or empty string if not found
-    function _getOriginalToolCid(bytes32 hashedCid) internal view returns (string memory) {
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        return l.hashedToolCidToOriginalCid[hashedCid];
-    }
-
-    /// @notice Stores a tool's IPFS CID and its hash in storage
-    /// @dev Maps the hash to the original CID for future lookups
-    /// @param toolIpfsCid The IPFS CID to store
-    /// @return bytes32 The keccak256 hash of the stored CID
-    function _storeToolCid(string memory toolIpfsCid) internal returns (bytes32) {
-        bytes32 hashedCid = _hashToolCid(toolIpfsCid);
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        l.hashedToolCidToOriginalCid[hashedCid] = toolIpfsCid;
-        return hashedCid;
-    }
 } 
