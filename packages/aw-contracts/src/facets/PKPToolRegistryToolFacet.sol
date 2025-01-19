@@ -38,6 +38,38 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         isEnabled = isRegistered && pkpData.toolMap[toolCidHash].enabled;
     }
 
+    /// @notice Check if a tool is permitted for a specific delegatee
+    /// @dev A tool must be registered and the delegatee must have permission to use it
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCid The IPFS CID of the tool to check
+    /// @param delegatee The address of the delegatee to check
+    /// @return isPermitted True if the tool is permitted for the delegatee, false otherwise
+    function isToolPermittedForDelegatee(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
+        address delegatee
+    ) external view returns (bool isPermitted) {
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+
+        // Check if tool exists and is enabled
+        if (!pkpData.toolCids.contains(toolCidHash)) {
+            return false;
+        }
+        PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+        if (!tool.enabled) {
+            return false;
+        }
+
+        // Check if delegatee has permission
+        PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+        return delegateeData.permittedToolsForPkp[pkpTokenId].contains(toolCidHash);
+    }
+
     /// @notice Get all registered tools for a PKP token
     /// @dev Returns all tools regardless of their enabled state
     /// @param pkpTokenId The PKP token ID
@@ -90,11 +122,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         }
 
         // Get all delegatees
-        delegatees = new address[](delegateesLength);
-        for (uint256 i = 0; i < delegateesLength;) {
-            delegatees[i] = pkpData.delegatees.at(i);
-            unchecked { ++i; }
-        }
+        delegatees = pkpData.delegatees.values();
 
         blanketPolicyCids = new string[](toolsLength);
         delegateePolicyCids = new string[][](toolsLength);
@@ -289,11 +317,9 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             // Only process removal if tool exists
             if (pkpData.toolCids.remove(toolCidHash)) {
                 // Update all delegatees' permissions for this tool
-                uint256 delegateesLength = pkpData.delegatees.length();
-                for (uint256 j = 0; j < delegateesLength;) {
-                    address delegatee = pkpData.delegatees.at(j);
-                    PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-                    
+                address[] memory pkpDelegatees = pkpData.delegatees.values();
+                for (uint256 j = 0; j < pkpDelegatees.length;) {
+                    PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[pkpDelegatees[j]];
                     // Remove tool from delegatee's permitted tools
                     delegateeData.permittedToolsForPkp[pkpTokenId].remove(toolCidHash);
                     unchecked { ++j; }
@@ -410,5 +436,112 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             }
             emit PKPToolRegistryToolEvents.ToolsDisabled(pkpTokenId, trimmedDisabledTools);
         }
+    }
+
+    /// @notice Grant tool permissions to delegatees
+    /// @dev Only callable by PKP owner. For single tool/delegatee operations, pass arrays with one element
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools to permit
+    /// @param delegatees The array of delegatee addresses to grant permissions to
+    /// @custom:throws ArrayLengthMismatch if array lengths don't match
+    /// @custom:throws InvalidDelegatee if any delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
+    /// @custom:throws EmptyIPFSCID if any tool CID is empty
+    /// @custom:throws ToolNotFound if any tool is not registered or enabled
+    function permitToolsForDelegatees(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
+
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string calldata toolIpfsCid = toolIpfsCids[i];
+            address delegatee = delegatees[i];
+
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+
+            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            }
+
+            // Add tool to delegatee's permitted tools
+            PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+            delegateeData.permittedToolsForPkp[pkpTokenId].add(toolCidHash);
+
+            unchecked { ++i; }
+        }
+
+        emit PKPToolRegistryToolEvents.ToolsPermitted(pkpTokenId, toolIpfsCids, delegatees);
+    }
+
+    /// @notice Remove tool permissions from delegatees
+    /// @dev Only callable by PKP owner. For single tool/delegatee operations, pass arrays with one element
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools to unpermit
+    /// @param delegatees The array of delegatee addresses to remove permissions from
+    /// @custom:throws ArrayLengthMismatch if array lengths don't match
+    /// @custom:throws InvalidDelegatee if any delegatee is the zero address
+    /// @custom:throws NotPKPOwner if caller is not the PKP owner
+    /// @custom:throws EmptyIPFSCID if any tool CID is empty
+    /// @custom:throws ToolNotFound if any tool is not registered
+    function unpermitToolsForDelegatees(
+        uint256 pkpTokenId,
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external onlyPKPOwner(pkpTokenId) {
+        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
+
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+
+        for (uint256 i = 0; i < toolIpfsCids.length;) {
+            string calldata toolIpfsCid = toolIpfsCids[i];
+            address delegatee = delegatees[i];
+
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+
+            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            }
+
+            // Clean up policies and permissions for this tool-delegatee pair
+            _cleanupToolPoliciesForDelegatees(pkpTokenId, toolCidHash, delegatee);
+
+            unchecked { ++i; }
+        }
+
+        emit PKPToolRegistryToolEvents.ToolsUnpermitted(pkpTokenId, toolIpfsCids, delegatees);
+    }
+
+    /// @notice Internal function to clean up policies when revoking tool permissions
+    /// @dev Removes policies and permissions for a specific tool-delegatee pair
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolCidHash The hashed tool IPFS CID
+    /// @param delegatee The delegatee to remove permissions from
+    function _cleanupToolPoliciesForDelegatees(
+        uint256 pkpTokenId,
+        bytes32 toolCidHash,
+        address delegatee
+    ) internal {
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+        
+        // Remove the policy if it exists
+        PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+        if (tool.delegateesWithCustomPolicy.remove(delegatee)) {
+            delete tool.delegateeCustomPolicies[delegatee];
+        }
+
+        // Remove the tool from permitted tools
+        delegateeData.permittedToolsForPkp[pkpTokenId].remove(toolCidHash);
     }
 } 

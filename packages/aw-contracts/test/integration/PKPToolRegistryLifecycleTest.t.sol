@@ -146,7 +146,7 @@ contract PKPToolRegistryLifecycleTest is Test {
         );
 
         // Verify delegatee-specific policy is set
-        string memory delegateePolicy = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
+        (string memory delegateePolicy,) = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
@@ -192,7 +192,7 @@ contract PKPToolRegistryLifecycleTest is Test {
         assertEq(blanketPolicy1, "", "First blanket policy should be disabled");
         assertEq(blanketPolicy2, "", "Second blanket policy should be disabled");
         
-        delegateePolicy = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
+        (delegateePolicy,) = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE

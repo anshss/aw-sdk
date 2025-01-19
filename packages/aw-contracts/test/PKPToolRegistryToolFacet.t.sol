@@ -30,6 +30,8 @@ contract PKPToolRegistryToolFacetTest is Test {
     event ToolsRemoved(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsEnabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsPermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+    event ToolsUnpermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
 
     function setUp() public {
         // Setup deployer account using default test account
@@ -886,6 +888,278 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, multipleTools);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test permitting a single tool for a delegatee
+    function test_permitSingleToolForDelegatee() public {
+        vm.startPrank(deployer);
+
+        // First register a tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add a delegatee
+        address delegatee = makeAddr("delegatee");
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = delegatee;
+
+        // Verify tool is not permitted before
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should not be permitted before"
+        );
+
+        // Expect the ToolsPermitted event
+        vm.expectEmit(true, false, false, true);
+        emit ToolsPermitted(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Permit the tool for the delegatee
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Verify tool is permitted after
+        assertTrue(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should be permitted after"
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test specific cases for isToolPermittedForDelegatee
+    function test_isToolPermittedForDelegatee() public {
+        vm.startPrank(deployer);
+
+        // Register a tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add a delegatee
+        address delegatee = makeAddr("delegatee");
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = delegatee;
+
+        // Test non-existent tool
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, "non-existent-tool", delegatee),
+            "Non-existent tool should not be permitted"
+        );
+
+        // Test before permitting
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should not be permitted before"
+        );
+
+        // Permit the tool
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Test after permitting
+        assertTrue(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should be permitted after"
+        );
+
+        // Test with disabled tool
+        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Disabled tool should not be permitted"
+        );
+
+        // Test with different delegatee
+        address otherDelegatee = makeAddr("otherDelegatee");
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, otherDelegatee),
+            "Tool should not be permitted for other delegatee"
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test error cases for isToolPermittedForDelegatee
+    function test_revert_isToolPermittedForDelegatee() public {
+        vm.startPrank(deployer);
+
+        address delegatee = makeAddr("delegatee");
+
+        // Test zero address delegatee
+        vm.expectRevert(PKPToolRegistryErrors.InvalidDelegatee.selector);
+        PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, address(0));
+
+        // Test empty IPFS CID
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, "", delegatee);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test unpermitting a single tool for a delegatee
+    function test_unpermitSingleToolForDelegatee() public {
+        vm.startPrank(deployer);
+
+        // First register and permit a tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        address delegatee = makeAddr("delegatee");
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = delegatee;
+
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Verify tool is permitted before unpermitting
+        assertTrue(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should be permitted before unpermitting"
+        );
+
+        // Expect the ToolsUnpermitted event
+        vm.expectEmit(true, false, false, true);
+        emit ToolsUnpermitted(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Unpermit the tool
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Verify permission was removed
+        (string[] memory toolsWithPolicy, address[][] memory delegateesWithPolicy, bool[] memory hasBlanketPolicy) = 
+            PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+        
+        assertEq(toolsWithPolicy.length, 0, "Should have no tools with policy");
+
+        // Verify tool is not permitted after unpermitting
+        assertFalse(
+            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
+            "Tool should not be permitted after unpermitting"
+        );
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test unpermitting multiple tools for multiple delegatees
+    function test_unpermitMultipleToolsForDelegatees() public {
+        vm.startPrank(deployer);
+
+        // First register and permit multiple tools
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        address delegatee1 = makeAddr("delegatee1");
+        address delegatee2 = makeAddr("delegatee2");
+        address[] memory delegatees = new address[](2);
+        delegatees[0] = delegatee1;
+        delegatees[1] = delegatee2;
+
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Expect the ToolsUnpermitted event
+        vm.expectEmit(true, false, false, true);
+        emit ToolsUnpermitted(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Unpermit the tools
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Verify permissions were removed
+        (string[] memory toolsWithPolicy, address[][] memory delegateesWithPolicy, bool[] memory hasBlanketPolicy) = 
+            PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+        
+        assertEq(toolsWithPolicy.length, 0, "Should have no tools with policy");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test error cases for permitting tools
+    function test_revert_permitToolsForDelegatees() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = makeAddr("delegatee");
+
+        // Test array length mismatch
+        address[] memory moreDelegatees = new address[](2);
+        moreDelegatees[0] = makeAddr("delegatee1");
+        moreDelegatees[1] = makeAddr("delegatee2");
+
+        vm.expectRevert(PKPToolRegistryErrors.ArrayLengthMismatch.selector);
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, moreDelegatees);
+
+        // Test zero address delegatee
+        delegatees[0] = address(0);
+        vm.expectRevert(PKPToolRegistryErrors.InvalidDelegatee.selector);
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Test empty IPFS CID
+        delegatees[0] = makeAddr("delegatee");
+        toolIpfsCids[0] = "";
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Test non-existent tool
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test error cases for unpermitting tools
+    function test_revert_unpermitToolsForDelegatees() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = makeAddr("delegatee");
+
+        // Test array length mismatch
+        address[] memory moreDelegatees = new address[](2);
+        moreDelegatees[0] = makeAddr("delegatee1");
+        moreDelegatees[1] = makeAddr("delegatee2");
+
+        vm.expectRevert(PKPToolRegistryErrors.ArrayLengthMismatch.selector);
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, moreDelegatees);
+
+        // Test zero address delegatee
+        delegatees[0] = address(0);
+        vm.expectRevert(PKPToolRegistryErrors.InvalidDelegatee.selector);
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Test empty IPFS CID
+        delegatees[0] = makeAddr("delegatee");
+        toolIpfsCids[0] = "";
+        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Test non-existent tool
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test non-owner cannot permit or unpermit tools
+    function test_revert_nonOwnerPermitUnpermit() public {
+        vm.startPrank(nonOwner);
+
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = makeAddr("delegatee");
+
+        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         vm.stopPrank();
     }

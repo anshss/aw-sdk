@@ -28,4 +28,18 @@ library PKPToolRegistryToolEvents {
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
     /// @param toolIpfsCids Array of IPFS CIDs for the tools being disabled
     event ToolsDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+
+    /// @notice Emitted when tools are permitted for delegatees
+    /// @dev Granting tool permissions allows delegatees to use specific tools
+    /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
+    /// @param toolIpfsCids Array of IPFS CIDs of the tools being permitted
+    /// @param delegatees Array of delegatee addresses being granted permissions
+    event ToolsPermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+
+    /// @notice Emitted when tool permissions are removed from delegatees
+    /// @dev Removing tool permissions prevents delegatees from using specific tools
+    /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
+    /// @param toolIpfsCids Array of IPFS CIDs of the tools being unpermitted
+    /// @param delegatees Array of delegatee addresses having permissions removed
+    event ToolsUnpermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
 } 
