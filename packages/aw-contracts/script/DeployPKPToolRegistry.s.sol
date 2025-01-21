@@ -10,8 +10,6 @@ import "../src/diamond/upgradeInitializers/PKPToolRegistryInit.sol";
 import "../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../src/facets/PKPToolRegistryToolFacet.sol";
 import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
-import "../src/facets/PKPToolRegistryBlanketPolicyFacet.sol";
-import "../src/facets/PKPToolRegistryBlanketParameterFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
 import "../src/abstract/PKPToolRegistryBase.sol";
 import "../src/diamond/interfaces/IDiamondCut.sol";
@@ -42,12 +40,10 @@ contract DeployPKPToolRegistry is Script {
         PKPToolRegistryPolicyFacet policyFacet = new PKPToolRegistryPolicyFacet();
         PKPToolRegistryToolFacet toolFacet = new PKPToolRegistryToolFacet();
         PKPToolRegistryDelegateeFacet delegateeFacet = new PKPToolRegistryDelegateeFacet();
-        PKPToolRegistryBlanketPolicyFacet blanketPolicyFacet = new PKPToolRegistryBlanketPolicyFacet();
-        PKPToolRegistryBlanketParameterFacet blanketParameterFacet = new PKPToolRegistryBlanketParameterFacet();
         PKPToolRegistryPolicyParameterFacet policyParameterFacet = new PKPToolRegistryPolicyParameterFacet();
 
         // Build cut struct for adding facets
-        IDiamond.FacetCut[] memory cut = new IDiamond.FacetCut[](8);
+        IDiamond.FacetCut[] memory cut = new IDiamond.FacetCut[](6);
 
         // Add DiamondLoupeFacet
         cut[0] = IDiamond.FacetCut({
@@ -84,22 +80,8 @@ contract DeployPKPToolRegistry is Script {
             functionSelectors: getDelegateeFacetSelectors()
         });
 
-        // Add BlanketPolicyFacet
-        cut[5] = IDiamond.FacetCut({
-            facetAddress: address(blanketPolicyFacet),
-            action: IDiamond.FacetCutAction.Add,
-            functionSelectors: getBlanketPolicyFacetSelectors()
-        });
-
-        // Add BlanketParameterFacet
-        cut[6] = IDiamond.FacetCut({
-            facetAddress: address(blanketParameterFacet),
-            action: IDiamond.FacetCutAction.Add,
-            functionSelectors: getBlanketParameterFacetSelectors()
-        });
-
         // Add PolicyParameterFacet
-        cut[7] = IDiamond.FacetCut({
+        cut[5] = IDiamond.FacetCut({
             facetAddress: address(policyParameterFacet),
             action: IDiamond.FacetCutAction.Add,
             functionSelectors: getPolicyParameterFacetSelectors()
@@ -192,12 +174,6 @@ contract DeployPKPToolRegistry is Script {
         if (equal(facetName, "PKPToolRegistryDelegateeFacet")) {
             return getDelegateeFacetSelectors();
         }
-        if (equal(facetName, "PKPToolRegistryBlanketPolicyFacet")) {
-            return getBlanketPolicyFacetSelectors();
-        }
-        if (equal(facetName, "PKPToolRegistryBlanketParameterFacet")) {
-            return getBlanketParameterFacetSelectors();
-        }
         if (equal(facetName, "PKPToolRegistryPolicyParameterFacet")) {
             return getPolicyParameterFacetSelectors();
         }
@@ -257,25 +233,6 @@ contract DeployPKPToolRegistry is Script {
         selectors[2] = PKPToolRegistryDelegateeFacet.getDelegatedPkps.selector;
         selectors[3] = PKPToolRegistryDelegateeFacet.addDelegatees.selector;
         selectors[4] = PKPToolRegistryDelegateeFacet.removeDelegatees.selector;
-        return selectors;
-    }
-
-    function getBlanketPolicyFacetSelectors() public pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](5);
-        selectors[0] = PKPToolRegistryBlanketPolicyFacet.getBlanketToolPolicy.selector;
-        selectors[1] = PKPToolRegistryBlanketPolicyFacet.setBlanketToolPolicies.selector;
-        selectors[2] = PKPToolRegistryBlanketPolicyFacet.removeBlanketToolPolicies.selector;
-        selectors[3] = PKPToolRegistryBlanketPolicyFacet.enableBlanketPolicies.selector;
-        selectors[4] = PKPToolRegistryBlanketPolicyFacet.disableBlanketPolicies.selector;
-        return selectors;
-    }
-
-    function getBlanketParameterFacetSelectors() public pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameterNames.selector;
-        selectors[1] = PKPToolRegistryBlanketParameterFacet.getBlanketToolPolicyParameters.selector;
-        selectors[2] = PKPToolRegistryBlanketParameterFacet.setBlanketToolPolicyParameters.selector;
-        selectors[3] = PKPToolRegistryBlanketParameterFacet.removeBlanketToolPolicyParameters.selector;
         return selectors;
     }
 

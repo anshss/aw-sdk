@@ -40,28 +40,22 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         bool enablePolicy
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
         if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
 
         bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
-        bytes32 policyIpfsCidHash = keccak256(bytes(policyIpfsCid));
 
-        if (delegatee == address(0)) {
-            // Set blanket policy
-            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
-            blanketPolicy.enabled = enablePolicy;
-            blanketPolicy.policyIpfsCidHash = policyIpfsCidHash;
-            l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
-        } else {
-            // Set delegatee-specific policy
-            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (!tool.delegateesWithCustomPolicy.contains(delegatee)) {
-                // First time ever setting policy for this delegatee
-                tool.delegateesWithCustomPolicy.add(delegatee);
-            }
-            policy.enabled = enablePolicy;
-            policy.policyIpfsCidHash = policyIpfsCidHash;
-            l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
+        // Set delegatee-specific policy
+        PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+        if (!tool.delegateesWithCustomPolicy.contains(delegatee)) {
+            // First time ever setting policy for this delegatee
+            tool.delegateesWithCustomPolicy.add(delegatee);
         }
+
+        policy.enabled = enablePolicy;
+        bytes32 policyIpfsCidHash = keccak256(bytes(policyIpfsCid));
+        policy.policyIpfsCidHash = policyIpfsCidHash;
+        l.hashedPolicyCidToOriginalCid[policyIpfsCidHash] = policyIpfsCid;
     }
 
     /// @notice Internal function to remove a policy for a tool and delegatee

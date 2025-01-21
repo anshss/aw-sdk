@@ -5,7 +5,8 @@ import "forge-std/Test.sol";
 import "../script/DeployPKPToolRegistry.s.sol";
 import "../src/PKPToolRegistry.sol";
 import "../src/facets/PKPToolRegistryToolFacet.sol";
-import "../src/facets/PKPToolRegistryBlanketPolicyFacet.sol";
+import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
+import "../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../src/libraries/PKPToolRegistryErrors.sol";
 import "../src/libraries/PKPToolRegistryToolEvents.sol";
 import "./mocks/MockPKPNFT.sol";
@@ -26,7 +27,7 @@ contract PKPToolRegistryToolFacetTest is Test {
     string constant TEST_TOOL_CID_2 = "test-tool-cid-2";
 
     // Events to test
-    event ToolsRegistered(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsRegistered(uint256 indexed pkpTokenId, bool indexed enabled, string[] toolIpfsCids);
     event ToolsRemoved(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsEnabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
@@ -68,7 +69,7 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         // Expect the ToolsRegistered event
         vm.expectEmit(true, false, false, true);
-        emit ToolsRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        emit ToolsRegistered(TEST_PKP_TOKEN_ID, true, toolIpfsCids);
 
         // Register the tool
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
@@ -95,7 +96,7 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         // Expect the ToolsRegistered event
         vm.expectEmit(true, false, false, true);
-        emit ToolsRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids);
+        emit ToolsRegistered(TEST_PKP_TOKEN_ID, true, toolIpfsCids);
 
         // Register the tools
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
@@ -356,7 +357,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test enabling non-existent tool should succeed silently
+    /// @notice Test enabling non-existent tool should revert
     function test_enableNonExistentTool() public {
         vm.startPrank(deployer);
 
@@ -368,13 +369,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         assertFalse(isRegisteredBefore, "Tool should not exist initially");
         assertFalse(isEnabledBefore, "Tool should not be enabled initially");
 
-        // Enable non-existent tool - should succeed silently
+        // Enable non-existent tool - should revert
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        // Verify state hasn't changed
-        (bool isRegisteredAfter, bool isEnabledAfter) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
-        assertFalse(isRegisteredAfter, "Tool should still not exist");
-        assertFalse(isEnabledAfter, "Tool should still not be enabled");
 
         vm.stopPrank();
     }
@@ -443,7 +440,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test disabling non-existent tool should succeed silently
+    /// @notice Test disabling non-existent tool should revert
     function test_disableNonExistentTool() public {
         vm.startPrank(deployer);
 
@@ -455,38 +452,26 @@ contract PKPToolRegistryToolFacetTest is Test {
         assertFalse(isRegisteredBefore, "Tool should not exist initially");
         assertFalse(isEnabledBefore, "Tool should not be enabled initially");
 
-        // Disable non-existent tool - should succeed silently
+        // Disable non-existent tool - should revert
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        // Verify state hasn't changed
-        (bool isRegisteredAfter, bool isEnabledAfter) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
-        assertFalse(isRegisteredAfter, "Tool should still not exist");
-        assertFalse(isEnabledAfter, "Tool should still not be enabled");
 
         vm.stopPrank();
     }
 
-    /// @notice Test that blanket policy indices align correctly with tool indices in getRegisteredToolsAndPolicies
+    /// @notice Test that policy indices align correctly with tool indices in getRegisteredToolsAndPolicies
     function test_getRegisteredToolsAndPoliciesIndexAlignment() public {
         vm.startPrank(deployer);
 
-        // Register first tool and set blanket policy (enabled)
+        // Register first tool
         string[] memory tool1 = new string[](1);
         tool1[0] = TEST_TOOL_CID;
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool1, true);
 
-        string[] memory policy1 = new string[](1);
-        policy1[0] = "policy-1";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool1, policy1, true);
-
-        // Register second tool and set blanket policy (disabled)
+        // Register second tool
         string[] memory tool2 = new string[](1);
         tool2[0] = TEST_TOOL_CID_2;
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool2, true);
-
-        string[] memory policy2 = new string[](1);
-        policy2[0] = "policy-2";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool2, policy2, false);
 
         // Add a delegatee with enabled and disabled policies
         address delegatee = makeAddr("delegatee");
@@ -522,43 +507,34 @@ contract PKPToolRegistryToolFacetTest is Test {
         (
             string[] memory toolIpfsCids,
             string[][] memory delegateePolicyCids,
-            address[] memory allDelegatees,
-            string[] memory blanketPolicyCids
+            address[] memory allDelegatees
         ) = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndPolicies(TEST_PKP_TOKEN_ID);
 
         // Verify lengths match
         assertEq(toolIpfsCids.length, 2, "Should have 2 tools registered");
-        assertEq(blanketPolicyCids.length, 2, "Should have 2 blanket policy slots");
         assertEq(allDelegatees.length, 1, "Should have 1 delegatee");
         assertEq(delegateePolicyCids.length, 2, "Should have 2 delegatee policy arrays");
         assertEq(delegateePolicyCids[0].length, 1, "First tool should have 1 delegatee policy");
         assertEq(delegateePolicyCids[1].length, 1, "Second tool should have 1 delegatee policy");
 
-        // Verify first tool has blanket policy and enabled delegatee policy
+        // Verify first tool has enabled delegatee policy
         assertEq(toolIpfsCids[0], TEST_TOOL_CID, "First tool should be TEST_TOOL_CID");
-        assertEq(blanketPolicyCids[0], "policy-1", "First tool should show enabled blanket policy");
         assertEq(delegateePolicyCids[0][0], "delegatee-policy-1", "First tool should show enabled delegatee policy");
 
-        // Verify second tool's disabled policies are visible
+        // Verify second tool's disabled policy is visible
         assertEq(toolIpfsCids[1], TEST_TOOL_CID_2, "Second tool should be TEST_TOOL_CID_2");
-        assertEq(blanketPolicyCids[1], "policy-2", "Second tool's disabled blanket policy should be visible");
         assertEq(delegateePolicyCids[1][0], "delegatee-policy-2", "Second tool's disabled delegatee policy should be visible");
 
         // Verify getToolsWithPolicy shows both tools with policies
         (
             string[] memory toolsWithPolicy,
-            address[][] memory delegateesWithPolicy,
-            bool[] memory hasBlanketPolicy
+            address[][] memory delegateesWithPolicy
         ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
 
         // Verify both tools are included
         assertEq(toolsWithPolicy.length, 2, "Should show both tools with policies");
         assertEq(toolsWithPolicy[0], TEST_TOOL_CID, "First tool should be TEST_TOOL_CID");
         assertEq(toolsWithPolicy[1], TEST_TOOL_CID_2, "Second tool should be TEST_TOOL_CID_2");
-
-        // Verify both are marked as having blanket policies
-        assertTrue(hasBlanketPolicy[0], "First tool should be marked as having blanket policy");
-        assertTrue(hasBlanketPolicy[1], "Second tool should be marked as having blanket policy");
 
         // Verify delegatees are included
         assertEq(delegateesWithPolicy[0].length, 1, "First tool should have 1 delegatee");
@@ -569,76 +545,7 @@ contract PKPToolRegistryToolFacetTest is Test {
         vm.stopPrank();
     }
 
-    /// @notice Test that blanket policy indices align correctly with tool indices in getRegisteredToolsAndPolicies without delegatees
-    function test_getRegisteredToolsAndPoliciesWithoutDelegatees() public {
-        vm.startPrank(deployer);
-
-        // Register first tool and set blanket policy (enabled)
-        string[] memory tool1 = new string[](1);
-        tool1[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool1, true);
-
-        string[] memory policy1 = new string[](1);
-        policy1[0] = "policy-1";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool1, policy1, true);
-
-        // Register second tool and set blanket policy (disabled)
-        string[] memory tool2 = new string[](1);
-        tool2[0] = TEST_TOOL_CID_2;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool2, true);
-
-        string[] memory policy2 = new string[](1);
-        policy2[0] = "policy-2";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool2, policy2, false);
-
-        // Get all tools and policies
-        (
-            string[] memory toolIpfsCids,
-            string[][] memory delegateePolicyCids,
-            address[] memory allDelegatees,
-            string[] memory blanketPolicyCids
-        ) = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndPolicies(TEST_PKP_TOKEN_ID);
-
-        // Verify lengths match
-        assertEq(toolIpfsCids.length, 2, "Should have 2 tools registered");
-        assertEq(blanketPolicyCids.length, 2, "Should have 2 blanket policy slots");
-        assertEq(allDelegatees.length, 0, "Should have no delegatees");
-        assertEq(delegateePolicyCids.length, 2, "Should have 2 delegatee policy arrays");
-        assertEq(delegateePolicyCids[0].length, 0, "First tool should have no delegatee policies");
-        assertEq(delegateePolicyCids[1].length, 0, "Second tool should have no delegatee policies");
-
-        // Verify first tool has enabled blanket policy
-        assertEq(toolIpfsCids[0], TEST_TOOL_CID, "First tool should be TEST_TOOL_CID");
-        assertEq(blanketPolicyCids[0], "policy-1", "First tool should show enabled blanket policy");
-
-        // Verify second tool's disabled policy is visible
-        assertEq(toolIpfsCids[1], TEST_TOOL_CID_2, "Second tool should be TEST_TOOL_CID_2");
-        assertEq(blanketPolicyCids[1], "policy-2", "Second tool's disabled blanket policy should be visible");
-
-        // Verify getToolsWithPolicy shows both tools with policies
-        (
-            string[] memory toolsWithPolicy,
-            address[][] memory delegateesWithPolicy,
-            bool[] memory hasBlanketPolicy
-        ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
-
-        // Verify both tools are included
-        assertEq(toolsWithPolicy.length, 2, "Should show both tools with policies");
-        assertEq(toolsWithPolicy[0], TEST_TOOL_CID, "First tool should be TEST_TOOL_CID");
-        assertEq(toolsWithPolicy[1], TEST_TOOL_CID_2, "Second tool should be TEST_TOOL_CID_2");
-
-        // Verify both are marked as having blanket policies
-        assertTrue(hasBlanketPolicy[0], "First tool should be marked as having blanket policy");
-        assertTrue(hasBlanketPolicy[1], "Second tool should be marked as having blanket policy");
-
-        // Verify no delegatees
-        assertEq(delegateesWithPolicy[0].length, 0, "First tool should have no delegatees");
-        assertEq(delegateesWithPolicy[1].length, 0, "Second tool should have no delegatees");
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test getting tools without any policies
+    /// @notice Test getting tools without policies
     function test_getToolsWithoutPolicy() public {
         vm.startPrank(deployer);
 
@@ -647,32 +554,12 @@ contract PKPToolRegistryToolFacetTest is Test {
         tool1[0] = TEST_TOOL_CID;
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool1, true);
 
-        // Register second tool with blanket policy
+        // Register second tool with delegatee policy
         string[] memory tool2 = new string[](1);
         tool2[0] = TEST_TOOL_CID_2;
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool2, true);
 
-        string[] memory policy2 = new string[](1);
-        policy2[0] = "policy-2";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool2, policy2, true);
-
-        // Register third tool with disabled blanket policy
-        string[] memory tool3 = new string[](1);
-        tool3[0] = "test-tool-cid-3";
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool3, true);
-
-        string[] memory policy3 = new string[](1);
-        policy3[0] = "policy-3";
-        PKPToolRegistryBlanketPolicyFacet(address(diamond)).setBlanketToolPolicies(TEST_PKP_TOKEN_ID, tool3, policy3, false);
-
-        // Get tools without policy
-        string[] memory toolsWithoutPolicy = PKPToolRegistryToolFacet(address(diamond)).getToolsWithoutPolicy(TEST_PKP_TOKEN_ID);
-
-        // Should only return the first tool (no policy at all)
-        assertEq(toolsWithoutPolicy.length, 1, "Should have 1 tool without policy");
-        assertEq(toolsWithoutPolicy[0], TEST_TOOL_CID, "Only tool without policy should be TEST_TOOL_CID");
-
-        // Add a delegatee policy to the first tool
+        // Add a delegatee with policy for second tool
         address delegatee = makeAddr("delegatee");
         address[] memory delegatees = new address[](1);
         delegatees[0] = delegatee;
@@ -684,6 +571,23 @@ contract PKPToolRegistryToolFacetTest is Test {
         delegateePolicies[0] = "delegatee-policy-1";
         PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
+            tool2,
+            delegatees,
+            delegateePolicies,
+            true
+        );
+
+        // Get tools without policy
+        string[] memory toolsWithoutPolicy = PKPToolRegistryToolFacet(address(diamond)).getToolsWithoutPolicy(TEST_PKP_TOKEN_ID);
+
+        // Should only return the first tool (no policy at all)
+        assertEq(toolsWithoutPolicy.length, 1, "Should have 1 tool without policy");
+        assertEq(toolsWithoutPolicy[0], TEST_TOOL_CID, "Only tool without policy should be TEST_TOOL_CID");
+
+        // Add a delegatee policy to the first tool
+        delegateePolicies[0] = "delegatee-policy-2";
+        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
             tool1,
             delegatees,
             delegateePolicies,
@@ -693,13 +597,13 @@ contract PKPToolRegistryToolFacetTest is Test {
         // Get tools without policy again
         toolsWithoutPolicy = PKPToolRegistryToolFacet(address(diamond)).getToolsWithoutPolicy(TEST_PKP_TOKEN_ID);
 
-        // Should return empty array as all tools have some form of policy (enabled or disabled)
+        // Should return empty array as all tools have some form of policy
         assertEq(toolsWithoutPolicy.length, 0, "Should have no tools without policy");
 
         vm.stopPrank();
     }
 
-    /// @notice Test that registering duplicate tools doesn't include them in the event
+    /// @notice Test that registering duplicate tools reverts
     function test_registerDuplicateToolEvent() public {
         vm.startPrank(deployer);
 
@@ -710,24 +614,14 @@ contract PKPToolRegistryToolFacetTest is Test {
         // Register first time
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
-        // Try to register both tools again, but only add a third new one
-        string[] memory duplicateTools = new string[](3);
-        duplicateTools[0] = TEST_TOOL_CID; // Already registered
-        duplicateTools[1] = TEST_TOOL_CID_2; // Already registered
-        duplicateTools[2] = "test-tool-cid-3"; // New tool
-
-        // Expect event to only include the new tool
-        string[] memory expectedTools = new string[](1);
-        expectedTools[0] = "test-tool-cid-3";
-        vm.expectEmit(true, false, false, true);
-        emit ToolsRegistered(TEST_PKP_TOKEN_ID, expectedTools);
-
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, duplicateTools, true);
+        // Try to register both tools again - should revert
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyRegistered.selector, TEST_TOOL_CID));
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
     }
 
-    /// @notice Test that removing non-existent tools doesn't include them in the event
+    /// @notice Test that removing non-existent tools reverts
     function test_removeNonExistentToolEvent() public {
         vm.startPrank(deployer);
 
@@ -741,67 +635,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         removeTools[0] = TEST_TOOL_CID; // Exists
         removeTools[1] = TEST_TOOL_CID_2; // Doesn't exist
 
-        // Expect event to only include the existing tool
-        string[] memory expectedTools = new string[](1);
-        expectedTools[0] = TEST_TOOL_CID;
-        vm.expectEmit(true, false, false, true);
-        emit ToolsRemoved(TEST_PKP_TOKEN_ID, expectedTools);
-
+        // Should revert when trying to remove non-existent tool
+        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID_2));
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, removeTools);
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test that enabling already enabled tools doesn't include them in the event
-    function test_enableAlreadyEnabledToolEvent() public {
-        vm.startPrank(deployer);
-
-        // Register two tools (enabled)
-        string[] memory toolIpfsCids = new string[](2);
-        toolIpfsCids[0] = TEST_TOOL_CID;
-        toolIpfsCids[1] = TEST_TOOL_CID_2;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
-
-        // Disable one tool
-        string[] memory disableTools = new string[](1);
-        disableTools[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, disableTools);
-
-        // Try to enable both tools
-        // Expect event to only include the disabled tool
-        string[] memory expectedTools = new string[](1);
-        expectedTools[0] = TEST_TOOL_CID;
-        vm.expectEmit(true, false, false, true);
-        emit ToolsEnabled(TEST_PKP_TOKEN_ID, expectedTools);
-
-        PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        vm.stopPrank();
-    }
-
-    /// @notice Test that disabling already disabled tools doesn't include them in the event
-    function test_disableAlreadyDisabledToolEvent() public {
-        vm.startPrank(deployer);
-
-        // Register two tools (enabled)
-        string[] memory toolIpfsCids = new string[](2);
-        toolIpfsCids[0] = TEST_TOOL_CID;
-        toolIpfsCids[1] = TEST_TOOL_CID_2;
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
-
-        // Disable one tool
-        string[] memory disableTools = new string[](1);
-        disableTools[0] = TEST_TOOL_CID;
-        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, disableTools);
-
-        // Try to disable both tools
-        // Expect event to only include the enabled tool
-        string[] memory expectedTools = new string[](1);
-        expectedTools[0] = TEST_TOOL_CID_2;
-        vm.expectEmit(true, false, false, true);
-        emit ToolsDisabled(TEST_PKP_TOKEN_ID, expectedTools);
-
-        PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
     }
@@ -819,9 +655,6 @@ contract PKPToolRegistryToolFacetTest is Test {
         // Record all events before our test operations
         vm.recordLogs();
 
-        // Try to register the same tools again - should not emit event
-        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
-
         // Try to enable already enabled tools - should not emit event
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
@@ -833,11 +666,6 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         // Try to disable already disabled tools - should not emit event
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-
-        // Try to remove non-existent tools - should not emit event
-        string[] memory nonExistentTools = new string[](1);
-        nonExistentTools[0] = "non-existent-tool";
-        PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, nonExistentTools);
 
         // Verify no events were emitted
         Vm.Log[] memory entries = vm.getRecordedLogs();
@@ -907,10 +735,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         delegatees[0] = delegatee;
 
         // Verify tool is not permitted before
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should not be permitted before"
-        );
+        (bool isPermitted, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertFalse(isPermitted, "Tool should not be permitted before");
+        assertFalse(isEnabled, "Tool should not be enabled before");
 
         // Expect the ToolsPermitted event
         vm.expectEmit(true, false, false, true);
@@ -920,10 +747,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Verify tool is permitted after
-        assertTrue(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should be permitted after"
-        );
+        (isPermitted, isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertTrue(isPermitted, "Tool should be permitted after");
+        assertTrue(isEnabled, "Tool should be enabled after");
 
         vm.stopPrank();
     }
@@ -943,39 +769,34 @@ contract PKPToolRegistryToolFacetTest is Test {
         delegatees[0] = delegatee;
 
         // Test non-existent tool
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, "non-existent-tool", delegatee),
-            "Non-existent tool should not be permitted"
-        );
+        (bool isPermitted, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, "non-existent-tool", delegatee);
+        assertFalse(isPermitted, "Non-existent tool should not be permitted");
+        assertFalse(isEnabled, "Non-existent tool should not be enabled");
 
         // Test before permitting
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should not be permitted before"
-        );
+        (bool isPermittedBefore, bool isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertFalse(isPermittedBefore, "Tool should not be permitted before");
+        assertFalse(isEnabledBefore, "Tool should not be enabled before");
 
         // Permit the tool
         PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Test after permitting
-        assertTrue(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should be permitted after"
-        );
+        (isPermittedBefore, isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertTrue(isPermittedBefore, "Tool should be permitted after");
+        assertTrue(isEnabledBefore, "Tool should be enabled after");
 
         // Test with disabled tool
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Disabled tool should not be permitted"
-        );
+        (isPermittedBefore, isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertFalse(isPermittedBefore, "Disabled tool should not be permitted");
+        assertFalse(isEnabledBefore, "Disabled tool should not be enabled");
 
         // Test with different delegatee
         address otherDelegatee = makeAddr("otherDelegatee");
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, otherDelegatee),
-            "Tool should not be permitted for other delegatee"
-        );
+        (isPermitted, isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, otherDelegatee);
+        assertFalse(isPermitted, "Tool should not be permitted for other delegatee");
+        assertFalse(isEnabled, "Tool should not be enabled for other delegatee");
 
         vm.stopPrank();
     }
@@ -1013,10 +834,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Verify tool is permitted before unpermitting
-        assertTrue(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should be permitted before unpermitting"
-        );
+        (bool isPermittedBefore, bool isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertTrue(isPermittedBefore, "Tool should be permitted before unpermitting");
+        assertTrue(isEnabledBefore, "Tool should be enabled before unpermitting");
 
         // Expect the ToolsUnpermitted event
         vm.expectEmit(true, false, false, true);
@@ -1026,16 +846,16 @@ contract PKPToolRegistryToolFacetTest is Test {
         PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Verify permission was removed
-        (string[] memory toolsWithPolicy, address[][] memory delegateesWithPolicy, bool[] memory hasBlanketPolicy) = 
-            PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+        (
+            string[] memory toolsWithPolicy,
+        ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
         
         assertEq(toolsWithPolicy.length, 0, "Should have no tools with policy");
 
         // Verify tool is not permitted after unpermitting
-        assertFalse(
-            PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee),
-            "Tool should not be permitted after unpermitting"
-        );
+        (isPermittedBefore, isEnabledBefore) = PKPToolRegistryToolFacet(address(diamond)).isToolPermittedForDelegatee(TEST_PKP_TOKEN_ID, TEST_TOOL_CID, delegatee);
+        assertFalse(isPermittedBefore, "Tool should not be permitted after unpermitting");
+        assertFalse(isEnabledBefore, "Tool should not be enabled after unpermitting");
 
         vm.stopPrank();
     }
@@ -1066,8 +886,9 @@ contract PKPToolRegistryToolFacetTest is Test {
         PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Verify permissions were removed
-        (string[] memory toolsWithPolicy, address[][] memory delegateesWithPolicy, bool[] memory hasBlanketPolicy) = 
-            PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+        (
+            string[] memory toolsWithPolicy,
+        ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
         
         assertEq(toolsWithPolicy.length, 0, "Should have no tools with policy");
 
@@ -1160,6 +981,49 @@ contract PKPToolRegistryToolFacetTest is Test {
 
         vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that policy indices align correctly with tool indices in getRegisteredToolsAndPolicies without delegatees
+    function test_getRegisteredToolsAndPoliciesWithoutDelegatees() public {
+        vm.startPrank(deployer);
+
+        // Register first tool
+        string[] memory tool1 = new string[](1);
+        tool1[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool1, true);
+
+        // Register second tool
+        string[] memory tool2 = new string[](1);
+        tool2[0] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, tool2, true);
+
+        // Get all tools and policies
+        (
+            string[] memory toolIpfsCids,
+            string[][] memory delegateePolicyCids,
+            address[] memory allDelegatees
+        ) = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndPolicies(TEST_PKP_TOKEN_ID);
+
+        // Verify lengths match
+        assertEq(toolIpfsCids.length, 2, "Should have 2 tools registered");
+        assertEq(allDelegatees.length, 0, "Should have no delegatees");
+        assertEq(delegateePolicyCids.length, 2, "Should have 2 delegatee policy arrays");
+        assertEq(delegateePolicyCids[0].length, 0, "First tool should have no delegatee policies");
+        assertEq(delegateePolicyCids[1].length, 0, "Second tool should have no delegatee policies");
+
+        // Verify tools are in correct order
+        assertEq(toolIpfsCids[0], TEST_TOOL_CID, "First tool should be TEST_TOOL_CID");
+        assertEq(toolIpfsCids[1], TEST_TOOL_CID_2, "Second tool should be TEST_TOOL_CID_2");
+
+        // Verify getToolsWithPolicy shows no tools with policies
+        (
+            string[] memory toolsWithPolicy,
+        ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+
+        // Verify no tools have policies
+        assertEq(toolsWithPolicy.length, 0, "Should show no tools with policies");
 
         vm.stopPrank();
     }

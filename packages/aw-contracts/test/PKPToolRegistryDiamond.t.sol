@@ -15,8 +15,6 @@ import "../src/diamond/facets/OwnershipFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../src/facets/PKPToolRegistryToolFacet.sol";
 import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
-import "../src/facets/PKPToolRegistryBlanketPolicyFacet.sol";
-import "../src/facets/PKPToolRegistryBlanketParameterFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
 import "../src/libraries/PKPToolRegistryStorage.sol";
 import "../src/libraries/PKPToolRegistryErrors.sol";
@@ -62,8 +60,8 @@ contract PKPToolRegistryDiamondTest is Test {
     function test_facetsAreInstalled() public {
         IDiamondLoupe.Facet[] memory facets = IDiamondLoupe(address(diamond)).facets();
         
-        // Should have 9 facets (DiamondCut + 8 others)
-        assertEq(facets.length, 9, "Wrong number of facets");
+        // Should have 7 facets (DiamondCut + 6 others)
+        assertEq(facets.length, 7, "Wrong number of facets");
         
         // Verify each facet has the correct number of functions
         for (uint i = 0; i < facets.length; i++) {
@@ -402,8 +400,6 @@ contract PKPToolRegistryDiamondTest is Test {
         if (hash == keccak256(type(PKPToolRegistryPolicyFacet).runtimeCode)) return deployScript.getPolicyFacetSelectors().length;
         if (hash == keccak256(type(PKPToolRegistryToolFacet).runtimeCode)) return deployScript.getToolFacetSelectors().length;
         if (hash == keccak256(type(PKPToolRegistryDelegateeFacet).runtimeCode)) return deployScript.getDelegateeFacetSelectors().length;
-        if (hash == keccak256(type(PKPToolRegistryBlanketPolicyFacet).runtimeCode)) return deployScript.getBlanketPolicyFacetSelectors().length;
-        if (hash == keccak256(type(PKPToolRegistryBlanketParameterFacet).runtimeCode)) return deployScript.getBlanketParameterFacetSelectors().length;
         if (hash == keccak256(type(PKPToolRegistryPolicyParameterFacet).runtimeCode)) return deployScript.getPolicyParameterFacetSelectors().length;
         
         return 0;

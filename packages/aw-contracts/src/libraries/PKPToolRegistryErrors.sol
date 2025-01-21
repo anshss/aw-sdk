@@ -48,4 +48,8 @@ library PKPToolRegistryErrors {
     /// @notice Thrown when attempting to access a tool that isn't registered
     /// @param toolIpfsCid The IPFS CID of the tool that wasn't found
     error ToolNotFound(string toolIpfsCid);
+
+    /// @notice Thrown when attempting to add a tool that's already registered
+    /// @param toolIpfsCid The IPFS CID of the tool that's already registered
+    error ToolAlreadyRegistered(string toolIpfsCid);
 } 

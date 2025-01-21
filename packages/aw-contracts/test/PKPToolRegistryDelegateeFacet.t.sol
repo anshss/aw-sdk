@@ -483,8 +483,7 @@ contract PKPToolRegistryDelegateeFacetTest is Test {
         // Verify tools have no policies
         (
             string[] memory toolsWithPolicy,
-            address[][] memory delegateesWithPolicy,
-            bool[] memory hasBlanketPolicy
+            address[][] memory delegateesWithPolicy
         ) = PKPToolRegistryToolFacet(address(diamond)).getToolsWithPolicy(TEST_PKP_TOKEN_ID);
         assertEq(toolsWithPolicy.length, 0, "There should be no tools with policies");
 

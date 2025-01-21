@@ -8,8 +8,9 @@ library PKPToolRegistryToolEvents {
     /// @notice Emitted when new tools are registered for a PKP
     /// @dev Tools must be registered before they can be used in policies
     /// @param pkpTokenId The ID of the PKP token (indexed for efficient filtering)
+    /// @param enabled Whether the tools are enabled or disabled
     /// @param toolIpfsCids Array of IPFS CIDs for the tools being registered
-    event ToolsRegistered(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsRegistered(uint256 indexed pkpTokenId, bool indexed enabled, string[] toolIpfsCids);
 
     /// @notice Emitted when tools are removed from a PKP
     /// @dev Removing a tool also removes all associated policies and parameters
