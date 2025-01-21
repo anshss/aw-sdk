@@ -70,7 +70,7 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test {
         delegateesForPolicy[0] = TEST_DELEGATEE;
         string[] memory policyIpfsCids = new string[](1);
         policyIpfsCids[0] = TEST_POLICY_CID;
-        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
             toolsForPolicy,
             delegateesForPolicy,
@@ -125,7 +125,7 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test {
         delegateesForPolicy[0] = TEST_DELEGATEE;
         string[] memory policyIpfsCids = new string[](1);
         policyIpfsCids[0] = TEST_POLICY_CID;
-        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
             toolsForPolicy,
             delegateesForPolicy,
@@ -172,7 +172,7 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test {
         delegateesForPolicy[0] = TEST_DELEGATEE;
         string[] memory policyIpfsCids = new string[](1);
         policyIpfsCids[0] = TEST_POLICY_CID;
-        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
             toolsForPolicy,
             delegateesForPolicy,
@@ -187,6 +187,56 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test {
         // Verify results
         assertEq(toolsWithoutPolicy.length, 1, "Wrong number of tools without policy");
         assertEq(toolsWithoutPolicy[0], TEST_TOOL_CID_2, "Wrong tool");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test removing policies when removing delegatee
+    function test_removePolicies() public {
+        vm.startPrank(deployer);
+
+        // Register multiple tools
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add delegatee
+        address[] memory delegateesToAdd = new address[](1);
+        delegateesToAdd[0] = TEST_DELEGATEE;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
+
+        // Set policies for tools
+        string[] memory policyIpfsCids = new string[](2);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        policyIpfsCids[1] = TEST_POLICY_CID_2;
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            toolIpfsCids,
+            delegateesToAdd,
+            policyIpfsCids,
+            true
+        );
+
+        // Remove the delegatee
+        PKPToolRegistryDelegateeFacet(address(diamond)).removeDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
+
+        // Verify policies were removed
+        (string memory policy1, bool enabled1) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE
+        );
+        assertEq(bytes(policy1).length, 0, "Policy 1 should be removed");
+        assertFalse(enabled1, "Policy 1 should be disabled");
+
+        (string memory policy2, bool enabled2) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID_2,
+            TEST_DELEGATEE
+        );
+        assertEq(bytes(policy2).length, 0, "Policy 2 should be removed");
+        assertFalse(enabled2, "Policy 2 should be disabled");
 
         vm.stopPrank();
     }

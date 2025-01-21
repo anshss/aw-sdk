@@ -63,33 +63,25 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
-        address[] memory addedDelegatees = new address[](delegatees.length);
-        uint256 addedCount;
-
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.ZeroAddressCannotBeDelegatee();
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             
-            // Add delegatee to PKP's set if not already present
-            if (pkpData.delegatees.add(delegatee)) {
-                // Add PKP to delegatee's set
-                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-                delegateeData.delegatedPkps.add(pkpTokenId);
-                addedDelegatees[addedCount++] = delegatee;
+            // Check if delegatee already exists
+            if (pkpData.delegatees.contains(delegatee)) {
+                revert PKPToolRegistryErrors.DelegateeAlreadyExists(pkpTokenId, delegatee);
             }
+
+            // Add delegatee to PKP's set
+            pkpData.delegatees.add(delegatee);
+            // Add PKP to delegatee's set
+            PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+            delegateeData.delegatedPkps.add(pkpTokenId);
 
             unchecked { ++i; }
         }
 
-        if (addedCount > 0) {
-            // Create a new array with exact size of added delegatees
-            address[] memory trimmedAddedDelegatees = new address[](addedCount);
-            for (uint256 i = 0; i < addedCount;) {
-                trimmedAddedDelegatees[i] = addedDelegatees[i];
-                unchecked { ++i; }
-            }
-            emit PKPToolRegistryDelegateeEvents.AddedDelegatees(pkpTokenId, trimmedAddedDelegatees);
-        }
+        emit PKPToolRegistryDelegateeEvents.AddedDelegatees(pkpTokenId, delegatees);
     }
 
     /// @notice Remove delegatees from a PKP
@@ -109,63 +101,43 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
-        address[] memory removedDelegatees = new address[](delegatees.length);
-        uint256 removedCount;
-
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.ZeroAddressCannotBeDelegatee();
+            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
 
-            // Remove delegatee from PKP's set if present
-            if (pkpData.delegatees.remove(delegatee)) {
-                // Clean up any policies this delegatee had
-                _cleanupDelegateePolicies(pkpTokenId, delegatee);
-
-                // Remove PKP from delegatee's set
-                PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-                delegateeData.delegatedPkps.remove(pkpTokenId);
-                removedDelegatees[removedCount++] = delegatee;
+            // Check if delegatee exists
+            if (!pkpData.delegatees.contains(delegatee)) {
+                revert PKPToolRegistryErrors.DelegateeNotFound(pkpTokenId, delegatee);
             }
+
+            // Remove delegatee from PKP's set
+            pkpData.delegatees.remove(delegatee);
+
+            // Clean up policies and permissions
+            PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
+            EnumerableSet.Bytes32Set storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
+            bytes32[] memory toolsToRemove = permittedTools.values();
+
+            // Remove policies for each permitted tool
+            for (uint256 j = 0; j < toolsToRemove.length;) {
+                // Remove the policy if it exists
+                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolsToRemove[j]];
+                if (tool.delegateesWithCustomPolicy.remove(delegatee)) {
+                    delete tool.delegateeCustomPolicies[delegatee];
+                }
+
+                // Remove the tool from permitted tools
+                permittedTools.remove(toolsToRemove[j]);
+
+                unchecked { ++j; }
+            }
+
+            // Remove PKP from delegatee's set
+            delegateeData.delegatedPkps.remove(pkpTokenId);
 
             unchecked { ++i; }
         }
 
-        if (removedCount > 0) {
-            // Create a new array with exact size of removed delegatees
-            address[] memory trimmedRemovedDelegatees = new address[](removedCount);
-            for (uint256 i = 0; i < removedCount;) {
-                trimmedRemovedDelegatees[i] = removedDelegatees[i];
-                unchecked { ++i; }
-            }
-            emit PKPToolRegistryDelegateeEvents.RemovedDelegatees(pkpTokenId, trimmedRemovedDelegatees);
-        }
-    }
-
-    /// @notice Internal function to clean up policies when removing a delegatee
-    /// @dev Removes all policies and permitted tools for a PKP-delegatee pair
-    /// @param pkpTokenId The PKP token ID
-    /// @param delegatee The delegatee being removed
-    function _cleanupDelegateePolicies(uint256 pkpTokenId, address delegatee) internal {
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-        EnumerableSet.Bytes32Set storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
-        
-        // Get all tools this delegatee has permissions for
-        bytes32[] memory toolsToRemove = permittedTools.values();
-
-        // Remove policies for each permitted tool
-        for (uint256 i = 0; i < toolsToRemove.length;) {
-            // Remove the policy if it exists
-            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolsToRemove[i]];
-            if (tool.delegateesWithCustomPolicy.remove(delegatee)) {
-                delete tool.delegateeCustomPolicies[delegatee];
-            }
-
-            // Remove the tool from permitted tools
-            permittedTools.remove(toolsToRemove[i]);
-
-            unchecked { ++i; }
-        }
+        emit PKPToolRegistryDelegateeEvents.RemovedDelegatees(pkpTokenId, delegatees);
     }
 } 

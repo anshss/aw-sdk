@@ -56,7 +56,7 @@ library PKPToolRegistryStorage {
         /// @notice Hash of the policy's IPFS CID for efficient storage and comparison
         bytes32 policyIpfsCidHash;
         /// @notice Set of parameter names (stored as keccak256 hashes)
-        EnumerableSet.Bytes32Set parameterNames;
+        EnumerableSet.Bytes32Set parameterNameHashes;
         /// @notice Maps parameter name hashes to their values
         mapping(bytes32 => bytes) parameters;
     }

@@ -95,7 +95,7 @@ contract PKPToolRegistryLifecycleTest is Test {
         singleDelegateeArray[0] = TEST_DELEGATEE;
         string[] memory delegateePolicies = new string[](1);
         delegateePolicies[0] = TEST_POLICY_CID_2;
-        PKPToolRegistryPolicyFacet(address(diamond)).setCustomToolPoliciesForDelegatees(
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
             singleToolArray,
             singleDelegateeArray,
@@ -104,7 +104,7 @@ contract PKPToolRegistryLifecycleTest is Test {
         );
 
         // Verify delegatee-specific policy is set
-        (string memory delegateePolicy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
+        (string memory delegateePolicy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
@@ -129,30 +129,34 @@ contract PKPToolRegistryLifecycleTest is Test {
         );
 
         // Verify delegatee-specific parameters are set
-        string[] memory storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+        (string[] memory storedParamNames, bytes[] memory storedParamValues) = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
         );
         assertEq(storedParamNames.length, 2, "Wrong number of delegatee parameters");
-        bytes[] memory storedParamValues = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParametersForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            parameterNames
-        );
+        assertEq(storedParamValues.length, 2, "Wrong number of delegatee parameter values");
         assertEq(storedParamValues[0], TEST_PARAM_VALUE, "Wrong delegatee parameter value 1");
         assertEq(storedParamValues[1], TEST_PARAM_VALUE_2, "Wrong delegatee parameter value 2");
 
+        // Verify individual parameter retrieval
+        bytes memory paramValue = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameter(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            TEST_PARAM_NAME
+        );
+        assertEq(paramValue, TEST_PARAM_VALUE, "Wrong individual parameter value");
+
         // Step 5: Disable policies
-        PKPToolRegistryPolicyFacet(address(diamond)).disableCustomToolPoliciesForDelegatees(
+        PKPToolRegistryPolicyFacet(address(diamond)).disableToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
             singleToolArray,
             singleDelegateeArray
         );
 
         // Verify policies are disabled
-        (delegateePolicy, enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getCustomToolPolicyForDelegatee(
+        (delegateePolicy, enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
@@ -170,12 +174,13 @@ contract PKPToolRegistryLifecycleTest is Test {
         );
 
         // Verify parameters are removed
-        storedParamNames = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameterNamesForDelegatee(
+        (storedParamNames, storedParamValues) = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
         );
         assertEq(storedParamNames.length, 1, "Should have 1 delegatee parameter remaining");
+        assertEq(storedParamValues.length, 1, "Should have 1 delegatee parameter value remaining");
 
         // Step 7: Remove delegatees
         PKPToolRegistryDelegateeFacet(address(diamond)).removeDelegatees(TEST_PKP_TOKEN_ID, delegatees);

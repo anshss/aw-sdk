@@ -29,7 +29,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
     {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         
         // Check if tool exists in the set
         isRegistered = pkpData.toolCids.contains(toolCidHash);
@@ -55,7 +55,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
 
         // Check if tool exists
         if (!pkpData.toolCids.contains(toolCidHash)) {
@@ -248,7 +248,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool already exists
             if (pkpData.toolCids.contains(toolCidHash)) {
@@ -286,7 +286,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
@@ -339,7 +339,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
@@ -375,7 +375,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
@@ -419,7 +419,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             if (!pkpData.toolCids.contains(toolCidHash)) {
                 revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
             }
@@ -461,7 +461,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
             if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-            bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             if (!pkpData.toolCids.contains(toolCidHash)) {
                 revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
             }

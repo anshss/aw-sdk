@@ -35,21 +35,21 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         bytes calldata parameterValue
     ) internal {
         // Validate parameter name is not empty
-        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameter();
+        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameters();
 
         // Validate parameter value is not empty
-        if (parameterValue.length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameter();
+        if (parameterValue.length == 0) revert PKPToolRegistryErrors.InvalidPolicyValue();
 
         bytes32 paramNameHash = keccak256(bytes(parameterName));
         
         // Check for duplicate parameter name
-        if (policy.parameterNames.contains(paramNameHash)) revert PKPToolRegistryErrors.InvalidPolicyParameter();
+        if (policy.parameterNameHashes.contains(paramNameHash)) revert PKPToolRegistryErrors.PolicyParameterAlreadySet(parameterName);
         
         // Store original parameter name in the mapping
         l.hashedParameterNameToOriginalName[paramNameHash] = parameterName;
         
         // Add parameter name to the set if not already present
-        policy.parameterNames.add(paramNameHash);
+        policy.parameterNameHashes.add(paramNameHash);
         
         // Store parameter value
         policy.parameters[paramNameHash] = parameterValue;
@@ -64,11 +64,11 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         PKPToolRegistryStorage.Policy storage policy,
         string calldata parameterName
     ) internal {
+        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameters();
+
         bytes32 paramNameHash = keccak256(bytes(parameterName));
-        
         // Remove parameter name from the set
-        policy.parameterNames.remove(paramNameHash);
-        
+        policy.parameterNameHashes.remove(paramNameHash);
         // Delete parameter value
         delete policy.parameters[paramNameHash];
     }

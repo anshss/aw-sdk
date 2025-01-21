@@ -15,7 +15,14 @@ library PKPToolRegistryErrors {
     error EmptyPolicyIPFSCID();
 
     /// @notice Thrown when a policy parameter is invalid or malformed
-    error InvalidPolicyParameter();
+    error InvalidPolicyParameters();
+
+    /// @notice Thrown when a policy parameter value is invalid or malformed
+    error InvalidPolicyValue();
+
+    /// @notice Thrown when a policy parameter is already set
+    /// @param parameterName The name of the parameter that is already set
+    error PolicyParameterAlreadySet(string parameterName);
 
     /// @notice Thrown when trying to access or modify a non-existent policy
     error NoPolicySet();
@@ -31,9 +38,6 @@ library PKPToolRegistryErrors {
 
     /// @notice Thrown when a delegatee address is invalid
     error InvalidDelegatee();
-
-    /// @notice Thrown when attempting to set the zero address as a delegatee
-    error ZeroAddressCannotBeDelegatee();
 
     /// @notice Thrown when attempting to add a delegatee that's already registered
     /// @param pkpTokenId The ID of the PKP token
@@ -52,4 +56,16 @@ library PKPToolRegistryErrors {
     /// @notice Thrown when attempting to add a tool that's already registered
     /// @param toolIpfsCid The IPFS CID of the tool that's already registered
     error ToolAlreadyRegistered(string toolIpfsCid);
+
+    /// @notice Thrown when attempting to set a policy that's already set
+    /// @param pkpTokenId The ID of the PKP token
+    /// @param toolIpfsCid The IPFS CID of the tool
+    /// @param delegatee The address of the delegatee
+    error PolicyAlreadySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
+
+    /// @notice Thrown when attempting to set a policy that's already set
+    /// @param pkpTokenId The ID of the PKP token
+    /// @param toolIpfsCid The IPFS CID of the tool
+    /// @param delegatee The address of the delegatee
+    error PolicySameEnabledState(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
 } 

@@ -40,7 +40,7 @@ abstract contract PKPToolRegistryBase {
     ) {
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        bytes32 hashedCid = _hashToolCid(toolIpfsCid);
+        bytes32 hashedCid = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
@@ -56,13 +56,5 @@ abstract contract PKPToolRegistryBase {
     function getPKPNFTContract() external view returns (address) {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         return l.pkpNftContract;
-    }
-
-    /// @notice Computes the keccak256 hash of a tool's IPFS CID
-    /// @dev Used for efficient storage and lookup of tool data
-    /// @param toolIpfsCid The IPFS CID to hash
-    /// @return bytes32 The keccak256 hash of the IPFS CID
-    function _hashToolCid(string memory toolIpfsCid) internal pure returns (bytes32) {
-        return keccak256(bytes(toolIpfsCid));
     }
 } 

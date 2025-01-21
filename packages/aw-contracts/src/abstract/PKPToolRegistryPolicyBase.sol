@@ -22,11 +22,10 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     }
 
     /// @notice Internal function to set a policy for a tool and delegatee
-    /// @dev Sets either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @param delegatee The delegatee address
     /// @param policyIpfsCid The IPFS CID of the policy to set
     /// @param enablePolicy Whether to enable the policy when set
     /// @custom:throws EmptyPolicyIPFSCID if policyIpfsCid is empty
@@ -39,19 +38,19 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         string calldata policyIpfsCid,
         bool enablePolicy
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
-        if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
         if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
 
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
-        // Set delegatee-specific policy
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        if (!tool.delegateesWithCustomPolicy.contains(delegatee)) {
-            // First time ever setting policy for this delegatee
-            tool.delegateesWithCustomPolicy.add(delegatee);
+        if (tool.delegateesWithCustomPolicy.contains(delegatee)) {
+            revert PKPToolRegistryErrors.PolicyAlreadySet(pkpTokenId, toolIpfsCid, delegatee);
         }
 
+        tool.delegateesWithCustomPolicy.add(delegatee);
         policy.enabled = enablePolicy;
         bytes32 policyIpfsCidHash = keccak256(bytes(policyIpfsCid));
         policy.policyIpfsCidHash = policyIpfsCidHash;
@@ -59,11 +58,10 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
     }
 
     /// @notice Internal function to remove a policy for a tool and delegatee
-    /// @dev Removes either a blanket policy or a delegatee-specific policy based on the delegatee address
     /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @param delegatee The delegatee address
     /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
     /// @custom:throws NoPolicySet if attempting to remove a non-existent policy
     function _removeToolPolicy(
@@ -72,87 +70,43 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
-        if (delegatee == address(0)) {
-            // Remove blanket policy
-            if (tool.blanketPolicy[0].policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            delete tool.blanketPolicy[0];
-        } else {
-            // Remove delegatee-specific policy if it exists
-            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            tool.delegateesWithCustomPolicy.remove(delegatee);
-            delete tool.delegateeCustomPolicies[delegatee];
-        }
+        PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+        if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+        tool.delegateesWithCustomPolicy.remove(delegatee);
+        delete tool.delegateeCustomPolicies[delegatee];
     }
 
-    /// @notice Internal function to enable a policy
-    /// @dev Enables either a blanket policy or a delegatee-specific policy based on the delegatee address
+    /// @notice Internal function to set the enabled status of a policy
     /// @param l The storage layout to use
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (use address(0) for blanket policy)
+    /// @param delegatee The delegatee address
+    /// @param enable Whether to enable or disable the policy
     /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
-    /// @custom:throws NoPolicySet if attempting to enable a non-existent policy
+    /// @custom:throws NoPolicySet if attempting to modify a non-existent policy
     /// @custom:throws ToolNotFound if tool is not registered or enabled
-    function _enablePolicy(
+    function _setPolicyEnabled(
         PKPToolRegistryStorage.Layout storage l,
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
-        address delegatee
+        address delegatee,
+        bool enable
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
+        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
         if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
 
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
-        if (delegatee == address(0)) {
-            // Enable blanket policy
-            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
-            if (blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            blanketPolicy.enabled = true;
-        } else {
-            // Enable delegatee-specific policy
-            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            policy.enabled = true;
-        }
-    }
-
-    /// @notice Internal function to disable a policy
-    /// @dev Disables either a blanket policy or a delegatee-specific policy based on the delegatee address
-    /// @param l The storage layout to use
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address (use address(0) for blanket policy)
-    /// @custom:throws EmptyIPFSCID if toolIpfsCid is empty
-    /// @custom:throws NoPolicySet if attempting to disable a non-existent policy
-    /// @custom:throws ToolNotFound if tool is not registered or enabled
-    function _disablePolicy(
-        PKPToolRegistryStorage.Layout storage l,
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee
-    ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-
-        bytes32 toolCidHash = _hashToolCid(toolIpfsCid);
-        PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
-
-        if (delegatee == address(0)) {
-            // Disable blanket policy
-            PKPToolRegistryStorage.Policy storage blanketPolicy = tool.blanketPolicy[0];
-            if (blanketPolicy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            blanketPolicy.enabled = false;
-        } else {
-            // Disable delegatee-specific policy
-            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-            policy.enabled = false;
-        }
+        PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+        if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+        if (policy.enabled == enable) revert PKPToolRegistryErrors.PolicySameEnabledState(pkpTokenId, toolIpfsCid, delegatee);
+        policy.enabled = enable;
     }
 } 
