@@ -1,13 +1,17 @@
 -include .env
 
-.PHONY: help deploy-tool-registry build test deploy-dev-erc20 mint-dev-erc20
+.PHONY: help deploy-tool-registry build test deploy-dev-erc20 mint-dev-erc20 dev-erc20-balance
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-deploy-tool-registry: ## Deploy the PKP Tool Policy Registry contract
-	@if [ -z "$(PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL)" ]; then \
-		echo "Error: PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL is not set in .env"; \
+deploy-tool-registry: ## Deploy the PKP Tool Registry contract to all Datil networks
+	@if [ -z "$(PKP_TOOL_REGISTRY_DEPLOYMENT_RPC_URL)" ]; then \
+		echo "Error: PKP_TOOL_REGISTRY_DEPLOYMENT_RPC_URL is not set in .env"; \
+		exit 1; \
+	fi
+	@if [ -z "$(PKP_TOOL_REGISTRY_DEPLOYER_PRIVATE_KEY)" ]; then \
+		echo "Error: PKP_TOOL_REGISTRY_DEPLOYER_PRIVATE_KEY is not set in .env"; \
 		exit 1; \
 	fi
 	@if [ -z "$(DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS)" ]; then \
@@ -27,16 +31,26 @@ deploy-tool-registry: ## Deploy the PKP Tool Policy Registry contract
 	@echo "  Datil Dev:  $(DATIL_DEV_PKP_NFT_CONTRACT_ADDRESS)"
 	@echo "  Datil Test: $(DATIL_TEST_PKP_NFT_CONTRACT_ADDRESS)"
 	@echo "  Datil:      $(DATIL_PKP_NFT_CONTRACT_ADDRESS)"
-	@forge script -vvv script/DeployPKPToolPolicyRegistry.s.sol:DeployPKPToolPolicyRegistry \
-		--rpc-url $(PKP_TOOL_POLICY_REGISTRY_DEPLOYMENT_RPC_URL) \
+	@forge script script/DeployPKPToolRegistry.s.sol:DeployPKPToolRegistry -vvv \
 		--broadcast \
-		--private-key $(PKP_TOOL_POLICY_REGISTRY_DEPLOYER_PRIVATE_KEY)
+		--private-key $(PKP_TOOL_REGISTRY_DEPLOYER_PRIVATE_KEY) \
+		--rpc-url $(PKP_TOOL_REGISTRY_DEPLOYMENT_RPC_URL)
 
-build:
+build: ## Build the contracts
 	forge build
 
-test:
+test: ## Run the tests
 	forge test
+
+test-verbose: ## Run the tests with verbose output
+	forge test -vvv
+
+test-match: ## Run tests matching a pattern. Usage: make test-match PATTERN=MyTest
+	@if [ -z "$(PATTERN)" ]; then \
+		echo "Error: PATTERN parameter is required. Usage: make test-match PATTERN=MyTest"; \
+		exit 1; \
+	fi
+	forge test --match-contract $(PATTERN) -vvv
 
 deploy-dev-erc20: ## Deploy the DevERC20 contract
 	@if [ -z "$(DEVERC20_DEPLOYMENT_RPC_URL)" ]; then \
