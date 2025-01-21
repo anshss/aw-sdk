@@ -4,7 +4,12 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolRegistryBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
+
+library LibPKPToolRegistryPolicyParametersBase {
+    error InvalidPolicyParameters();
+    error PolicyParameterAlreadySet(string parameterName);
+    error InvalidPolicyValue();
+}
 
 /// @title PKP Tool Registry Parameters Base Contract
 /// @notice Base contract for managing policy parameters in the PKP tool registry system
@@ -35,15 +40,15 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         bytes calldata parameterValue
     ) internal {
         // Validate parameter name is not empty
-        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameters();
+        if (bytes(parameterName).length == 0) revert LibPKPToolRegistryPolicyParametersBase.InvalidPolicyParameters();
 
         // Validate parameter value is not empty
-        if (parameterValue.length == 0) revert PKPToolRegistryErrors.InvalidPolicyValue();
+        if (parameterValue.length == 0) revert LibPKPToolRegistryPolicyParametersBase.InvalidPolicyValue();
 
         bytes32 paramNameHash = keccak256(bytes(parameterName));
         
         // Check for duplicate parameter name
-        if (policy.parameterNameHashes.contains(paramNameHash)) revert PKPToolRegistryErrors.PolicyParameterAlreadySet(parameterName);
+        if (policy.parameterNameHashes.contains(paramNameHash)) revert LibPKPToolRegistryPolicyParametersBase.PolicyParameterAlreadySet(parameterName);
         
         // Store original parameter name in the mapping
         l.hashedParameterNameToOriginalName[paramNameHash] = parameterName;
@@ -64,7 +69,7 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         PKPToolRegistryStorage.Policy storage policy,
         string calldata parameterName
     ) internal {
-        if (bytes(parameterName).length == 0) revert PKPToolRegistryErrors.InvalidPolicyParameters();
+        if (bytes(parameterName).length == 0) revert LibPKPToolRegistryPolicyParametersBase.InvalidPolicyParameters();
 
         bytes32 paramNameHash = keccak256(bytes(parameterName));
         // Remove parameter name from the set

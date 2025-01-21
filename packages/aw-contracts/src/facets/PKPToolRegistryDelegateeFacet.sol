@@ -4,8 +4,16 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../abstract/PKPToolRegistryBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
-import "../libraries/PKPToolRegistryDelegateeEvents.sol";
+
+library LibPKPToolRegistryDelegateeFacet {
+    error InvalidDelegatee();
+    error EmptyDelegatees();
+    error DelegateeAlreadyExists(uint256 pkpTokenId, address delegatee);
+    error DelegateeNotFound(uint256 pkpTokenId, address delegatee);
+
+    event AddedDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
+    event RemovedDelegatees(uint256 indexed pkpTokenId, address[] delegatees);
+}
 
 /// @title PKP Tool Policy Delegatee Management Facet
 /// @notice Diamond facet for managing delegatees in the PKP tool policy system
@@ -58,18 +66,18 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatees.length == 0) revert PKPToolRegistryErrors.EmptyDelegatees();
+        if (delegatees.length == 0) revert LibPKPToolRegistryDelegateeFacet.EmptyDelegatees();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+            if (delegatee == address(0)) revert LibPKPToolRegistryDelegateeFacet.InvalidDelegatee();
             
             // Check if delegatee already exists
             if (pkpData.delegatees.contains(delegatee)) {
-                revert PKPToolRegistryErrors.DelegateeAlreadyExists(pkpTokenId, delegatee);
+                revert LibPKPToolRegistryDelegateeFacet.DelegateeAlreadyExists(pkpTokenId, delegatee);
             }
 
             // Add delegatee to PKP's set
@@ -81,7 +89,7 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryDelegateeEvents.AddedDelegatees(pkpTokenId, delegatees);
+        emit LibPKPToolRegistryDelegateeFacet.AddedDelegatees(pkpTokenId, delegatees);
     }
 
     /// @notice Remove delegatees from a PKP
@@ -96,18 +104,18 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (delegatees.length == 0) revert PKPToolRegistryErrors.EmptyDelegatees();
+        if (delegatees.length == 0) revert LibPKPToolRegistryDelegateeFacet.EmptyDelegatees();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < delegatees.length;) {
             address delegatee = delegatees[i];
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+            if (delegatee == address(0)) revert LibPKPToolRegistryDelegateeFacet.InvalidDelegatee();
 
             // Check if delegatee exists
             if (!pkpData.delegatees.contains(delegatee)) {
-                revert PKPToolRegistryErrors.DelegateeNotFound(pkpTokenId, delegatee);
+                revert LibPKPToolRegistryDelegateeFacet.DelegateeNotFound(pkpTokenId, delegatee);
             }
 
             // Remove delegatee from PKP's set
@@ -138,6 +146,6 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryDelegateeEvents.RemovedDelegatees(pkpTokenId, delegatees);
+        emit LibPKPToolRegistryDelegateeFacet.RemovedDelegatees(pkpTokenId, delegatees);
     }
 } 

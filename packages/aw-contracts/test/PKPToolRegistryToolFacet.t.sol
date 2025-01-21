@@ -5,8 +5,6 @@ import "forge-std/Test.sol";
 import "../src/facets/PKPToolRegistryToolFacet.sol";
 import "../src/facets/PKPToolRegistryDelegateeFacet.sol";
 import "../src/facets/PKPToolRegistryPolicyFacet.sol";
-import "../src/libraries/PKPToolRegistryErrors.sol";
-import "../src/libraries/PKPToolRegistryToolEvents.sol";
 import "./helpers/TestHelper.sol";
 
 contract PKPToolRegistryToolFacetTest is Test, TestHelper {
@@ -87,7 +85,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = "";
 
-        vm.expectRevert(PKPToolRegistryErrors.EmptyIPFSCID.selector);
+        vm.expectRevert(LibPKPToolRegistryToolFacet.EmptyIPFSCID.selector);
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
@@ -104,7 +102,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Try to register same tool again
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolAlreadyRegistered.selector, TEST_TOOL_CID));
+        vm.expectRevert(abi.encodeWithSelector(LibPKPToolRegistryToolFacet.ToolAlreadyRegistered.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
@@ -174,7 +172,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
+        vm.expectRevert(abi.encodeWithSelector(LibPKPToolRegistryToolFacet.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -251,7 +249,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
+        vm.expectRevert(abi.encodeWithSelector(LibPKPToolRegistryToolFacet.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -328,7 +326,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(abi.encodeWithSelector(PKPToolRegistryErrors.ToolNotFound.selector, TEST_TOOL_CID));
+        vm.expectRevert(abi.encodeWithSelector(LibPKPToolRegistryToolFacet.ToolNotFound.selector, TEST_TOOL_CID));
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -410,7 +408,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         vm.stopPrank();
@@ -424,7 +422,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -438,7 +436,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -452,7 +450,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         string[] memory toolIpfsCids = new string[](1);
         toolIpfsCids[0] = TEST_TOOL_CID;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         vm.stopPrank();
@@ -468,7 +466,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         address[] memory delegatees = new address[](1);
         delegatees[0] = TEST_DELEGATEE;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         vm.stopPrank();
@@ -484,7 +482,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         address[] memory delegatees = new address[](1);
         delegatees[0] = TEST_DELEGATEE;
 
-        vm.expectRevert(PKPToolRegistryErrors.NotPKPOwner.selector);
+        vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         vm.stopPrank();

@@ -7,7 +7,6 @@ import "../../src/PKPToolRegistry.sol";
 import "../../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../../src/facets/PKPToolRegistryToolFacet.sol";
 import "../../src/facets/PKPToolRegistryDelegateeFacet.sol";
-import "../../src/libraries/PKPToolRegistryErrors.sol";
 import "../mocks/MockPKPNFT.sol";
 
 contract PKPToolRegistryToolPolicyIntegrationTest is Test {

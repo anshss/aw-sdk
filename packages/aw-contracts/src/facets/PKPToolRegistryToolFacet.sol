@@ -4,8 +4,21 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../abstract/PKPToolRegistryBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
-import "../libraries/PKPToolRegistryToolEvents.sol";
+
+library LibPKPToolRegistryToolFacet {
+    error InvalidDelegatee();
+    error EmptyIPFSCID();
+    error ToolNotFound(string toolIpfsCid);
+    error ToolAlreadyRegistered(string toolIpfsCid);
+    error ArrayLengthMismatch();
+
+    event ToolsRegistered(uint256 indexed pkpTokenId, bool enabled, string[] toolIpfsCids);
+    event ToolsRemoved(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsEnabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
+    event ToolsPermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+    event ToolsUnpermitted(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+}
 
 /// @title PKP Tool Policy Tool Management Facet
 /// @notice Diamond facet for managing tool registration and lifecycle in the PKP system
@@ -50,8 +63,8 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         string calldata toolIpfsCid,
         address delegatee
     ) external view returns (bool isPermitted, bool isEnabled) {
-        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (delegatee == address(0)) revert LibPKPToolRegistryToolFacet.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -240,19 +253,19 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         string[] calldata toolIpfsCids,
         bool enabled
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (toolIpfsCids.length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool already exists
             if (pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolAlreadyRegistered(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolAlreadyRegistered(toolIpfsCid);
             }
 
             // Add to tools set and set enabled state
@@ -264,7 +277,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsRegistered(pkpTokenId, enabled, toolIpfsCids);
+        emit LibPKPToolRegistryToolFacet.ToolsRegistered(pkpTokenId, enabled, toolIpfsCids);
     }
 
     /// @notice Remove tools from a PKP
@@ -278,19 +291,19 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (toolIpfsCids.length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
             }
 
             // Clean up policies and permissions for each delegatees
@@ -317,7 +330,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsRemoved(pkpTokenId, toolIpfsCids);
+        emit LibPKPToolRegistryToolFacet.ToolsRemoved(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Enable tools for a PKP
@@ -331,19 +344,19 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (toolIpfsCids.length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
             }
 
             // Enable the tool
@@ -353,7 +366,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsEnabled(pkpTokenId, toolIpfsCids);
+        emit LibPKPToolRegistryToolFacet.ToolsEnabled(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Disable tools for a PKP
@@ -367,19 +380,19 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         uint256 pkpTokenId,
         string[] calldata toolIpfsCids
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (toolIpfsCids.length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         for (uint256 i = 0; i < toolIpfsCids.length;) {
             string memory toolIpfsCid = toolIpfsCids[i];
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             
             // Check if tool exists
             if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
             }
 
             // Disable the tool
@@ -389,7 +402,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsDisabled(pkpTokenId, toolIpfsCids);
+        emit LibPKPToolRegistryToolFacet.ToolsDisabled(pkpTokenId, toolIpfsCids);
     }
 
     /// @notice Grant tool permissions to delegatees
@@ -407,7 +420,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         string[] calldata toolIpfsCids,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != delegatees.length) revert LibPKPToolRegistryToolFacet.ArrayLengthMismatch();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -416,12 +429,12 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             string calldata toolIpfsCid = toolIpfsCids[i];
             address delegatee = delegatees[i];
 
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (delegatee == address(0)) revert LibPKPToolRegistryToolFacet.InvalidDelegatee();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
             }
 
             // Add tool to delegatee's permitted tools
@@ -431,7 +444,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsPermitted(pkpTokenId, toolIpfsCids, delegatees);
+        emit LibPKPToolRegistryToolFacet.ToolsPermitted(pkpTokenId, toolIpfsCids, delegatees);
     }
 
     /// @notice Remove tool permissions from delegatees
@@ -449,7 +462,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         string[] calldata toolIpfsCids,
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
-        if (toolIpfsCids.length != delegatees.length) revert PKPToolRegistryErrors.ArrayLengthMismatch();
+        if (toolIpfsCids.length != delegatees.length) revert LibPKPToolRegistryToolFacet.ArrayLengthMismatch();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -458,12 +471,12 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             string calldata toolIpfsCid = toolIpfsCids[i];
             address delegatee = delegatees[i];
 
-            if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-            if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+            if (delegatee == address(0)) revert LibPKPToolRegistryToolFacet.InvalidDelegatee();
+            if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryToolFacet.EmptyIPFSCID();
 
             bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
             if (!pkpData.toolCids.contains(toolCidHash)) {
-                revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
             }
 
             // Clean up policies and permissions
@@ -481,6 +494,6 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryToolEvents.ToolsUnpermitted(pkpTokenId, toolIpfsCids, delegatees);
+        emit LibPKPToolRegistryToolFacet.ToolsUnpermitted(pkpTokenId, toolIpfsCids, delegatees);
     }
 } 

@@ -7,7 +7,11 @@ import "./diamond/interfaces/IERC165.sol";
 import "./diamond/interfaces/IERC173.sol";
 import "./diamond/libraries/LibDiamond.sol";
 import "./libraries/PKPToolRegistryStorage.sol";
-import "./libraries/PKPToolRegistryErrors.sol";
+
+
+library LibPKPToolRegistry {
+    error InvalidPKPTokenId();
+}
 
 /// @title PKP Tool Registry Diamond
 /// @notice Core contract for managing programmable PKP tool policies using Lit Actions
@@ -16,7 +20,7 @@ import "./libraries/PKPToolRegistryErrors.sol";
 contract PKPToolRegistry {
     /// @custom:throws InvalidPKPTokenId if _pkpNFT is the zero address
     constructor(address _contractOwner, address _diamondCutFacet, address _pkpNFT) payable {
-        if (_pkpNFT == address(0)) revert PKPToolRegistryErrors.InvalidPKPTokenId();
+        if (_pkpNFT == address(0)) revert LibPKPToolRegistry.InvalidPKPTokenId();
         
         // Initialize diamond with owner and diamondCut facet
         LibDiamond.setContractOwner(_contractOwner);

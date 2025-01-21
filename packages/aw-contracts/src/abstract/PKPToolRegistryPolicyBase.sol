@@ -4,7 +4,16 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./PKPToolRegistryBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
+
+library LibPKPToolRegistryPolicyBase {
+    error EmptyIPFSCID();
+    error EmptyPolicyIPFSCID();
+    error ToolNotFound(string toolIpfsCid);
+    error InvalidDelegatee();
+    error PolicyAlreadySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
+    error NoPolicySet();
+    error PolicySameEnabledState(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
+}
 
 /// @title PKP Tool Policy Base Contract
 /// @notice Base contract for managing tool policies in the PKP system
@@ -38,16 +47,16 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         string calldata policyIpfsCid,
         bool enablePolicy
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
-        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-        if (bytes(policyIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyPolicyIPFSCID();
+        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyBase.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyBase.EmptyIPFSCID();
+        if (bytes(policyIpfsCid).length == 0) revert LibPKPToolRegistryPolicyBase.EmptyPolicyIPFSCID();
 
         bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
         if (tool.delegateesWithCustomPolicy.contains(delegatee)) {
-            revert PKPToolRegistryErrors.PolicyAlreadySet(pkpTokenId, toolIpfsCid, delegatee);
+            revert LibPKPToolRegistryPolicyBase.PolicyAlreadySet(pkpTokenId, toolIpfsCid, delegatee);
         }
 
         tool.delegateesWithCustomPolicy.add(delegatee);
@@ -70,14 +79,14 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         string calldata toolIpfsCid,
         address delegatee
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
-        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyBase.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyBase.EmptyIPFSCID();
 
         bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
+        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet();
         tool.delegateesWithCustomPolicy.remove(delegatee);
         delete tool.delegateeCustomPolicies[delegatee];
     }
@@ -98,15 +107,15 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         address delegatee,
         bool enable
     ) internal virtual verifyToolExists(pkpTokenId, toolIpfsCid) {
-        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyBase.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyBase.EmptyIPFSCID();
 
         bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        if (policy.policyIpfsCidHash == bytes32(0)) revert PKPToolRegistryErrors.NoPolicySet();
-        if (policy.enabled == enable) revert PKPToolRegistryErrors.PolicySameEnabledState(pkpTokenId, toolIpfsCid, delegatee);
+        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet();
+        if (policy.enabled == enable) revert LibPKPToolRegistryPolicyBase.PolicySameEnabledState(pkpTokenId, toolIpfsCid, delegatee);
         policy.enabled = enable;
     }
 } 

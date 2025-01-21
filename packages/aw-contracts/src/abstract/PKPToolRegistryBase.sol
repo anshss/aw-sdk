@@ -3,8 +3,13 @@ pragma solidity ^0.8.24;
 
 import "../interfaces/IPKPNFTFacet.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
+library LibPKPToolRegistryBase {
+    error NotPKPOwner();
+    error EmptyIPFSCID();
+    error ToolNotFound(string toolIpfsCid);
+}
 
 using EnumerableSet for EnumerableSet.Bytes32Set;
 
@@ -25,7 +30,7 @@ abstract contract PKPToolRegistryBase {
     modifier onlyPKPOwner(uint256 pkpTokenId) {
         PKPToolRegistryStorage.Layout storage layout = _layout();
         if (msg.sender != IPKPNFTFacet(layout.pkpNftContract).ownerOf(pkpTokenId)) {
-            revert PKPToolRegistryErrors.NotPKPOwner();
+            revert LibPKPToolRegistryBase.NotPKPOwner();
         }
         _;
     }
@@ -38,14 +43,14 @@ abstract contract PKPToolRegistryBase {
         uint256 pkpTokenId,
         string memory toolIpfsCid
     ) {
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryBase.EmptyIPFSCID();
 
         bytes32 hashedCid = keccak256(bytes(toolIpfsCid));
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
 
         if (!pkpData.toolCids.contains(hashedCid)) {
-            revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            revert LibPKPToolRegistryBase.ToolNotFound(toolIpfsCid);
         }
         _;
     }

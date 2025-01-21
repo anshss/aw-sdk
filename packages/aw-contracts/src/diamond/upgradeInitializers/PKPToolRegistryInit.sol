@@ -7,13 +7,16 @@ import "../interfaces/IDiamondCut.sol";
 import "../interfaces/IDiamondLoupe.sol";
 import "../interfaces/IERC173.sol";
 import "../../libraries/PKPToolRegistryStorage.sol";
-import "../../libraries/PKPToolRegistryErrors.sol";
+
+library LibPKPToolRegistryInit {
+    error InvalidPKPTokenId();
+}
 
 contract PKPToolRegistryInit {
     /// @notice Initialize the PKPToolRegistry Diamond
     /// @param _pkpNftContract The address of the PKP NFT contract
     function init(address _pkpNftContract) external {
-        if (_pkpNftContract == address(0)) revert PKPToolRegistryErrors.InvalidPKPTokenId();
+        if (_pkpNftContract == address(0)) revert LibPKPToolRegistryInit.InvalidPKPTokenId();
         
         // Initialize PKPToolRegistry storage
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();

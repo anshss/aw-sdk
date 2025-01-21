@@ -4,8 +4,19 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../abstract/PKPToolRegistryPolicyBase.sol";
 import "../libraries/PKPToolRegistryStorage.sol";
-import "../libraries/PKPToolRegistryErrors.sol";
-import "../libraries/PKPToolRegistryPolicyEvents.sol";
+
+library LibPKPToolRegistryPolicyFacet {
+    error ArrayLengthMismatch();
+    error InvalidDelegatee();
+    error EmptyIPFSCID();
+    error ToolNotFound(string toolIpfsCid);
+    error NoPolicySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
+
+    event ToolPoliciesSet(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees, string[] policyIpfsCids, bool enablePolicies);
+    event ToolPoliciesRemoved(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+    event PoliciesEnabled(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+    event PoliciesDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids, address[] delegatees);
+}
 
 /// @title PKP Tool Registry Policy Facet
 /// @notice Diamond facet for managing delegatee-specific policies for PKP tools
@@ -27,8 +38,8 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         string calldata toolIpfsCid,
         address delegatee
     ) external view returns (string memory policyIpfsCid, bool enabled) {
-        if (bytes(toolIpfsCid).length == 0) revert PKPToolRegistryErrors.EmptyIPFSCID();
-        if (delegatee == address(0)) revert PKPToolRegistryErrors.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyFacet.EmptyIPFSCID();
+        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyFacet.InvalidDelegatee();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
@@ -36,7 +47,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         
         // Check if tool exists
         if (!pkpData.toolCids.contains(toolCidHash)) {
-            revert PKPToolRegistryErrors.ToolNotFound(toolIpfsCid);
+            revert LibPKPToolRegistryPolicyFacet.ToolNotFound(toolIpfsCid);
         }
         
         PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
@@ -66,7 +77,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         bool enablePolicies
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length || toolIpfsCids.length != policyIpfsCids.length) {
-            revert PKPToolRegistryErrors.ArrayLengthMismatch();
+            revert LibPKPToolRegistryPolicyFacet.ArrayLengthMismatch();
         }
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -75,7 +86,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryPolicyEvents.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids, enablePolicies);
+        emit LibPKPToolRegistryPolicyFacet.ToolPoliciesSet(pkpTokenId, toolIpfsCids, delegatees, policyIpfsCids, enablePolicies);
     }
 
     /// @notice Remove custom policies for tools and delegatees
@@ -94,7 +105,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) {
-            revert PKPToolRegistryErrors.ArrayLengthMismatch();
+            revert LibPKPToolRegistryPolicyFacet.ArrayLengthMismatch();
         }
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -103,7 +114,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryPolicyEvents.ToolPoliciesRemoved(pkpTokenId, toolIpfsCids, delegatees);
+        emit LibPKPToolRegistryPolicyFacet.ToolPoliciesRemoved(pkpTokenId, toolIpfsCids, delegatees);
     }
 
     /// @notice Enable custom policies for tools and delegatees
@@ -123,7 +134,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) {
-            revert PKPToolRegistryErrors.ArrayLengthMismatch();
+            revert LibPKPToolRegistryPolicyFacet.ArrayLengthMismatch();
         }
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -132,7 +143,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryPolicyEvents.PoliciesEnabled(pkpTokenId, toolIpfsCids, delegatees);
+        emit LibPKPToolRegistryPolicyFacet.PoliciesEnabled(pkpTokenId, toolIpfsCids, delegatees);
     }
 
     /// @notice Disable custom policies for tools and delegatees
@@ -152,7 +163,7 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
         address[] calldata delegatees
     ) external onlyPKPOwner(pkpTokenId) {
         if (toolIpfsCids.length != delegatees.length) {
-            revert PKPToolRegistryErrors.ArrayLengthMismatch();
+            revert LibPKPToolRegistryPolicyFacet.ArrayLengthMismatch();
         }
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
@@ -161,6 +172,6 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
             unchecked { ++i; }
         }
 
-        emit PKPToolRegistryPolicyEvents.PoliciesDisabled(pkpTokenId, toolIpfsCids, delegatees);
+        emit LibPKPToolRegistryPolicyFacet.PoliciesDisabled(pkpTokenId, toolIpfsCids, delegatees);
     }
 } 

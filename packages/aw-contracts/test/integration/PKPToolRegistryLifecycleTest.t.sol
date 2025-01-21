@@ -8,8 +8,6 @@ import "../../src/facets/PKPToolRegistryToolFacet.sol";
 import "../../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../../src/facets/PKPToolRegistryDelegateeFacet.sol";
 import "../../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
-import "../../src/libraries/PKPToolRegistryErrors.sol";
-import "../../src/libraries/PKPToolRegistryParameterEvents.sol";
 import "../mocks/MockPKPNFT.sol";
 
 contract PKPToolRegistryLifecycleTest is Test {
