@@ -133,17 +133,18 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         uint256 toolsLength = pkpData.toolCids.length();
         delegateePolicyCids = new string[][](toolsLength);
 
-        uint256 delegateesLength = pkpData.delegatees.length();
         // For each tool
         for (uint256 i = 0; i < toolsLength;) {
             PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[pkpData.toolCids.at(i)];
             
-            // Initialize policy array for this tool
-            delegateePolicyCids[i] = new string[](delegateesLength);
+            // Initialize policy array for this tool with length equal to number of delegatees with custom policy
+            uint256 delegateesWithPolicyLength = tool.delegateesWithCustomPolicy.length();
+            delegateePolicyCids[i] = new string[](delegateesWithPolicyLength);
             
-            // Fill in policies for each delegatee
-            for (uint256 j = 0; j < delegateesLength;) {
-                PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatees[j]];
+            // Fill in policies for each delegatee that has a custom policy
+            for (uint256 j = 0; j < delegateesWithPolicyLength;) {
+                address delegatee = tool.delegateesWithCustomPolicy.at(j);
+                PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
                 delegateePolicyCids[i][j] = l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash];
                 unchecked { ++j; }
             }

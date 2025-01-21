@@ -123,20 +123,22 @@ contract PKPToolRegistryDelegateeFacet is PKPToolRegistryBase {
 
             // Clean up policies and permissions
             PKPToolRegistryStorage.Delegatee storage delegateeData = l.delegatees[delegatee];
-            EnumerableSet.Bytes32Set storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
-            bytes32[] memory toolsToRemove = permittedTools.values();
-
-            // Remove policies for each permitted tool
-            for (uint256 j = 0; j < toolsToRemove.length;) {
-                // Remove the policy if it exists
-                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolsToRemove[j]];
+            
+            // Remove policies for all tools
+            bytes32[] memory allTools = pkpData.toolCids.values();
+            for (uint256 j = 0; j < allTools.length;) {
+                PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[allTools[j]];
                 if (tool.delegateesWithCustomPolicy.remove(delegatee)) {
                     delete tool.delegateeCustomPolicies[delegatee];
                 }
+                unchecked { ++j; }
+            }
 
-                // Remove the tool from permitted tools
+            // Remove tool permissions
+            EnumerableSet.Bytes32Set storage permittedTools = delegateeData.permittedToolsForPkp[pkpTokenId];
+            bytes32[] memory toolsToRemove = permittedTools.values();
+            for (uint256 j = 0; j < toolsToRemove.length;) {
                 permittedTools.remove(toolsToRemove[j]);
-
                 unchecked { ++j; }
             }
 

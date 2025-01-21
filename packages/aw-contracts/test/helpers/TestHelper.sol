@@ -22,10 +22,21 @@ abstract contract TestHelper is Test {
 
     // Test constants
     uint256 constant TEST_PKP_TOKEN_ID = 1;
+
     address constant TEST_DELEGATEE = address(0x123);
+    address constant TEST_DELEGATEE_2 = address(0x456);
+
     string constant TEST_TOOL_CID = "QmTEST1";
     string constant TEST_TOOL_CID_2 = "QmTEST2";
+
     string constant TEST_POLICY_CID = "QmPOLICY";
+    string constant TEST_POLICY_CID_2 = "QmPOLICY2";
+
+    string constant TEST_PARAM_NAME = "maxAmount";
+    string constant TEST_PARAM_NAME_2 = "minAmount";
+
+    bytes constant TEST_PARAM_VALUE = abi.encode(1000);
+    bytes constant TEST_PARAM_VALUE_2 = abi.encode(100);
 
     function setUp() public virtual {
         // Setup deployer account using default test account

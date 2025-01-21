@@ -11,7 +11,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
 
     // Events from the contract
-    event ToolsRegistered(uint256 indexed pkpTokenId, bool indexed enabled, string[] toolIpfsCids);
+    event ToolsRegistered(uint256 indexed pkpTokenId, bool enabled, string[] toolIpfsCids);
     event ToolsRemoved(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsEnabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
     event ToolsDisabled(uint256 indexed pkpTokenId, string[] toolIpfsCids);
@@ -30,7 +30,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         toolIpfsCids[0] = TEST_TOOL_CID;
 
         // Expect the ToolsRegistered event
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsRegistered(TEST_PKP_TOKEN_ID, true, toolIpfsCids);
 
         // Register the tool
@@ -57,7 +57,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         toolIpfsCids[1] = TEST_TOOL_CID_2;
 
         // Expect the ToolsRegistered event
-        vm.expectEmit(true, true, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsRegistered(TEST_PKP_TOKEN_ID, true, toolIpfsCids);
 
         // Register the tools
@@ -118,7 +118,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Expect the ToolsRemoved event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsRemoved(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Remove the tool
@@ -146,7 +146,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Expect the ToolsRemoved event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsRemoved(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Remove the tools
@@ -193,7 +193,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         assertFalse(isEnabled, "Tool should be disabled after registration");
 
         // Expect the ToolsEnabled event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsEnabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Enable the tool
@@ -226,7 +226,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         assertFalse(isEnabled2, "Tool 2 should be disabled");
 
         // Enable the tools
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsEnabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         PKPToolRegistryToolFacet(address(diamond)).enableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
@@ -270,7 +270,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         assertTrue(isEnabled, "Tool should be enabled after registration");
 
         // Expect the ToolsDisabled event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsDisabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Disable the tool
@@ -303,7 +303,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         assertTrue(isEnabled2, "Tool 2 should be enabled");
 
         // Disable the tools
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsDisabled(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         PKPToolRegistryToolFacet(address(diamond)).disableTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
@@ -347,7 +347,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
 
         // Expect the ToolsPermitted event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsPermitted(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Permit the tool
@@ -382,7 +382,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Expect the ToolsUnpermitted event
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit(true, true, true, true);
         emit ToolsUnpermitted(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
 
         // Unpermit the tool

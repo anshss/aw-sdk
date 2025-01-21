@@ -236,11 +236,17 @@ contract DeployPKPToolRegistry is Script {
     }
 
     function getPolicyParameterFacetSelectors() public pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](3);
+        bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameters.selector;
         selectors[1] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameter.selector;
         selectors[2] = PKPToolRegistryPolicyParameterFacet.setToolPolicyParametersForDelegatee.selector;
         selectors[3] = PKPToolRegistryPolicyParameterFacet.removeToolPolicyParametersForDelegatee.selector;
+        return selectors;
+    }
+
+    function getDiamondCutFacetSelectors() public pure returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = IDiamondCut.diamondCut.selector;
         return selectors;
     }
 

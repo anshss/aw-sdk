@@ -9,48 +9,11 @@ import "../../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../../src/facets/PKPToolRegistryDelegateeFacet.sol";
 import "../../src/facets/PKPToolRegistryPolicyParameterFacet.sol";
 import "../mocks/MockPKPNFT.sol";
+import "../helpers/TestHelper.sol";
 
-contract PKPToolRegistryLifecycleTest is Test {
-    // Test addresses
-    MockPKPNFT mockPkpNft;
-    address deployer;
-    address nonOwner;
-    
-    // Contract instances
-    PKPToolRegistry diamond;
-    DeployPKPToolRegistry deployScript;
-    
-    // Test data
-    uint256 constant TEST_PKP_TOKEN_ID = 1;
-    address constant TEST_DELEGATEE = address(0x1234);
-    address constant TEST_DELEGATEE_2 = address(0x5678);
-    string constant TEST_TOOL_CID = "QmTEST";
-    string constant TEST_TOOL_CID_2 = "QmTEST2";
-    string constant TEST_POLICY_CID = "QmPOLICY";
-    string constant TEST_POLICY_CID_2 = "QmPOLICY2";
-    string constant TEST_PARAM_NAME = "maxAmount";
-    string constant TEST_PARAM_NAME_2 = "minAmount";
-    bytes constant TEST_PARAM_VALUE = abi.encode(1000);
-    bytes constant TEST_PARAM_VALUE_2 = abi.encode(100);
-
-    function setUp() public {
-        // Setup deployer account using default test account
-        deployer = vm.addr(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);
-        nonOwner = makeAddr("non-owner");
-
-        // Deploy mock PKP NFT contract
-        mockPkpNft = new MockPKPNFT();
-
-        // Set environment variables for deployment
-        vm.setEnv("PKP_TOOL_REGISTRY_DEPLOYER_PRIVATE_KEY", "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
-        
-        // Deploy using the script
-        deployScript = new DeployPKPToolRegistry();
-        address diamondAddress = deployScript.deployToNetwork("test", address(mockPkpNft));
-        diamond = PKPToolRegistry(payable(diamondAddress));
-
-        // Set up mock PKP NFT for tests
-        mockPkpNft.setOwner(TEST_PKP_TOKEN_ID, deployer);
+contract PKPToolRegistryLifecycleTest is Test, TestHelper {
+    function setUp() public override {
+        super.setUp();
     }
 
     /// @notice Test full lifecycle of PKP Tool Registry interactions
