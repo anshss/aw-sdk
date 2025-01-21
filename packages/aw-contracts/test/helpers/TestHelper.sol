@@ -25,19 +25,24 @@ abstract contract TestHelper is Test {
 
     address constant TEST_DELEGATEE = address(0x123);
     address constant TEST_DELEGATEE_2 = address(0x456);
+    address constant TEST_DELEGATEE_3 = address(0x789);
 
     string constant TEST_TOOL_CID = "QmTEST1";
     string constant TEST_TOOL_CID_2 = "QmTEST2";
+    string constant TEST_TOOL_CID_3 = "QmToolHash3";
 
     string constant TEST_POLICY_CID = "QmPOLICY";
     string constant TEST_POLICY_CID_2 = "QmPOLICY2";
+    string constant TEST_POLICY_CID_3 = "QmPolicyHash3";
 
     string constant TEST_PARAM_NAME = "maxAmount";
     string constant TEST_PARAM_NAME_2 = "minAmount";
+    string constant TEST_PARAM_NAME_3 = "someAmount";
 
     bytes constant TEST_PARAM_VALUE = abi.encode(1000);
     bytes constant TEST_PARAM_VALUE_2 = abi.encode(100);
-
+    bytes constant TEST_PARAM_VALUE_3 = abi.encode(10000);
+ 
     function setUp() public virtual {
         // Setup deployer account using default test account
         deployer = vm.addr(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80);

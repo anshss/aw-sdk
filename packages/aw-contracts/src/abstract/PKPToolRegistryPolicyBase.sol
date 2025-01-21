@@ -11,7 +11,7 @@ library LibPKPToolRegistryPolicyBase {
     error ToolNotFound(string toolIpfsCid);
     error InvalidDelegatee();
     error PolicyAlreadySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
-    error NoPolicySet();
+    error NoPolicySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
     error PolicySameEnabledState(uint256 pkpTokenId, string toolIpfsCid, address delegatee);
 }
 
@@ -86,7 +86,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet();
+        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet(pkpTokenId, toolIpfsCid, delegatee);
         tool.delegateesWithCustomPolicy.remove(delegatee);
         delete tool.delegateeCustomPolicies[delegatee];
     }
@@ -114,7 +114,7 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
         PKPToolRegistryStorage.ToolInfo storage tool = l.pkpStore[pkpTokenId].toolMap[toolCidHash];
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet();
+        if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet(pkpTokenId, toolIpfsCid, delegatee);
         if (policy.enabled == enable) revert LibPKPToolRegistryPolicyBase.PolicySameEnabledState(pkpTokenId, toolIpfsCid, delegatee);
         policy.enabled = enable;
     }
