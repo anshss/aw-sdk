@@ -4,24 +4,24 @@ import {
   AUTH_METHOD_SCOPE_VALUES,
 } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
+// import { AwTool } from '@lit-protocol/aw-tool';
 import { ethers } from 'ethers';
 
 import {
   AdminConfig,
   AgentConfig,
   LitNetwork,
-  UnknownRegisteredToolWithPolicy,
+  // UnknownRegisteredToolWithPolicy,
 } from './types';
 import {
   DEFAULT_REGISTRY_CONFIG,
-  getPkpToolPolicyRegistryContract,
+  getPkpToolRegistryContract,
   getRegisteredTools,
-  getToolPolicy,
+  // getToolPolicy,
 } from './utils/pkp-tool-registry';
 import { LocalStorage } from './utils/storage';
 import { loadPkpsFromStorage, mintPkp, savePkpsToStorage } from './utils/pkp';
 import { AwSignerError, AwSignerErrorType } from './errors';
-import { AwTool } from '@lit-protocol/aw-tool';
 
 /**
  * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.
@@ -35,7 +35,7 @@ export class Admin {
   private readonly storage: LocalStorage;
   private readonly litNodeClient: LitNodeClientNodeJs;
   private readonly litContracts: LitContracts;
-  private readonly toolPolicyRegistryContract: ethers.Contract;
+  private readonly toolRegistryContract: ethers.Contract;
   private readonly adminWallet: ethers.Wallet;
 
   public readonly litNetwork: LitNetwork;
@@ -44,7 +44,7 @@ export class Admin {
    * @param litNetwork - The Lit network to use.
    * @param litNodeClient - An instance of `LitNodeClientNodeJs`.
    * @param litContracts - An instance of `LitContracts`.
-   * @param toolPolicyRegistryContract - An instance of the tool policy registry contract.
+   * @param toolRegistryContract - An instance of the tool policy registry contract.
    * @param adminWallet - The wallet used for Admin operations.
    * @param pkpInfo - Information about the PKP (Programmable Key Pair).
    */
@@ -53,14 +53,14 @@ export class Admin {
     litNetwork: LitNetwork,
     litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
-    toolPolicyRegistryContract: ethers.Contract,
+    toolRegistryContract: ethers.Contract,
     adminWallet: ethers.Wallet
   ) {
     this.storage = storage;
     this.litNetwork = litNetwork;
     this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
-    this.toolPolicyRegistryContract = toolPolicyRegistryContract;
+    this.toolRegistryContract = toolRegistryContract;
     this.adminWallet = adminWallet;
   }
 
@@ -104,10 +104,10 @@ export class Admin {
 
     const storage = new LocalStorage(Admin.DEFAULT_STORAGE_PATH);
 
-    const toolPolicyRegistryConfig = DEFAULT_REGISTRY_CONFIG[litNetwork];
+    const toolRegistryConfig = DEFAULT_REGISTRY_CONFIG[litNetwork];
 
     const provider = new ethers.providers.JsonRpcProvider(
-      toolPolicyRegistryConfig.rpcUrl
+      toolRegistryConfig.rpcUrl
     );
 
     let adminWallet: ethers.Wallet;
@@ -153,7 +153,7 @@ export class Admin {
       litNetwork,
       litNodeClient,
       litContracts,
-      getPkpToolPolicyRegistryContract(toolPolicyRegistryConfig, adminWallet),
+      getPkpToolRegistryContract(toolRegistryConfig, adminWallet),
       adminWallet
     );
   }
@@ -223,38 +223,55 @@ export class Admin {
   public async permitTool(
     pkpTokenId: string,
     ipfsCid: string,
-    signingScopes: AUTH_METHOD_SCOPE_VALUES[] = [AUTH_METHOD_SCOPE.SignAnything]
+    options: {
+      signingScopes: AUTH_METHOD_SCOPE_VALUES[];
+      enableTools: boolean;
+    } = {
+      signingScopes: [AUTH_METHOD_SCOPE.SignAnything],
+      enableTools: true,
+    }
   ) {
     if (!this.litContracts) {
       throw new Error('Not properly initialized');
     }
 
-    return this.litContracts.addPermittedAction({
+    const litContractsTxReceipt = await this.litContracts.addPermittedAction({
       ipfsId: ipfsCid,
-      authMethodScopes: signingScopes,
+      authMethodScopes: options.signingScopes,
       pkpTokenId: (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
     });
+
+    const toolRegistryContractTx =
+      await this.toolRegistryContract.registerTools(
+        pkpTokenId,
+        [ipfsCid],
+        options.enableTools
+      );
+
+    return {
+      litContractsTxReceipt,
+      toolRegistryContractTxReceipt: await toolRegistryContractTx.wait(),
+    };
   }
 
+  // /**
+  //  * Removes a tool from the list of permitted tools.
+  //  * @param ipfsCid - The IPFS CID of the tool.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the Admin instance is not properly initialized.
+  //  */
+  // public async removeTool(pkpTokenId: string, ipfsCid: string) {
+  //   if (!this.litContracts) {
+  //     throw new Error('Not properly initialized');
+  //   }
+
+  //   return this.litContracts.pkpPermissionsContractUtils.write.revokePermittedAction(
+  //     (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
+  //     ipfsCid
+  //   );
+  // }
+
   /**
-   * Removes a tool from the list of permitted tools.
-   * @param ipfsCid - The IPFS CID of the tool.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the Admin instance is not properly initialized.
-   */
-  public async removeTool(pkpTokenId: string, ipfsCid: string) {
-    if (!this.litContracts) {
-      throw new Error('Not properly initialized');
-    }
-
-    return this.litContracts.pkpPermissionsContractUtils.write.revokePermittedAction(
-      (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
-      ipfsCid
-    );
-  }
-
-  /**
-
    * Get all registered tools and categorize them based on whether they have policies
    * @returns Object containing:
    * - toolsWithPolicies: Array of tools that have policies and match the current network
@@ -262,106 +279,37 @@ export class Admin {
    * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
    * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
-  public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: Array<AwTool<any, any>>;
-    toolsWithoutPolicies: Array<AwTool<any, any>>;
-    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
-    toolsUnknownWithoutPolicies: string[];
-  }> {
-    if (!this.toolPolicyRegistryContract) {
+  // public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
+  //   toolsWithPolicies: Array<AwTool<any, any>>;
+  //   toolsWithoutPolicies: Array<AwTool<any, any>>;
+  //   toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+  //   toolsUnknownWithoutPolicies: string[];
+  // }> {
+  public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<void> {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
     const registeredTools = await getRegisteredTools(
-      this.toolPolicyRegistryContract,
+      this.toolRegistryContract,
       this.litContracts,
       (
         await this.getPkpByTokenId(pkpTokenId)
       ).info.tokenId
     );
 
-    return {
-      toolsWithPolicies: registeredTools.toolsWithPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
-      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
-    };
-  }
+    console.log(registeredTools);
 
-  /**
-   * Retrieves the policy for a specific tool.
-   * @param ipfsCid - The IPFS CID of the tool.
-   * @returns An object containing the policy and version for the tool.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async getToolPolicy(
-    pkpTokenId: string,
-    ipfsCid: string
-  ): Promise<{ policy: string; version: string }> {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
-
-    return getToolPolicy(
-      this.toolPolicyRegistryContract,
-      (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
-      ipfsCid
-    );
-  }
-
-  /**
-   * Sets or updates a policy for a specific tool.
-   * @param ipfsCid - The IPFS CID of the tool.
-   * @param policy - The policy bytes (must be ABI encoded).
-   * @param version - The version of the policy.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async setToolPolicy(
-    pkpTokenId: string,
-    ipfsCid: string,
-    policy: string,
-    version: string
-  ) {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
-
-    const tx = await this.toolPolicyRegistryContract.setToolPolicy(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      ipfsCid,
-      policy,
-      version
-    );
-
-    return await tx.wait();
-  }
-
-  /**
-   * Removes the policy for a specific tool.
-   * @param ipfsCid - The IPFS CID of the tool.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async removeToolPolicy(pkpTokenId: string, ipfsCid: string) {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
-
-    const tx = await this.toolPolicyRegistryContract.removeToolPolicy(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      ipfsCid
-    );
-
-    return await tx.wait();
+    // return {
+    //   toolsWithPolicies: registeredTools.toolsWithPolicies
+    //     .filter((tool) => tool.network === this.litNetwork)
+    //     .map((t) => t.tool),
+    //   toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+    //     .filter((tool) => tool.network === this.litNetwork)
+    //     .map((t) => t.tool),
+    //   toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+    //   toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+    // };
   }
 
   /**
@@ -370,11 +318,11 @@ export class Admin {
    * @throws If the tool policy registry contract is not initialized.
    */
   public async getDelegatees(pkpTokenId: string): Promise<string[]> {
-    if (!this.toolPolicyRegistryContract) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return await this.toolPolicyRegistryContract.getDelegatees(
+    return await this.toolRegistryContract.getDelegatees(
       (
         await this.getPkpByTokenId(pkpTokenId)
       ).info.tokenId
@@ -388,11 +336,11 @@ export class Admin {
    * @throws If the tool policy registry contract is not initialized.
    */
   public async isDelegatee(pkpTokenId: string, delegatee: string) {
-    if (!this.toolPolicyRegistryContract) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return await this.toolPolicyRegistryContract.isDelegateeOf(
+    return await this.toolRegistryContract.isPkpDelegatee(
       (
         await this.getPkpByTokenId(pkpTokenId)
       ).info.tokenId,
@@ -407,82 +355,154 @@ export class Admin {
    * @throws If the tool policy registry contract is not initialized.
    */
   public async addDelegatee(pkpTokenId: string, delegatee: string) {
-    if (!this.toolPolicyRegistryContract) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    const tx = await this.toolPolicyRegistryContract.addDelegatee(
+    const tx = await this.toolRegistryContract.addDelegatees(
       (
         await this.getPkpByTokenId(pkpTokenId)
       ).info.tokenId,
-      delegatee
+      [delegatee]
     );
 
     return await tx.wait();
   }
 
-  /**
-   * Removes a delegatee for the PKP.
-   * @param delegatee - The address to remove as a delegatee.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async removeDelegatee(pkpTokenId: string, delegatee: string) {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  // /**
+  //  * Retrieves the policy for a specific tool.
+  //  * @param ipfsCid - The IPFS CID of the tool.
+  //  * @returns An object containing the policy and version for the tool.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async getToolPolicy(
+  //   pkpTokenId: string,
+  //   ipfsCid: string
+  // ): Promise<{ policy: string; version: string }> {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-    const tx = await this.toolPolicyRegistryContract.removeDelegatee(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      delegatee
-    );
+  //   return getToolPolicy(
+  //     this.toolRegistryContract,
+  //     (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
+  //     ipfsCid
+  //   );
+  // }
 
-    return await tx.wait();
-  }
+  // /**
+  //  * Sets or updates a policy for a specific tool.
+  //  * @param ipfsCid - The IPFS CID of the tool.
+  //  * @param policy - The policy bytes (must be ABI encoded).
+  //  * @param version - The version of the policy.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async setToolPolicy(
+  //   pkpTokenId: string,
+  //   ipfsCid: string,
+  //   policy: string,
+  //   version: string
+  // ) {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-  /**
-   * Adds multiple delegatees for the PKP in a single transaction.
-   * @param delegatees - An array of addresses to add as delegatees.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async batchAddDelegatees(pkpTokenId: string, delegatees: string[]) {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  //   const tx = await this.toolRegistryContract.setToolPolicy(
+  //     (
+  //       await this.getPkpByTokenId(pkpTokenId)
+  //     ).info.tokenId,
+  //     ipfsCid,
+  //     policy,
+  //     version
+  //   );
 
-    const tx = await this.toolPolicyRegistryContract.batchAddDelegatees(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      delegatees
-    );
+  //   return await tx.wait();
+  // }
 
-    return await tx.wait();
-  }
+  // /**
+  //  * Removes the policy for a specific tool.
+  //  * @param ipfsCid - The IPFS CID of the tool.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async removeToolPolicy(pkpTokenId: string, ipfsCid: string) {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-  /**
-   * Removes multiple delegatees for the PKP in a single transaction.
-   * @param delegatees - An array of addresses to remove as delegatees.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async batchRemoveDelegatees(pkpTokenId: string, delegatees: string[]) {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  //   const tx = await this.toolRegistryContract.removeToolPolicy(
+  //     (
+  //       await this.getPkpByTokenId(pkpTokenId)
+  //     ).info.tokenId,
+  //     ipfsCid
+  //   );
 
-    const tx = await this.toolPolicyRegistryContract.batchRemoveDelegatees(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      delegatees
-    );
+  //   return await tx.wait();
+  // }
 
-    return await tx.wait();
-  }
+  // /**
+  //  * Removes a delegatee for the PKP.
+  //  * @param delegatee - The address to remove as a delegatee.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async removeDelegatee(pkpTokenId: string, delegatee: string) {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
+
+  //   const tx = await this.toolRegistryContract.removeDelegatee(
+  //     (
+  //       await this.getPkpByTokenId(pkpTokenId)
+  //     ).info.tokenId,
+  //     delegatee
+  //   );
+
+  //   return await tx.wait();
+  // }
+
+  // /**
+  //  * Adds multiple delegatees for the PKP in a single transaction.
+  //  * @param delegatees - An array of addresses to add as delegatees.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async batchAddDelegatees(pkpTokenId: string, delegatees: string[]) {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
+
+  //   const tx = await this.toolRegistryContract.batchAddDelegatees(
+  //     (
+  //       await this.getPkpByTokenId(pkpTokenId)
+  //     ).info.tokenId,
+  //     delegatees
+  //   );
+
+  //   return await tx.wait();
+  // }
+
+  // /**
+  //  * Removes multiple delegatees for the PKP in a single transaction.
+  //  * @param delegatees - An array of addresses to remove as delegatees.
+  //  * @returns A promise that resolves to the transaction receipt.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async batchRemoveDelegatees(pkpTokenId: string, delegatees: string[]) {
+  //   if (!this.toolRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
+
+  //   const tx = await this.toolRegistryContract.batchRemoveDelegatees(
+  //     (
+  //       await this.getPkpByTokenId(pkpTokenId)
+  //     ).info.tokenId,
+  //     delegatees
+  //   );
+
+  //   return await tx.wait();
+  // }
 
   /**
    * Disconnects the Lit node client.

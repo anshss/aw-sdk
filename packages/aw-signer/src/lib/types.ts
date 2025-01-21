@@ -15,7 +15,7 @@ export type LitNetwork =
  * Configuration for the Tool Policy Registry contract.
  * Includes the RPC URL and contract address for interacting with the registry.
  */
-export interface ToolPolicyRegistryConfig {
+export interface ToolRegistryConfig {
   /** The RPC URL for the blockchain network. */
   rpcUrl: string;
 

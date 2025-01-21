@@ -1,28 +1,28 @@
-import { LIT_ABILITY } from '@lit-protocol/constants';
+// import { LIT_ABILITY } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
-import {
-  createSiweMessage,
-  generateAuthSig,
-  LitActionResource,
-  LitPKPResource,
-} from '@lit-protocol/auth-helpers';
-import type {
-  AuthSig,
-  ExecuteJsResponse,
-  JsonExecutionSdkParams,
-} from '@lit-protocol/types';
-import { type AwTool } from '@lit-protocol/aw-tool';
+// import {
+//   createSiweMessage,
+//   generateAuthSig,
+//   LitActionResource,
+//   LitPKPResource,
+// } from '@lit-protocol/auth-helpers';
+// import type {
+//   AuthSig,
+//   ExecuteJsResponse,
+//   JsonExecutionSdkParams,
+// } from '@lit-protocol/types';
+// import { type AwTool } from '@lit-protocol/aw-tool';
 import { ethers } from 'ethers';
 
 import type {
-  DelegatedPkpInfo,
+  // DelegatedPkpInfo,
   LitNetwork,
-  UnknownRegisteredToolWithPolicy,
+  // UnknownRegisteredToolWithPolicy,
   AgentConfig,
-  IntentMatcher,
+  // IntentMatcher,
   CredentialStore,
-  IntentMatcherResponse,
+  // IntentMatcherResponse,
   CredentialsFor,
 } from './types';
 import {
@@ -36,9 +36,9 @@ import { LocalStorage } from './utils/storage';
 import { AwSignerError, AwSignerErrorType } from './errors';
 import {
   DEFAULT_REGISTRY_CONFIG,
-  getPkpToolPolicyRegistryContract,
-  getRegisteredTools,
-  getToolPolicy,
+  getPkpToolRegistryContract,
+  // getRegisteredTools,
+  // getToolPolicy,
 } from './utils/pkp-tool-registry';
 
 /**
@@ -51,8 +51,11 @@ export class Delegatee implements CredentialStore {
 
   private readonly storage: LocalStorage;
   private readonly litNodeClient: LitNodeClientNodeJs;
+  // @ts-expect-error foo
   private readonly litContracts: LitContracts;
+  // @ts-expect-error foo
   private readonly toolPolicyRegistryContract: ethers.Contract;
+  // @ts-expect-error foo
   private readonly delegateeWallet: ethers.Wallet;
 
   public readonly litNetwork: LitNetwork;
@@ -181,205 +184,202 @@ export class Delegatee implements CredentialStore {
       storage,
       litNodeClient,
       litContracts,
-      getPkpToolPolicyRegistryContract(
-        toolPolicyRegistryConfig,
-        delegateeWallet
-      ),
+      getPkpToolRegistryContract(toolPolicyRegistryConfig, delegateeWallet),
       delegateeWallet
     );
   }
 
-  /**
-   * Retrieves all delegated PKPs (Programmable Key Pairs) for the Delegatee.
-   * @returns A promise that resolves to an array of `DelegatedPkpInfo` objects.
-   * @throws If the tool policy registry contract, delegatee wallet, or Lit contracts are not initialized.
-   */
-  public async getDelegatedPkps(): Promise<DelegatedPkpInfo[]> {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  // /**
+  //  * Retrieves all delegated PKPs (Programmable Key Pairs) for the Delegatee.
+  //  * @returns A promise that resolves to an array of `DelegatedPkpInfo` objects.
+  //  * @throws If the tool policy registry contract, delegatee wallet, or Lit contracts are not initialized.
+  //  */
+  // public async getDelegatedPkps(): Promise<DelegatedPkpInfo[]> {
+  //   if (!this.toolPolicyRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-    if (!this.delegateeWallet) {
-      throw new Error('Delegatee wallet not initialized');
-    }
+  //   if (!this.delegateeWallet) {
+  //     throw new Error('Delegatee wallet not initialized');
+  //   }
 
-    if (!this.litContracts) {
-      throw new Error('Lit contracts not initialized');
-    }
+  //   if (!this.litContracts) {
+  //     throw new Error('Lit contracts not initialized');
+  //   }
 
-    // Get token IDs of delegated PKPs
-    const tokenIds = await this.toolPolicyRegistryContract.getDelegatedPkps(
-      this.delegateeWallet.address
-    );
+  //   // Get token IDs of delegated PKPs
+  //   const tokenIds = await this.toolPolicyRegistryContract.getDelegatedPkps(
+  //     this.delegateeWallet.address
+  //   );
 
-    // For each token ID, get the public key and compute eth address
-    const pkps = await Promise.all(
-      tokenIds.map(async (tokenId: string) => {
-        // Get PKP public key
-        const pkpInfo = await this.litContracts.pkpNftContract.read.getPubkey(
-          tokenId
-        );
-        const publicKey = pkpInfo.toString();
+  //   // For each token ID, get the public key and compute eth address
+  //   const pkps = await Promise.all(
+  //     tokenIds.map(async (tokenId: string) => {
+  //       // Get PKP public key
+  //       const pkpInfo = await this.litContracts.pkpNftContract.read.getPubkey(
+  //         tokenId
+  //       );
+  //       const publicKey = pkpInfo.toString();
 
-        // Compute eth address from public key
-        const ethAddress = ethers.utils.computeAddress(publicKey);
+  //       // Compute eth address from public key
+  //       const ethAddress = ethers.utils.computeAddress(publicKey);
 
-        return {
-          tokenId: tokenId.toString(),
-          ethAddress,
-          publicKey,
-        };
-      })
-    );
+  //       return {
+  //         tokenId: tokenId.toString(),
+  //         ethAddress,
+  //         publicKey,
+  //       };
+  //     })
+  //   );
 
-    return pkps;
-  }
+  //   return pkps;
+  // }
 
-  /**
-   * Get all registered tools and categorize them based on whether they have policies
-   * @param pkpTokenId The token ID of the PKP to get tools for
-   * @returns Object containing:
-   * - toolsWithPolicies: Array of tools that have policies and match the current network
-   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
-   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
-   * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
-   */
-  public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: Array<AwTool<any, any>>;
-    toolsWithoutPolicies: Array<AwTool<any, any>>;
-    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
-    toolsUnknownWithoutPolicies: string[];
-  }> {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  // /**
+  //  * Get all registered tools and categorize them based on whether they have policies
+  //  * @param pkpTokenId The token ID of the PKP to get tools for
+  //  * @returns Object containing:
+  //  * - toolsWithPolicies: Array of tools that have policies and match the current network
+  //  * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
+  //  * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+  //  * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
+  //  */
+  // public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
+  //   toolsWithPolicies: Array<AwTool<any, any>>;
+  //   toolsWithoutPolicies: Array<AwTool<any, any>>;
+  //   toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
+  //   toolsUnknownWithoutPolicies: string[];
+  // }> {
+  //   if (!this.toolPolicyRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-    const registeredTools = await getRegisteredTools(
-      this.toolPolicyRegistryContract,
-      this.litContracts,
-      pkpTokenId
-    );
+  //   const registeredTools = await getRegisteredTools(
+  //     this.toolPolicyRegistryContract,
+  //     this.litContracts,
+  //     pkpTokenId
+  //   );
 
-    return {
-      toolsWithPolicies: registeredTools.toolsWithPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
-      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
-    };
-  }
+  //   return {
+  //     toolsWithPolicies: registeredTools.toolsWithPolicies
+  //       .filter((tool) => tool.network === this.litNetwork)
+  //       .map((t) => t.tool),
+  //     toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
+  //       .filter((tool) => tool.network === this.litNetwork)
+  //       .map((t) => t.tool),
+  //     toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
+  //     toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
+  //   };
+  // }
 
-  /**
-   * Retrieves the policy for a specific tool.
-   * @param pkpTokenId - The token ID of the PKP.
-   * @param ipfsCid - The IPFS CID of the tool.
-   * @returns An object containing the policy and version for the tool.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async getToolPolicy(
-    pkpTokenId: string,
-    ipfsCid: string
-  ): Promise<{ policy: string; version: string }> {
-    if (!this.toolPolicyRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
+  // /**
+  //  * Retrieves the policy for a specific tool.
+  //  * @param pkpTokenId - The token ID of the PKP.
+  //  * @param ipfsCid - The IPFS CID of the tool.
+  //  * @returns An object containing the policy and version for the tool.
+  //  * @throws If the tool policy registry contract is not initialized.
+  //  */
+  // public async getToolPolicy(
+  //   pkpTokenId: string,
+  //   ipfsCid: string
+  // ): Promise<{ policy: string; version: string }> {
+  //   if (!this.toolPolicyRegistryContract) {
+  //     throw new Error('Tool policy manager not initialized');
+  //   }
 
-    return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
-  }
+  //   return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
+  // }
 
-  public async getToolViaIntent(
-    pkpTokenId: string,
-    intent: string,
-    intentMatcher: IntentMatcher
-  ): Promise<IntentMatcherResponse<any>> {
-    // Get registered tools
-    const { toolsWithPolicies, toolsWithoutPolicies } =
-      await this.getRegisteredToolsForPkp(pkpTokenId);
+  // public async getToolViaIntent(
+  //   pkpTokenId: string,
+  //   intent: string,
+  //   intentMatcher: IntentMatcher
+  // ): Promise<IntentMatcherResponse<any>> {
+  //   // Get registered tools
+  //   const { toolsWithPolicies, toolsWithoutPolicies } =
+  //     await this.getRegisteredToolsForPkp(pkpTokenId);
 
-    // Analyze intent and find matching tool
-    return intentMatcher.analyzeIntentAndMatchTool(intent, [
-      ...toolsWithPolicies,
-      ...toolsWithoutPolicies,
-    ]);
-  }
+  //   // Analyze intent and find matching tool
+  //   return intentMatcher.analyzeIntentAndMatchTool(intent, [
+  //     ...toolsWithPolicies,
+  //     ...toolsWithoutPolicies,
+  //   ]);
+  // }
 
-  public async executeTool(
-    params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
-  ): Promise<ExecuteJsResponse> {
-    if (!this.litNodeClient || !this.litContracts || !this.delegateeWallet) {
-      throw new Error('Delegatee not properly initialized');
-    }
+  // public async executeTool(
+  //   params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
+  // ): Promise<ExecuteJsResponse> {
+  //   if (!this.litNodeClient || !this.litContracts || !this.delegateeWallet) {
+  //     throw new Error('Delegatee not properly initialized');
+  //   }
 
-    const capacityCreditInfo = await Delegatee.getCapacityCredit(
-      this.litContracts,
-      this.storage
-    );
+  //   const capacityCreditInfo = await Delegatee.getCapacityCredit(
+  //     this.litContracts,
+  //     this.storage
+  //   );
 
-    let capacityDelegationAuthSig: AuthSig | undefined;
-    if (capacityCreditInfo !== null) {
-      capacityDelegationAuthSig = (
-        await this.litNodeClient.createCapacityDelegationAuthSig({
-          dAppOwnerWallet: this.delegateeWallet,
-          capacityTokenId: capacityCreditInfo.capacityTokenId,
-          delegateeAddresses: [this.delegateeWallet.address],
-          uses: '1',
-        })
-      ).capacityDelegationAuthSig;
-    }
+  //   let capacityDelegationAuthSig: AuthSig | undefined;
+  //   if (capacityCreditInfo !== null) {
+  //     capacityDelegationAuthSig = (
+  //       await this.litNodeClient.createCapacityDelegationAuthSig({
+  //         dAppOwnerWallet: this.delegateeWallet,
+  //         capacityTokenId: capacityCreditInfo.capacityTokenId,
+  //         delegateeAddresses: [this.delegateeWallet.address],
+  //         uses: '1',
+  //       })
+  //     ).capacityDelegationAuthSig;
+  //   }
 
-    const sessionSignatures = await this.litNodeClient.getSessionSigs({
-      chain: 'ethereum',
-      expiration: new Date(Date.now() + 1000 * 60 * 10).toISOString(), // 10 minutes
-      capabilityAuthSigs:
-        capacityDelegationAuthSig !== undefined
-          ? [capacityDelegationAuthSig]
-          : undefined,
-      resourceAbilityRequests: [
-        {
-          resource: new LitActionResource('*'),
-          ability: LIT_ABILITY.LitActionExecution,
-        },
-        {
-          resource: new LitPKPResource('*'),
-          ability: LIT_ABILITY.PKPSigning,
-        },
-      ],
-      authNeededCallback: async ({
-        uri,
-        expiration,
-        resourceAbilityRequests,
-      }) => {
-        const toSign = await createSiweMessage({
-          uri,
-          expiration,
-          resources: resourceAbilityRequests,
-          walletAddress: await this.delegateeWallet.getAddress(),
-          nonce: await this.litNodeClient.getLatestBlockhash(),
-          litNodeClient: this.litNodeClient,
-        });
+  //   const sessionSignatures = await this.litNodeClient.getSessionSigs({
+  //     chain: 'ethereum',
+  //     expiration: new Date(Date.now() + 1000 * 60 * 10).toISOString(), // 10 minutes
+  //     capabilityAuthSigs:
+  //       capacityDelegationAuthSig !== undefined
+  //         ? [capacityDelegationAuthSig]
+  //         : undefined,
+  //     resourceAbilityRequests: [
+  //       {
+  //         resource: new LitActionResource('*'),
+  //         ability: LIT_ABILITY.LitActionExecution,
+  //       },
+  //       {
+  //         resource: new LitPKPResource('*'),
+  //         ability: LIT_ABILITY.PKPSigning,
+  //       },
+  //     ],
+  //     authNeededCallback: async ({
+  //       uri,
+  //       expiration,
+  //       resourceAbilityRequests,
+  //     }) => {
+  //       const toSign = await createSiweMessage({
+  //         uri,
+  //         expiration,
+  //         resources: resourceAbilityRequests,
+  //         walletAddress: await this.delegateeWallet.getAddress(),
+  //         nonce: await this.litNodeClient.getLatestBlockhash(),
+  //         litNodeClient: this.litNodeClient,
+  //       });
 
-        return await generateAuthSig({
-          signer: this.delegateeWallet,
-          toSign,
-        });
-      },
-    });
+  //       return await generateAuthSig({
+  //         signer: this.delegateeWallet,
+  //         toSign,
+  //       });
+  //     },
+  //   });
 
-    try {
-      return this.litNodeClient.executeJs({
-        ...params,
-        sessionSigs: sessionSignatures,
-      });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to execute tool: ${error.message}`);
-      }
-      throw error;
-    }
-  }
+  //   try {
+  //     return this.litNodeClient.executeJs({
+  //       ...params,
+  //       sessionSigs: sessionSignatures,
+  //     });
+  //   } catch (error: unknown) {
+  //     if (error instanceof Error) {
+  //       throw new Error(`Failed to execute tool: ${error.message}`);
+  //     }
+  //     throw error;
+  //   }
+  // }
 
   public async getCredentials<T>(
     requiredCredentialNames: readonly string[]
