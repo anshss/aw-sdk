@@ -5,7 +5,7 @@ const FormData = require('form-data');
 const networks = require('../config/networks');
 const dotenvx = require('@dotenvx/dotenvx');
 
-// Load environment variables from root .env
+// Load environment variables
 dotenvx.config({ path: path.join(__dirname, '../../../../.env') });
 
 async function uploadToIPFS(filePath) {

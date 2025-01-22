@@ -3,17 +3,17 @@
  */
 module.exports = {
   'datil-dev': {
-    pkpToolRegistryAddress: '0xdE8807799579eef5b9A84A0b4164D28E804da571',
+    pkpToolRegistryAddress: '0xad6123D29B470408bc536aA29d2233c8353a485e',
     litNetwork: 'datil-dev',
     outputFile: 'deployed-lit-action-datil-dev.js',
   },
   'datil-test': {
-    pkpToolRegistryAddress: '0x0b099F7e2520aCC52A361D1cB83fa43660C9a038',
+    pkpToolRegistryAddress: '0x2f02090138e29a7d345993b85D665B4377Fb22b0',
     litNetwork: 'datil-test',
     outputFile: 'deployed-lit-action-datil-test.js',
   },
   datil: {
-    pkpToolRegistryAddress: '0xDeb70dCBC7432fEFEdaE900AFF11Dcc5169CfcBB',
+    pkpToolRegistryAddress: '0xB41D75c11B557C1Df109940593c8cA75B2dd465c',
     litNetwork: 'datil',
     outputFile: 'deployed-lit-action-datil.js',
   },
