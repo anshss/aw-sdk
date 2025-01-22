@@ -549,7 +549,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         );
 
         // Get registered tools and policies
-        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsInfo = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID);
 
         // Verify number of tools
         assertEq(toolsInfo.length, 2, "Wrong number of registered tools");
@@ -711,16 +711,19 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         );
 
         // Call getRegisteredToolAndDelegatees
-        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies memory toolInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolAndDelegatees(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+        string[] memory toolIpfsCidsForQuery = new string[](1);
+        toolIpfsCidsForQuery[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCidsForQuery);
 
         // Verify number of tools
         // Verify tool info
-        assertEq(toolInfo.toolIpfsCid, TEST_TOOL_CID, "Wrong tool CID");
-        assertTrue(toolInfo.toolEnabled, "Tool should be enabled");
-        assertEq(toolInfo.delegatees.length, 1, "Wrong number of delegatees for tool");
-        assertEq(toolInfo.delegatees[0], TEST_DELEGATEE, "Wrong delegatee for tool");
-        assertEq(toolInfo.delegateesPolicyIpfsCids[0], TEST_POLICY_CID, "Wrong policy CID for tool");
-        assertTrue(toolInfo.delegateesPolicyEnabled[0], "Tool policy should be enabled");
+        assertEq(toolInfo.length, 1, "Wrong number of tools");
+        assertEq(toolInfo[0].toolIpfsCid, TEST_TOOL_CID, "Wrong tool CID");
+        assertTrue(toolInfo[0].toolEnabled, "Tool should be enabled");
+        assertEq(toolInfo[0].delegatees.length, 1, "Wrong number of delegatees for tool");
+        assertEq(toolInfo[0].delegatees[0], TEST_DELEGATEE, "Wrong delegatee for tool");
+        assertEq(toolInfo[0].delegateesPolicyIpfsCids[0], TEST_POLICY_CID, "Wrong policy CID for tool");
+        assertTrue(toolInfo[0].delegateesPolicyEnabled[0], "Tool policy should be enabled");
 
         vm.stopPrank();
     }

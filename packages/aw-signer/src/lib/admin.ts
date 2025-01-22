@@ -11,7 +11,6 @@ import {
   DEFAULT_REGISTRY_CONFIG,
   getPkpToolRegistryContract,
   getRegisteredToolsAndDelegatees,
-  getToolPolicy,
 } from './utils/pkp-tool-registry';
 import { LocalStorage } from './utils/storage';
 import { loadPkpsFromStorage, mintPkp, savePkpsToStorage } from './utils/pkp';
@@ -250,22 +249,37 @@ export class Admin {
     };
   }
 
-  // /**
-  //  * Removes a tool from the list of permitted tools.
-  //  * @param ipfsCid - The IPFS CID of the tool.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the Admin instance is not properly initialized.
-  //  */
-  // public async removeTool(pkpTokenId: string, ipfsCid: string) {
-  //   if (!this.litContracts) {
-  //     throw new Error('Not properly initialized');
-  //   }
+  /**
+   * Removes a tool from the list of permitted tools.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the Admin instance is not properly initialized.
+   */
+  public async removeTool(pkpTokenId: string, ipfsCid: string) {
+    if (!this.litContracts || !this.toolRegistryContract) {
+      throw new Error('Not properly initialized');
+    }
 
-  //   return this.litContracts.pkpPermissionsContractUtils.write.revokePermittedAction(
-  //     (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
-  //     ipfsCid
-  //   );
-  // }
+    const revokePermittedActionTx =
+      await this.litContracts.pkpPermissionsContractUtils.write.revokePermittedAction(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid
+      );
+
+    const removeToolsTx = await this.toolRegistryContract.removeTools(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [ipfsCid]
+    );
+
+    return {
+      revokePermittedActionTxReceipt: await revokePermittedActionTx.wait(),
+      removeToolsTxReceipt: await removeToolsTx.wait(),
+    };
+  }
 
   /**
    * Enables a tool for a given PKP.
@@ -289,27 +303,52 @@ export class Admin {
     return await tx.wait();
   }
 
-  // /**
-  //  * Disables a tool for a given PKP.
-  //  * @param pkpTokenId - The token ID of the PKP.
-  //  * @param toolIpfsCid - The IPFS CID of the tool to be disabled.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async disableTool(pkpTokenId: string, toolIpfsCid: string) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Disables a tool for a given PKP.
+   * @param pkpTokenId - The token ID of the PKP.
+   * @param toolIpfsCid - The IPFS CID of the tool to be disabled.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async disableTool(pkpTokenId: string, toolIpfsCid: string) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   const tx = await this.toolRegistryContract.disableTools(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     [toolIpfsCid]
-  //   );
+    const tx = await this.toolRegistryContract.disableTools(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [toolIpfsCid]
+    );
 
-  //   return await tx.wait();
-  // }
+    return await tx.wait();
+  }
+
+  /**
+   * Checks if a tool is registered for a given PKP.
+   * @param pkpTokenId - The token ID of the PKP.
+   * @param toolIpfsCid - The IPFS CID of the tool to be checked.
+   * @returns A promise that resolves to an object containing:
+   * - isRegistered: boolean indicating if the tool is registered
+   * - isEnabled: boolean indicating if the tool is enabled
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async isToolRegistered(pkpTokenId: string, toolIpfsCid: string) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const [isRegistered, isEnabled] =
+      await this.toolRegistryContract.isToolRegistered(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        toolIpfsCid
+      );
+
+    return { isRegistered, isEnabled };
+  }
 
   /**
    * Get a registered tool by its IPFS CID for a given PKP.
@@ -415,6 +454,37 @@ export class Admin {
   }
 
   /**
+   * Checks if a tool is permitted for a specific delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param toolIpfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to an object containing isPermitted and isEnabled.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async isToolPermittedForDelegatee(
+    pkpTokenId: string,
+    toolIpfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const result = await this.toolRegistryContract.isToolPermittedForDelegatee(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      toolIpfsCid,
+      ethers.utils.getAddress(delegatee)
+    );
+
+    return {
+      isPermitted: result[0],
+      isEnabled: result[1],
+    };
+  }
+
+  /**
    * Permits a tool for a specific delegatee.
    * @param pkpTokenId - The PKP token ID.
    * @param toolIpfsCid - The IPFS CID of the tool.
@@ -442,33 +512,33 @@ export class Admin {
     return await tx.wait();
   }
 
-  // /**
-  //  * Unpermits a tool for a specific delegatee.
-  //  * @param pkpTokenId - The PKP token ID.
-  //  * @param toolIpfsCid - The IPFS CID of the tool.
-  //  * @param delegatee - The address of the delegatee.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async unpermitToolForDelegatee(
-  //   pkpTokenId: string,
-  //   toolIpfsCid: string,
-  //   delegatee: string
-  // ) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Unpermits a tool for a specific delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param toolIpfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async unpermitToolForDelegatee(
+    pkpTokenId: string,
+    toolIpfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   const tx = await this.toolRegistryContract.unpermitToolsForDelegatees(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     [toolIpfsCid],
-  //     [delegatee]
-  //   );
+    const tx = await this.toolRegistryContract.unpermitToolsForDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [toolIpfsCid],
+      [delegatee]
+    );
 
-  //   return await tx.wait();
-  // }
+    return await tx.wait();
+  }
 
   /**
    * Retrieves the policy for a specific tool.
@@ -485,12 +555,15 @@ export class Admin {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getToolPolicy(
-      this.toolRegistryContract,
-      (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
-      ipfsCid,
-      delegatee
+    const result = await this.toolRegistryContract.getToolPoliciesForDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [ipfsCid],
+      [delegatee]
     );
+
+    return result[0];
   }
 
   /**
@@ -525,89 +598,211 @@ export class Admin {
     return await tx.wait();
   }
 
-  // /**
-  //  * Removes the policy for a specific tool.
-  //  * @param ipfsCid - The IPFS CID of the tool.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async removeToolPolicy(pkpTokenId: string, ipfsCid: string) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Removes a policy for a specific tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async removeToolPolicyForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   const tx = await this.toolRegistryContract.removeToolPolicy(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     ipfsCid
-  //   );
+    const tx = await this.toolRegistryContract.removeToolPoliciesForDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [ipfsCid],
+      [delegatee]
+    );
 
-  //   return await tx.wait();
-  // }
+    return await tx.wait();
+  }
 
-  // /**
-  //  * Removes a delegatee for the PKP.
-  //  * @param delegatee - The address to remove as a delegatee.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async removeDelegatee(pkpTokenId: string, delegatee: string) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Enables a policy for a specific tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async enableToolPolicyForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   const tx = await this.toolRegistryContract.removeDelegatee(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     delegatee
-  //   );
+    const tx = await this.toolRegistryContract.enableToolPoliciesForDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [ipfsCid],
+      [delegatee]
+    );
 
-  //   return await tx.wait();
-  // }
+    return await tx.wait();
+  }
 
-  // /**
-  //  * Adds multiple delegatees for the PKP in a single transaction.
-  //  * @param delegatees - An array of addresses to add as delegatees.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async batchAddDelegatees(pkpTokenId: string, delegatees: string[]) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Disables a policy for a specific tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async disableToolPolicyForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   const tx = await this.toolRegistryContract.batchAddDelegatees(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     delegatees
-  //   );
+    const tx = await this.toolRegistryContract.disableToolPoliciesForDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [ipfsCid],
+      [delegatee]
+    );
 
-  //   return await tx.wait();
-  // }
+    return await tx.wait();
+  }
 
-  // /**
-  //  * Removes multiple delegatees for the PKP in a single transaction.
-  //  * @param delegatees - An array of addresses to remove as delegatees.
-  //  * @returns A promise that resolves to the transaction receipt.
-  //  * @throws If the tool policy registry contract is not initialized.
-  //  */
-  // public async batchRemoveDelegatees(pkpTokenId: string, delegatees: string[]) {
-  //   if (!this.toolRegistryContract) {
-  //     throw new Error('Tool policy manager not initialized');
-  //   }
+  /**
+   * Retrieves a specific policy parameter for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @param parameterName - The name of the policy parameter.
+   * @returns A promise that resolves to the policy parameter value.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async getToolPolicyParameterForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string,
+    parameterName: string
+  ) {
+    return this.getToolPolicyParametersForDelegatee(
+      pkpTokenId,
+      ipfsCid,
+      delegatee,
+      [parameterName]
+    );
+  }
 
-  //   const tx = await this.toolRegistryContract.batchRemoveDelegatees(
-  //     (
-  //       await this.getPkpByTokenId(pkpTokenId)
-  //     ).info.tokenId,
-  //     delegatees
-  //   );
+  /**
+   * Retrieves multiple policy parameters for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @param parameterNames - An array of policy parameter names.
+   * @returns A promise that resolves to an array of policy parameter values.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async getToolPolicyParametersForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string,
+    parameterNames: string[]
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
 
-  //   return await tx.wait();
-  // }
+    const parameterValues =
+      await this.toolRegistryContract.getToolPolicyParameters(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid,
+        delegatee,
+        parameterNames
+      );
+
+    return parameterValues;
+  }
+
+  /**
+   * Sets multiple policy parameters for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @param parameterNames - An array of policy parameter names.
+   * @param parameterValues - An array of policy parameter values.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async setToolPolicyParametersForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string,
+    parameterNames: string[],
+    parameterValues: any[]
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const tx =
+      await this.toolRegistryContract.setToolPolicyParametersForDelegatee(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid,
+        delegatee,
+        parameterNames,
+        parameterValues
+      );
+
+    return await tx.wait();
+  }
+
+  /**
+   * Removes multiple policy parameters for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @param parameterNames - An array of policy parameter names to remove.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async removeToolPolicyParametersForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string,
+    parameterNames: string[]
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const tx =
+      await this.toolRegistryContract.removeToolPolicyParametersForDelegatee(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid,
+        delegatee,
+        parameterNames
+      );
+
+    return await tx.wait();
+  }
 
   /**
    * Disconnects the Lit node client.

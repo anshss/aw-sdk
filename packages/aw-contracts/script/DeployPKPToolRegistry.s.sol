@@ -203,8 +203,8 @@ contract DeployPKPToolRegistry is Script {
         selectors[1] = PKPToolRegistryToolFacet.isToolPermittedForDelegatee.selector;
         selectors[2] = PKPToolRegistryToolFacet.getRegisteredTools.selector;
         selectors[3] = PKPToolRegistryToolFacet.getAllRegisteredTools.selector;
-        selectors[4] = PKPToolRegistryToolFacet.getRegisteredToolAndDelegatees.selector;
-        selectors[5] = PKPToolRegistryToolFacet.getRegisteredToolsAndDelegatees.selector;
+        selectors[4] = PKPToolRegistryToolFacet.getRegisteredToolsAndDelegatees.selector;
+        selectors[5] = PKPToolRegistryToolFacet.getAllRegisteredToolsAndDelegatees.selector;
         selectors[6] = PKPToolRegistryToolFacet.getToolsWithPolicy.selector;
         selectors[7] = PKPToolRegistryToolFacet.getToolsWithoutPolicy.selector;
         selectors[8] = PKPToolRegistryToolFacet.registerTools.selector;
@@ -229,7 +229,7 @@ contract DeployPKPToolRegistry is Script {
 
         function getPolicyFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](5);
-        selectors[0] = PKPToolRegistryPolicyFacet.getToolPolicyForDelegatee.selector;
+        selectors[0] = PKPToolRegistryPolicyFacet.getToolPoliciesForDelegatees.selector;
         selectors[1] = PKPToolRegistryPolicyFacet.setToolPoliciesForDelegatees.selector;
         selectors[2] = PKPToolRegistryPolicyFacet.removeToolPoliciesForDelegatees.selector;
         selectors[3] = PKPToolRegistryPolicyFacet.enableToolPoliciesForDelegatees.selector;
@@ -240,7 +240,7 @@ contract DeployPKPToolRegistry is Script {
     function getPolicyParameterFacetSelectors() public pure returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameters.selector;
-        selectors[1] = PKPToolRegistryPolicyParameterFacet.getToolPolicyParameter.selector;
+        selectors[1] = PKPToolRegistryPolicyParameterFacet.getAllToolPolicyParameters.selector;
         selectors[2] = PKPToolRegistryPolicyParameterFacet.setToolPolicyParametersForDelegatee.selector;
         selectors[3] = PKPToolRegistryPolicyParameterFacet.removeToolPolicyParametersForDelegatee.selector;
         return selectors;

@@ -6,15 +6,15 @@ import { ToolRegistryConfig } from '../../types';
 export const DEFAULT_REGISTRY_CONFIG: Record<string, ToolRegistryConfig> = {
   'datil-dev': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0xe3367d943554099A7Df32e8d8D3AF7c4fAe4255c',
+    contractAddress: '0xc4A2Eb676bda78013dE7ADD156D164a0ee52e93C',
   },
   'datil-test': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0xC376C11E0195b8bFfbD95a51d5F0D59D8B295510',
+    contractAddress: '0x53E11580760D85DFcB6e591390323628eb361F75',
   },
   datil: {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0x72E7c2501b0f9B337D4df3D03e3a79D49c54780F',
+    contractAddress: '0x25Eed06A07241284aDf51dc9b89D200d55b70dB8',
   },
 } as const;
 
@@ -31,8 +31,8 @@ const PKP_TOOL_REGISTRY_ABI = [
 
   'function getRegisteredTools(uint256 pkpTokenId, string[] calldata toolIpfsCids) external view returns (tuple(string toolIpfsCid, bool toolEnabled)[] memory toolsInfo)',
   'function getAllRegisteredTools(uint256 pkpTokenId) external view returns (tuple(string toolIpfsCid, bool toolEnabled)[] memory toolsInfo)',
-  'function getRegisteredToolAndDelegatees(uint256 pkpTokenId, string calldata toolIpfsCid) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees, string[] delegateesPolicyIpfsCids, bool[] delegateesPolicyEnabled) memory toolInfo)',
-  'function getRegisteredToolsAndDelegatees(uint256 pkpTokenId) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees, string[] delegateesPolicyIpfsCids, bool[] delegateesPolicyEnabled)[] memory toolsInfo)',
+  'function getRegisteredToolsAndDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees, string[] delegateesPolicyIpfsCids, bool[] delegateesPolicyEnabled) memory toolInfo)',
+  'function getAllRegisteredToolsAndDelegatees(uint256 pkpTokenId) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees, string[] delegateesPolicyIpfsCids, bool[] delegateesPolicyEnabled)[] memory toolsInfo)',
   'function getToolsWithPolicy(uint256 pkpTokenId) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees, string[] delegateesPolicyIpfsCids, bool[] delegateesPolicyEnabled)[] memory toolsInfo)',
   'function getToolsWithoutPolicy(uint256 pkpTokenId) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address[] delegatees)[] memory toolsWithoutPolicy)',
 
@@ -47,17 +47,35 @@ const PKP_TOOL_REGISTRY_ABI = [
   'function isPkpDelegatee(uint256 pkpTokenId, address delegatee) external view returns (bool)',
 
   // Policy Facet Functions
-  'function getToolPolicyForDelegatee(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee) external view returns (string memory policyIpfsCid, bool enabled)',
+  'function getToolPoliciesForDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids, address[] calldata delegatees) external view returns (tuple(string toolIpfsCid, string policyIpfsCid, address delegatee, bool enabled)[] memory toolPolicies)',
   'function setToolPoliciesForDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids, address[] calldata delegatees, string[] calldata policyIpfsCids, bool enablePolicies) external',
   'function removeToolPoliciesForDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids, address[] calldata delegatees) external',
   'function enableToolPoliciesForDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids, address[] calldata delegatees) external',
   'function disableToolPoliciesForDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids, address[] calldata delegatees) external',
 
   // Policy Parameter Facet Functions
-  'function getToolPolicyParameter(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee, string calldata parameterName) external view returns (bytes memory parameterValue)',
-  'function getToolPolicyParameters(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee) external view returns (string[] memory parameterNames, bytes[] memory parameterValues)',
+  'function getToolPolicyParameters(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee, string[] calldata parameterNames) external view returns (tuple(string name, bytes value)[] memory parameters)',
+  'function getAllToolPolicyParameters(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee) external view returns (tuple(string name, bytes value)[] memory parameters)',
   'function setToolPolicyParametersForDelegatee(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee, string[] calldata parameterNames, bytes[] calldata parameterValues) external',
   'function removeToolPolicyParametersForDelegatee(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee, string[] calldata parameterNames) external',
+
+  // Error Signatures
+  'error InvalidDelegatee()',
+  'error EmptyDelegatees()',
+  'error DelegateeAlreadyExists(uint256 pkpTokenId, address delegatee)',
+  'error DelegateeNotFound(uint256 pkpTokenId, address delegatee)',
+  'error EmptyIPFSCID()',
+  'error ToolNotFound(string toolIpfsCid)',
+  'error ToolAlreadyRegistered(string toolIpfsCid)',
+  'error ArrayLengthMismatch()',
+  'error InvalidPolicyParameters()',
+  'error PolicyParameterAlreadySet(string parameterName)',
+  'error InvalidPolicyValue()',
+  'error NoPolicySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee)',
+  'error PolicyAlreadySet(uint256 pkpTokenId, string toolIpfsCid, address delegatee)',
+  'error PolicySameEnabledState(uint256 pkpTokenId, string toolIpfsCid, address delegatee)',
+  'error EmptyPolicyIPFSCID()',
+  'error NotPKPOwner()',
 
   // Events
   'event ToolsRegistered(uint256 indexed pkpTokenId, bool enabled, string[] toolIpfsCids)',

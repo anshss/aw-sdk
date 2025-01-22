@@ -164,43 +164,53 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
         }
     }
 
-    /// @notice Get a specific registered tool and its delegatees for a PKP token
-    /// @dev Returns the ToolInfoWithDelegateesAndPolicies struct containing tool IPFS CID, its enabled state, and delegatees with their policies
+    /// @notice Get registered tools and their delegatees for a PKP token
+    /// @dev Returns an array of ToolInfoWithDelegateesAndPolicies structs containing tool IPFS CIDs, their enabled state, and delegatees with their policies
     /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool to retrieve
-    /// @return toolInfo The ToolInfoWithDelegateesAndPolicies struct containing tool and delegatee details
-    function getRegisteredToolAndDelegatees(uint256 pkpTokenId, string calldata toolIpfsCid)
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools to retrieve
+    /// @return toolsInfo Array of ToolInfoWithDelegateesAndPolicies structs containing tool and delegatee details
+    function getRegisteredToolsAndDelegatees(uint256 pkpTokenId, string[] calldata toolIpfsCids)
         external
         view
-        returns (ToolInfoWithDelegateesAndPolicies memory toolInfo)
+        returns (ToolInfoWithDelegateesAndPolicies[] memory toolsInfo)
     {
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
+        
+        uint256 length = toolIpfsCids.length;
+        toolsInfo = new ToolInfoWithDelegateesAndPolicies[](length);
 
-        // Check if tool exists
-        if (!pkpData.toolCids.contains(toolCidHash)) {
-            revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCid);
-        }
+        for (uint256 i = 0; i < length;) {
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCids[i]));
 
-        // Retrieve tool information
-        PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-        toolInfo.toolIpfsCid = l.hashedToolCidToOriginalCid[toolCidHash];
-        toolInfo.toolEnabled = tool.enabled;
+            // Check if tool exists
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert LibPKPToolRegistryToolFacet.ToolNotFound(toolIpfsCids[i]);
+            }
 
-        // Get delegatees with custom policy
-        uint256 delegateesWithPolicyLength = tool.delegateesWithCustomPolicy.length();
-        toolInfo.delegatees = new address[](delegateesWithPolicyLength);
-        toolInfo.delegateesPolicyIpfsCids = new string[](delegateesWithPolicyLength);
-        toolInfo.delegateesPolicyEnabled = new bool[](delegateesWithPolicyLength);
+            // Retrieve tool information
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            ToolInfoWithDelegateesAndPolicies memory toolInfo;
+            toolInfo.toolIpfsCid = l.hashedToolCidToOriginalCid[toolCidHash];
+            toolInfo.toolEnabled = tool.enabled;
 
-        // Fill in policies for each delegatee that has a custom policy
-        for (uint256 i = 0; i < delegateesWithPolicyLength;) {
-            address delegatee = tool.delegateesWithCustomPolicy.at(i);
-            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-            toolInfo.delegatees[i] = delegatee;
-            toolInfo.delegateesPolicyIpfsCids[i] = l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash];
-            toolInfo.delegateesPolicyEnabled[i] = policy.enabled;
+            // Get delegatees with custom policy
+            uint256 delegateesWithPolicyLength = tool.delegateesWithCustomPolicy.length();
+            toolInfo.delegatees = new address[](delegateesWithPolicyLength);
+            toolInfo.delegateesPolicyIpfsCids = new string[](delegateesWithPolicyLength);
+            toolInfo.delegateesPolicyEnabled = new bool[](delegateesWithPolicyLength);
+
+            // Fill in policies for each delegatee that has a custom policy
+            for (uint256 j = 0; j < delegateesWithPolicyLength;) {
+                address delegatee = tool.delegateesWithCustomPolicy.at(j);
+                PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+                toolInfo.delegatees[j] = delegatee;
+                toolInfo.delegateesPolicyIpfsCids[j] = l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash];
+                toolInfo.delegateesPolicyEnabled[j] = policy.enabled;
+                unchecked { ++j; }
+            }
+
+            toolsInfo[i] = toolInfo;
             unchecked { ++i; }
         }
     }
@@ -209,7 +219,7 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
     /// @dev Returns a comprehensive view of all tools, policies, and delegatees
     /// @param pkpTokenId The PKP token ID
     /// @return toolsInfo Array of ToolPolicyInfo structs containing tool and policy details
-    function getRegisteredToolsAndDelegatees(uint256 pkpTokenId)
+    function getAllRegisteredToolsAndDelegatees(uint256 pkpTokenId)
         external
         view
         returns (ToolInfoWithDelegateesAndPolicies[] memory toolsInfo)

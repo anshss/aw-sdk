@@ -52,7 +52,7 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test, TestHelper {
         );
 
         // Get registered tools and policies
-        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsInfo = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID);
 
         // Verify number of tools
         assertEq(toolsInfo.length, 2, "Wrong number of registered tools");
@@ -194,21 +194,21 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test, TestHelper {
         PKPToolRegistryDelegateeFacet(address(diamond)).removeDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
 
         // Verify policies were removed
-        (string memory policy1, bool enabled1) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        string[] memory queryTools = new string[](2);
+        queryTools[0] = TEST_TOOL_CID;
+        queryTools[1] = TEST_TOOL_CID_2;
+        address[] memory queryDelegatees = new address[](2);
+        queryDelegatees[0] = TEST_DELEGATEE;
+        queryDelegatees[1] = TEST_DELEGATEE_2;
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
+            queryTools,
+            queryDelegatees
         );
-        assertEq(bytes(policy1).length, 0, "Policy 1 should be removed");
-        assertFalse(enabled1, "Policy 1 should be disabled");
-
-        (string memory policy2, bool enabled2) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
-            TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID_2,
-            TEST_DELEGATEE
-        );
-        assertEq(bytes(policy2).length, 0, "Policy 2 should be removed");
-        assertFalse(enabled2, "Policy 2 should be disabled");
+        assertEq(policies[0].policyIpfsCid, "", "Policy 1 should be empty");
+        assertFalse(policies[0].enabled, "Policy 1 should be disabled");
+        assertEq(policies[1].policyIpfsCid, "", "Policy 2 should be empty");
+        assertFalse(policies[1].enabled, "Policy 2 should be disabled");
 
         vm.stopPrank();
     }

@@ -20,14 +20,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
     function test_getToolPolicyForDelegatee_NonExistentTool() public {
         vm.startPrank(deployer);
 
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = TEST_DELEGATEE;
+
         vm.expectRevert(abi.encodeWithSelector(
             LibPKPToolRegistryPolicyFacet.ToolNotFound.selector,
             TEST_TOOL_CID
         ));
-        PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
+            toolIpfsCids,
+            delegatees
         );
 
         vm.stopPrank();
@@ -37,11 +42,16 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
     function test_getToolPolicyForDelegatee_EmptyToolCid() public {
         vm.startPrank(deployer);
 
+        string[] memory emptyToolCids = new string[](1);
+        emptyToolCids[0] = "";
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = TEST_DELEGATEE;
+
         vm.expectRevert(LibPKPToolRegistryPolicyFacet.EmptyIPFSCID.selector);
-        PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            "",
-            TEST_DELEGATEE
+            emptyToolCids,
+            delegatees
         );
 
         vm.stopPrank();
@@ -51,11 +61,16 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
     function test_getToolPolicyForDelegatee_ZeroAddressDelegatee() public {
         vm.startPrank(deployer);
 
+        string[] memory toolCids = new string[](1);
+        toolCids[0] = TEST_TOOL_CID;
+        address[] memory zeroDelegatees = new address[](1);
+        zeroDelegatees[0] = address(0);
+
         vm.expectRevert(LibPKPToolRegistryPolicyFacet.InvalidDelegatee.selector);
-        PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            address(0)
+            toolCids,
+            zeroDelegatees
         );
 
         vm.stopPrank();
@@ -87,13 +102,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         // Verify policy was set
-        (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = TEST_TOOL_CID;
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = TEST_DELEGATEE;
+        
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
+            queryTools,
+            queryDelegatees
         );
-        assertEq(policy, TEST_POLICY_CID, "Wrong policy CID");
-        assertTrue(enabled, "Policy should be enabled");
+        assertEq(policies[0].policyIpfsCid, TEST_POLICY_CID, "Wrong policy CID");
+        assertTrue(policies[0].enabled, "Policy should be enabled");
+        assertEq(policies[0].delegatee, TEST_DELEGATEE, "Wrong delegatee for policy");
 
         vm.stopPrank();
     }
@@ -131,13 +152,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
 
         // Verify all policies were set
         for (uint256 i = 0; i < toolIpfsCids.length; i++) {
-            (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+            string[] memory queryTools = new string[](1);
+            queryTools[0] = toolIpfsCids[i];
+            address[] memory queryDelegatees = new address[](1);
+            queryDelegatees[0] = delegatees[i];
+            
+            PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
                 TEST_PKP_TOKEN_ID,
-                toolIpfsCids[i],
-                delegatees[i]
+                queryTools,
+                queryDelegatees
             );
-            assertEq(policy, policyIpfsCids[i], "Wrong policy CID");
-            assertTrue(enabled, "Policy should be enabled");
+            assertEq(policies[0].policyIpfsCid, policyIpfsCids[i], "Wrong policy CID");
+            assertTrue(policies[0].enabled, "Policy should be enabled");
+            assertEq(policies[0].delegatee, delegatees[i], "Wrong delegatee for policy");
         }
 
         vm.stopPrank();
@@ -225,13 +252,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         // Verify policy was removed
-        (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = TEST_TOOL_CID;
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = TEST_DELEGATEE;
+        
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
             TEST_PKP_TOKEN_ID,
-            TEST_TOOL_CID,
-            TEST_DELEGATEE
+            queryTools,
+            queryDelegatees
         );
-        assertEq(policy, "", "Policy should be empty");
-        assertFalse(enabled, "Policy should be disabled");
+        assertEq(policies[0].policyIpfsCid, "", "Policy should be empty");
+        assertFalse(policies[0].enabled, "Policy should be disabled");
+        assertEq(policies[0].delegatee, TEST_DELEGATEE, "Wrong delegatee for policy");
 
         vm.stopPrank();
     }
@@ -274,15 +307,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         // Verify all policies were removed
-        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
-            (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
-                TEST_PKP_TOKEN_ID,
-                toolIpfsCids[i],
-                delegatees[i]
-            );
-            assertEq(policy, "", "Policy should be empty");
-            assertFalse(enabled, "Policy should be disabled");
-        }
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = TEST_TOOL_CID;
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = TEST_DELEGATEE;
+
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, "", "Policy should be empty");
+        assertFalse(policies[0].enabled, "Policy should be disabled");
+        assertEq(policies[0].delegatee, TEST_DELEGATEE, "Wrong delegatee for policy");
 
         vm.stopPrank();
     }
@@ -323,15 +360,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         // Verify policies are enabled
-        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
-            (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
-                TEST_PKP_TOKEN_ID,
-                toolIpfsCids[i],
-                delegatees[i]
-            );
-            assertEq(policy, policyIpfsCids[i], "Wrong policy CID");
-            assertTrue(enabled, "Policy should be enabled");
-        }
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = TEST_TOOL_CID;
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = TEST_DELEGATEE;
+
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, policyIpfsCids[0], "Wrong policy CID");
+        assertTrue(policies[0].enabled, "Policy should be enabled");
+        assertEq(policies[0].delegatee, TEST_DELEGATEE, "Wrong delegatee for policy");
 
         vm.stopPrank();
     }
@@ -372,15 +413,19 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         // Verify policies are disabled but still exist
-        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
-            (string memory policy, bool enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(
-                TEST_PKP_TOKEN_ID,
-                toolIpfsCids[i],
-                delegatees[i]
-            );
-            assertEq(policy, policyIpfsCids[i], "Wrong policy CID");
-            assertFalse(enabled, "Policy should be disabled");
-        }
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = TEST_TOOL_CID;
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = TEST_DELEGATEE;
+
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, policyIpfsCids[0], "Wrong policy CID");
+        assertFalse(policies[0].enabled, "Policy should be disabled");
+        assertEq(policies[0].delegatee, TEST_DELEGATEE, "Wrong delegatee for policy");
 
         vm.stopPrank();
     }

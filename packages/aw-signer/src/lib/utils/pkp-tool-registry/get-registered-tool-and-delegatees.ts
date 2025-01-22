@@ -195,7 +195,7 @@ export const getRegisteredToolsAndDelegatees = async (
 
   // Get tools and their policies from registry contract
   const toolsInfo =
-    await toolPolicyRegistryContract.getRegisteredToolsAndDelegatees(
+    await toolPolicyRegistryContract.getAllRegisteredToolsAndDelegatees(
       pkpTokenId
     );
 
