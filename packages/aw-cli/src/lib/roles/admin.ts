@@ -13,8 +13,6 @@ import {
 } from '../prompts/admin';
 import { promptSelectPkp } from '../prompts/admin/select-pkp';
 import {
-  handlePermitTool,
-  handleRemoveTool,
   handleGetTools,
   handleGetToolPolicy,
   handleSetToolPolicy,
@@ -23,10 +21,17 @@ import {
   handleIsDelegatee,
   handleAddDelegatee,
   handleRemoveDelegatee,
-  handleBatchAddDelegatee,
-  handleBatchRemoveDelegatee,
   handleMintPkp,
   handleTransferOwnership,
+  handleGetPolicyParameters,
+  handleSetPolicyParameters,
+  handleRemovePolicyParameters,
+  handleRegisterTool,
+  handleRemoveTool,
+  handleEnableTool,
+  handleDisableTool,
+  handlePermitToolForDelegatee,
+  handleUnpermitToolForDelegatee,
 } from '../handlers/admin';
 
 /**
@@ -134,14 +139,26 @@ export class Admin {
 
     // Handle the selected action.
     switch (option) {
-      case 'permitTool':
-        await handlePermitTool(admin.awAdmin, pkp);
+      case 'getRegisteredTools':
+        await handleGetTools(admin.awAdmin, pkp);
+        break;
+      case 'registerTool':
+        await handleRegisterTool(admin.awAdmin, pkp);
         break;
       case 'removeTool':
         await handleRemoveTool(admin.awAdmin, pkp);
         break;
-      case 'getRegisteredTools':
-        await handleGetTools(admin.awAdmin, pkp);
+      case 'enableTool':
+        await handleEnableTool(admin.awAdmin, pkp);
+        break;
+      case 'disableTool':
+        await handleDisableTool(admin.awAdmin, pkp);
+        break;
+      case 'permitToolForDelegatee':
+        await handlePermitToolForDelegatee(admin.awAdmin, pkp);
+        break;
+      case 'unpermitToolForDelegatee':
+        await handleUnpermitToolForDelegatee(admin.awAdmin, pkp);
         break;
       case 'getToolPolicy':
         await handleGetToolPolicy(admin.awAdmin, pkp);
@@ -151,6 +168,15 @@ export class Admin {
         break;
       case 'removeToolPolicy':
         await handleRemoveToolPolicy(admin.awAdmin, pkp);
+        break;
+      case 'getPolicyParameters':
+        await handleGetPolicyParameters(admin.awAdmin, pkp);
+        break;
+      case 'setPolicyParameters':
+        await handleSetPolicyParameters(admin.awAdmin, pkp);
+        break;
+      case 'removePolicyParameters':
+        await handleRemovePolicyParameters(admin.awAdmin, pkp);
         break;
       case 'getDelegatees':
         await handleGetDelegatees(admin.awAdmin, pkp);
@@ -163,12 +189,6 @@ export class Admin {
         break;
       case 'removeDelegatee':
         await handleRemoveDelegatee(admin.awAdmin, pkp);
-        break;
-      case 'batchAddDelegatees':
-        await handleBatchAddDelegatee(admin.awAdmin, pkp);
-        break;
-      case 'batchRemoveDelegatees':
-        await handleBatchRemoveDelegatee(admin.awAdmin, pkp);
         break;
       case 'transferOwnership':
         await handleTransferOwnership(admin.awAdmin, pkp);

@@ -36,32 +36,32 @@ const getRegisteredTools = async (awDelegatee: AwDelegatee) => {
   // Prompt the user to select a PKP.
   const selectedPkp = await promptSelectPkp(pkps);
 
-  const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
+  const registeredTools = await awDelegatee.getPermittedToolsForPkp(
     selectedPkp.tokenId
   );
 
   // Process tools with policies.
-  if (registeredTools.toolsWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithPolicies).length > 0) {
     logger.log(`Tools with Policies:`);
-    registeredTools.toolsWithPolicies.forEach((tool) => {
-      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+    Object.entries(registeredTools.toolsWithPolicies).forEach(([ipfsCid, tool]) => {
+      logger.log(`  - ${tool.name} (${ipfsCid})`);
       logger.log(`      - ${tool.description}`);
     });
   }
 
   // Process tools without policies.
-  if (registeredTools.toolsWithoutPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithoutPolicies).length > 0) {
     logger.log(`Tools without Policies:`);
-    registeredTools.toolsWithoutPolicies.forEach((tool) => {
-      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+    Object.entries(registeredTools.toolsWithoutPolicies).forEach(([ipfsCid, tool]) => {
+      logger.log(`  - ${tool.name} (${ipfsCid})`);
       logger.log(`      - ${tool.description}`);
     });
   }
 
-  if (registeredTools.toolsUnknownWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsUnknownWithPolicies).length > 0) {
     logger.log(`Unknown Tools with Policies:`);
-    registeredTools.toolsUnknownWithPolicies.forEach((tool) => {
-      logger.log(`  - Unknown tool: ${tool.ipfsCid}`);
+    Object.entries(registeredTools.toolsUnknownWithPolicies).forEach(([ipfsCid, tool]) => {
+      logger.log(`  - Unknown tool: ${ipfsCid}`);
     });
   }
 
@@ -75,8 +75,14 @@ const getRegisteredTools = async (awDelegatee: AwDelegatee) => {
   // Return the selected PKP and categorized tools.
   return {
     pkpInfo: selectedPkp,
-    toolsWithPolicies: registeredTools.toolsWithPolicies,
-    toolsWithoutPolicies: registeredTools.toolsWithoutPolicies,
+    toolsWithPolicies: Object.entries(registeredTools.toolsWithPolicies).map(([ipfsCid, tool]) => ({
+      ...tool,
+      ipfsCid,
+    })),
+    toolsWithoutPolicies: Object.entries(registeredTools.toolsWithoutPolicies).map(([ipfsCid, tool]) => ({
+      ...tool,
+      ipfsCid,
+    })),
   };
 };
 

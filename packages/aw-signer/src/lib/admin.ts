@@ -374,7 +374,7 @@ export class Admin {
 
   /**
    * Get all registered tools and categorize them based on whether they have policies
-   * @returns Object containing:
+   * @returns Object containing
    * - toolsWithPolicies: Object mapping tool IPFS CIDs to their metadata and delegatee policies
    * - toolsWithoutPolicies: Array of tools that don't have policies
    * - toolsUnknownWithPolicies: Object mapping unknown tool IPFS CIDs to their delegatee policies
@@ -800,6 +800,28 @@ export class Admin {
         delegatee,
         parameterNames
       );
+
+    return await tx.wait();
+  }
+
+  /**
+   * Removes a delegatee for the PKP.
+   * @param pkpTokenId - The PKP token ID.
+   * @param delegatee - The address to remove as a delegatee.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async removeDelegatee(pkpTokenId: string, delegatee: string) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const tx = await this.toolRegistryContract.removeDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [delegatee]
+    );
 
     return await tx.wait();
   }

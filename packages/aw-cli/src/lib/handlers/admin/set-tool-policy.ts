@@ -61,7 +61,49 @@ const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
   }
 
   // Return the selected tool.
-  return tool as AwTool<any, any>;
+  return tool as AwTool;
+};
+
+/**
+ * Prompts the user to select a delegatee for setting the tool policy.
+ * This function throws an error if the user cancels the selection.
+ *
+ * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to get delegatees for.
+ * @returns The selected delegatee address.
+ * @throws AwCliError - If the user cancels the selection.
+ */
+const promptSelectDelegatee = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
+  // Get the list of delegatees
+  const delegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
+
+  if (delegatees.length === 0) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES,
+      'No delegatees found for this PKP.'
+    );
+  }
+
+  // Prompt the user to select a delegatee
+  const { delegatee } = await prompts({
+    type: 'select',
+    name: 'delegatee',
+    message: 'Select a delegatee to set the policy for:',
+    choices: delegatees.map((address) => ({
+      title: address,
+      value: address,
+    })),
+  });
+
+  // Throw an error if the user cancels the selection.
+  if (!delegatee) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
+      'Tool policy setting cancelled.'
+    );
+  }
+
+  return delegatee;
 };
 
 /**
@@ -69,25 +111,64 @@ const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
  * This function logs the progress and success of the operation.
  *
  * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to set the tool policy for.
  * @param tool - The tool for which the policy will be set.
- * @param policy - The policy to set for the tool.
- * @param version - The version of the policy.
+ * @param delegatee - The delegatee address to set the policy for.
+ * @param policyIpfsCid - The IPFS CID of the policy to set.
+ * @param policyParams - Optional policy parameters to set.
  */
 const setToolPolicy = async (
   awAdmin: AwAdmin,
   pkp: PkpInfo,
-  tool: AwTool<any, any>,
-  policy: string,
-  version: string
+  tool: AwTool,
+  delegatee: string,
+  policyIpfsCid: string,
+  policyParams?: Record<string, any>
 ) => {
-  // Log a loading message to indicate the operation is in progress.
-  logger.loading('Setting tool policy...');
+  try {
+    // Log a loading message to indicate the operation is in progress.
+    logger.loading('Setting tool policy...');
 
-  // Set the tool's policy in the AW system.
-  await awAdmin.setToolPolicy(pkp.info.tokenId, tool.ipfsCid, policy, version);
+    // Set the tool's policy in the AW system.
+    await awAdmin.setToolPolicyForDelegatee(
+      pkp.info.tokenId,
+      tool.ipfsCid,
+      delegatee,
+      policyIpfsCid || tool.defaultPolicyIpfsCid,
+      true
+    );
 
-  // Log a success message once the policy is set.
-  logger.success('Tool policy set successfully.');
+    // If there are policy parameters, set them
+    if (policyParams) {
+      logger.loading('Setting policy parameters...');
+      const paramNames = Object.keys(policyParams).filter(name => name !== 'type' && name !== 'version');
+      const paramValues = paramNames.map(name => policyParams[name]);
+      await awAdmin.setToolPolicyParametersForDelegatee(
+        pkp.info.tokenId,
+        tool.ipfsCid,
+        delegatee,
+        paramNames,
+        paramValues
+      );
+    }
+
+    // Finally, permit the tool for the delegatee
+    logger.loading('Permitting tool for delegatee...');
+    await awAdmin.permitToolForDelegatee(
+      pkp.info.tokenId,
+      tool.ipfsCid,
+      delegatee
+    );
+
+    // Log a success message once the policy is set.
+    logger.success('Tool policy set successfully.');
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Failed to set tool policy: ${error.message}`);
+    } else {
+      logger.error('Failed to set tool policy: Unknown error occurred');
+    }
+  }
 };
 
 /**
@@ -117,17 +198,33 @@ export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
     // Prompt the user to select a tool for setting or updating its policy.
     const selectedTool = await promptSelectToolForPolicy(permittedTools);
 
+    // Prompt the user to select a delegatee.
+    const selectedDelegatee = await promptSelectDelegatee(awAdmin, pkp);
+
     // Prompt the user for policy details.
-    const { policy, version } = await promptPolicyDetails(selectedTool);
+    const { policyIpfsCid, parameters } = await promptPolicyDetails(selectedTool);
 
     // Set the policy for the selected tool.
-    await setToolPolicy(awAdmin, pkp, selectedTool, policy, version);
+    await setToolPolicy(
+      awAdmin,
+      pkp,
+      selectedTool,
+      selectedDelegatee,
+      policyIpfsCid || selectedTool.defaultPolicyIpfsCid,
+      parameters
+    );
   } catch (error) {
     // Handle specific errors related to tool policy setting.
     if (error instanceof AwCliError) {
       if (error.type === AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_TOOLS) {
         // Log an error message if no permitted tools are found.
         logger.error('No permitted tools found.');
+        return;
+      }
+
+      if (error.type === AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES) {
+        // Log an error message if no delegatees are found.
+        logger.error('No delegatees found for this PKP.');
         return;
       }
 

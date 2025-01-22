@@ -83,6 +83,48 @@ const promptSelectToolForPolicyRemoval = async (
 };
 
 /**
+ * Prompts the user to select a delegatee for removing the tool policy.
+ * This function throws an error if the user cancels the selection.
+ *
+ * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to get delegatees for.
+ * @returns The selected delegatee address.
+ * @throws AwCliError - If the user cancels the selection.
+ */
+const promptSelectDelegatee = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
+  // Get the list of delegatees
+  const delegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
+
+  if (delegatees.length === 0) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_NO_DELEGATEES,
+      'No delegatees found for this PKP.'
+    );
+  }
+
+  // Prompt the user to select a delegatee
+  const { delegatee } = await prompts({
+    type: 'select',
+    name: 'delegatee',
+    message: 'Select a delegatee to remove the policy for:',
+    choices: delegatees.map((address) => ({
+      title: address,
+      value: address,
+    })),
+  });
+
+  // Throw an error if the user cancels the selection.
+  if (!delegatee) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_CANCELLED,
+      'Tool policy removal cancelled.'
+    );
+  }
+
+  return delegatee;
+};
+
+/**
  * Removes the policy for a selected tool in the Full Self-Signing (AW) system.
  * This function logs the progress and success of the operation.
  *
@@ -93,13 +135,18 @@ const promptSelectToolForPolicyRemoval = async (
 const removeToolPolicy = async (
   awAdmin: AwAdmin,
   pkp: PkpInfo,
-  tool: AwTool<any, any>
+  tool: AwTool<any, any>,
+  delegatee: string
 ) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Removing tool policy...');
 
   // Remove the tool's policy from the AW system.
-  await awAdmin.removeToolPolicy(pkp.info.tokenId, tool.ipfsCid);
+  await awAdmin.removeToolPolicyForDelegatee(
+    pkp.info.tokenId,
+    tool.ipfsCid,
+    delegatee
+  );
 
   // Log a success message once the policy is removed.
   logger.success('Tool policy removed successfully.');
@@ -132,18 +179,28 @@ export const handleRemoveToolPolicy = async (
       );
     }
 
-    // Prompt the user to select a tool for policy removal and remove the policy.
-    await removeToolPolicy(
-      awAdmin,
-      pkp,
-      await promptSelectToolForPolicyRemoval(permittedTools.toolsWithPolicies)
+    // Prompt the user to select a tool for policy removal.
+    const selectedTool = await promptSelectToolForPolicyRemoval(
+      permittedTools.toolsWithPolicies
     );
+
+    // Prompt the user to select a delegatee.
+    const selectedDelegatee = await promptSelectDelegatee(awAdmin, pkp);
+
+    // Remove the policy for the selected tool.
+    await removeToolPolicy(awAdmin, pkp, selectedTool, selectedDelegatee);
   } catch (error) {
     // Handle specific errors related to tool policy removal.
     if (error instanceof AwCliError) {
       if (error.type === AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_NO_TOOLS) {
         // Log an error message if no tools with policies are found.
         logger.error('No tools with policies found.');
+        return;
+      }
+
+      if (error.type === AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_NO_DELEGATEES) {
+        // Log an error message if no delegatees are found.
+        logger.error('No delegatees found for this PKP.');
         return;
       }
 

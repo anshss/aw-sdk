@@ -21,32 +21,31 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
     // Retrieve the list of PKPs delegated to the user.
     const pkps = await awDelegatee.getDelegatedPkps();
 
-    // If no PKPs are delegated, throw an error.
+    // If no PKPs are delegated, log a message and return.
     if (pkps.length === 0) {
-      throw new AwCliError(
-        AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_PKPS,
-        'No PKPs are currently delegated to you.'
-      );
+      logger.info('No PKPs are currently delegated to you.');
+      return;
     }
 
     // Prompt the user to select a PKP.
     const selectedPkp = await promptSelectPkp(pkps);
 
     // Retrieve the list of registered tools for the selected PKP.
-    const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
+    const registeredTools = await awDelegatee.getPermittedToolsForPkp(
       selectedPkp.tokenId
     );
 
-    // If no tools with policies are found, throw an error.
-    if (registeredTools.toolsWithPolicies.length === 0) {
-      throw new AwCliError(
-        AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_TOOLS_WITH_POLICY,
-        'No registered tools with a policy for this PKP.'
-      );
+    // If no tools with policies are found, log a message and return.
+    if (Object.keys(registeredTools.toolsWithPolicies).length === 0) {
+      logger.info('No registered tools with a policy for this PKP.');
+      return;
     }
 
     const selectedTool = await promptSelectTool(
-      registeredTools.toolsWithPolicies,
+      Object.entries(registeredTools.toolsWithPolicies).map(([ipfsCid, tool]) => ({
+        ...tool,
+        ipfsCid,
+      })),
       []
     );
 
@@ -68,26 +67,25 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
     // Handle specific errors related to tool policy retrieval.
     if (error instanceof AwCliError) {
       if (error.type === AwCliErrorType.DELEGATEE_SELECT_PKP_CANCELLED) {
-        logger.error('No PKP selected');
+        logger.info('No PKP selected');
         return;
       }
       if (error.type === AwCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS) {
-        logger.error(
-          'No known tools with policies available for the selected PKP'
-        );
+        logger.info('No known tools with policies available for the selected PKP');
         return;
       }
       if (error.type === AwCliErrorType.DELEGATEE_SELECT_TOOL_CANCELLED) {
-        logger.error('No tool selected');
+        logger.info('No tool selected');
         return;
       }
       if (error.type === AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_POLICY) {
-        logger.error(error.message);
+        logger.info(error.message);
         return;
       }
     }
 
-    // Re-throw any other errors to be handled by the caller.
-    throw error;
+    // For any other errors, log them in a user-friendly way
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    logger.log(`Failed to get tool policy: ${errorMessage}`);
   }
 };
