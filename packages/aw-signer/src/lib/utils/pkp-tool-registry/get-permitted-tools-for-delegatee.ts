@@ -93,6 +93,7 @@ const processKnownTool = (
     network: registryTool.network,
     toolEnabled: toolInfo.toolEnabled,
     delegatee: toolInfo.delegatee,
+    defaultPolicyIpfsCid: registryTool.tool.defaultPolicyIpfsCid,
   };
 
   if (hasPolicy) {

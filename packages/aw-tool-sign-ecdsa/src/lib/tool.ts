@@ -75,7 +75,8 @@ const createNetworkTool = (
 ): AwTool<SignEcdsaLitActionParameters, SignEcdsaPolicyType> => ({
   name: 'SignEcdsa',
   description: `A Lit Action that signs a message with an allowlist of message prefixes.`,
-  ipfsCid: IPFS_CIDS[network],
+  ipfsCid: IPFS_CIDS[network].tool,
+  defaultPolicyIpfsCid: IPFS_CIDS[network].defaultPolicy,
   parameters: {
     type: {} as SignEcdsaLitActionParameters,
     schema: SignEcdsaLitActionSchema,

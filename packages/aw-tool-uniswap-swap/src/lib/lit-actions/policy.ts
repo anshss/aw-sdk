@@ -71,7 +71,7 @@ export default async () => {
   ) {
     throw new Error(
       `Token ${
-        params.tokenIn
+        toolParameters.tokenIn
       } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
     );
   }
@@ -84,7 +84,7 @@ export default async () => {
   ) {
     throw new Error(
       `Token ${
-        params.tokenOut
+        toolParameters.tokenOut
       } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
     );
   }

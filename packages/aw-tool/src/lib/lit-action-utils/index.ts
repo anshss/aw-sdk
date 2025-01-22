@@ -23,6 +23,7 @@ declare global {
       isHexString: any;
       getAddress: any;
       defaultAbiCoder: any;
+      toUtf8Bytes: any;
     };
     BigNumber: any;
     Contract: any;
