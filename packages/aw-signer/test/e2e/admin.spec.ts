@@ -54,7 +54,7 @@ describe('Admin E2E', () => {
     }
   });
 
-  describe.skip('PKP Management', () => {
+  describe('PKP Management', () => {
     let pkpMetadata: PkpInfo;
 
     it('should mint a new PKP', async () => {

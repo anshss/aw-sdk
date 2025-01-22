@@ -198,7 +198,7 @@ contract DeployPKPToolRegistry is Script {
     }
 
     function getToolFacetSelectors() public pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](15);
+        bytes4[] memory selectors = new bytes4[](16);
         selectors[0] = PKPToolRegistryToolFacet.isToolRegistered.selector;
         selectors[1] = PKPToolRegistryToolFacet.isToolPermittedForDelegatee.selector;
         selectors[2] = PKPToolRegistryToolFacet.getRegisteredTools.selector;
@@ -214,6 +214,7 @@ contract DeployPKPToolRegistry is Script {
         selectors[12] = PKPToolRegistryBase.getPKPNFTContract.selector;
         selectors[13] = PKPToolRegistryToolFacet.permitToolsForDelegatees.selector;
         selectors[14] = PKPToolRegistryToolFacet.unpermitToolsForDelegatees.selector;
+        selectors[15] = PKPToolRegistryToolFacet.getPermittedToolsForDelegatee.selector;
         return selectors;
     }
 

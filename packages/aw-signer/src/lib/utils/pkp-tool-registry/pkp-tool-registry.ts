@@ -6,15 +6,15 @@ import { ToolRegistryConfig } from '../../types';
 export const DEFAULT_REGISTRY_CONFIG: Record<string, ToolRegistryConfig> = {
   'datil-dev': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0xc4A2Eb676bda78013dE7ADD156D164a0ee52e93C',
+    contractAddress: '0xad6123D29B470408bc536aA29d2233c8353a485e',
   },
   'datil-test': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0x53E11580760D85DFcB6e591390323628eb361F75',
+    contractAddress: '0x2f02090138e29a7d345993b85D665B4377Fb22b0',
   },
   datil: {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0x25Eed06A07241284aDf51dc9b89D200d55b70dB8',
+    contractAddress: '0xB41D75c11B557C1Df109940593c8cA75B2dd465c',
   },
 } as const;
 
@@ -38,6 +38,7 @@ const PKP_TOOL_REGISTRY_ABI = [
 
   'function isToolRegistered(uint256 pkpTokenId, string calldata toolIpfsCid) external view returns (bool isRegistered, bool isEnabled)',
   'function isToolPermittedForDelegatee(uint256 pkpTokenId, string calldata toolIpfsCid, address delegatee) external view returns (bool isPermitted, bool isEnabled)',
+  'function getPermittedToolsForDelegatee(uint256 pkpTokenId, address delegatee) external view returns (tuple(string toolIpfsCid, bool toolEnabled, address delegatee, string policyIpfsCid, bool policyEnabled)[] memory permittedTools)',
 
   // Delegatee Facet Functions
   'function addDelegatees(uint256 pkpTokenId, address[] calldata delegatees) external',

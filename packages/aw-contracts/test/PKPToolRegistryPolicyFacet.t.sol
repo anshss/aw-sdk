@@ -4,11 +4,28 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import "../src/facets/PKPToolRegistryPolicyFacet.sol";
 import "../src/facets/PKPToolRegistryToolFacet.sol";
+import "../src/libraries/PKPToolRegistryStorage.sol";
 import "./helpers/TestHelper.sol";
 
 contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
+    PKPToolRegistryPolicyFacet policyFacet;
+    PKPToolRegistryToolFacet toolFacet;
+    uint256 pkpTokenId;
+    address pkpOwner;
+
     function setUp() public override {
         super.setUp();
+        pkpTokenId = 1;
+        pkpOwner = address(0x123);
+        policyFacet = new PKPToolRegistryPolicyFacet();
+        toolFacet = new PKPToolRegistryToolFacet();
+        
+        // Set PKP owner for testing
+        vm.mockCall(
+            address(policyFacet),
+            abi.encodeWithSignature("getPKPOwner(uint256)", pkpTokenId),
+            abi.encode(pkpOwner)
+        );
     }
 
     /// @notice Helper function to register tools for testing
@@ -482,5 +499,74 @@ contract PKPToolRegistryPolicyFacetTest is Test, TestHelper {
         );
 
         vm.stopPrank();
+    }
+
+    function test_getPermittedToolsForDelegatee() public {
+        // Setup - register tools and set permissions
+        string[] memory toolIpfsCids = new string[](3);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        toolIpfsCids[2] = TEST_TOOL_CID_3;
+        
+        vm.startPrank(deployer);
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Setup delegatee permissions
+        address[] memory delegatees = new address[](2);
+        delegatees[0] = TEST_DELEGATEE;
+        delegatees[1] = TEST_DELEGATEE;
+
+        // Permit tools 1 and 2 for the delegatee
+        string[] memory permittedTools = new string[](2);
+        permittedTools[0] = toolIpfsCids[0];
+        permittedTools[1] = toolIpfsCids[1];
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, permittedTools, delegatees);
+
+        // Set a policy for tool1
+        string[] memory policyTools = new string[](1);
+        policyTools[0] = toolIpfsCids[0];
+        address[] memory policyDelegatees = new address[](1);
+        policyDelegatees[0] = TEST_DELEGATEE;
+        string[] memory policyIpfsCids = new string[](1);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID, 
+            policyTools,
+            policyDelegatees,
+            policyIpfsCids,
+            true // enable the policy
+        );
+        vm.stopPrank();
+
+        // Test - Get permitted tools for delegatee
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateePolicy[] memory tools = 
+            PKPToolRegistryToolFacet(address(diamond)).getPermittedToolsForDelegatee(TEST_PKP_TOKEN_ID, TEST_DELEGATEE);
+
+        // Assert - Should have 2 permitted tools
+        assertEq(tools.length, 2, "Should have 2 permitted tools");
+
+        // Verify tool1 (with policy)
+        assertEq(tools[0].toolIpfsCid, toolIpfsCids[0], "Tool1 IPFS CID mismatch");
+        assertEq(tools[0].delegatee, TEST_DELEGATEE, "Tool1 delegatee mismatch");
+        assertEq(tools[0].toolEnabled, true, "Tool1 should be enabled");
+        assertEq(tools[0].policyIpfsCid, TEST_POLICY_CID, "Tool1 policy IPFS CID mismatch");
+        assertEq(tools[0].policyEnabled, true, "Tool1 policy should be enabled");
+
+        // Verify tool2 (without policy)
+        assertEq(tools[1].toolIpfsCid, toolIpfsCids[1], "Tool2 IPFS CID mismatch");
+        assertEq(tools[1].delegatee, TEST_DELEGATEE, "Tool2 delegatee mismatch");
+        assertEq(tools[1].toolEnabled, true, "Tool2 should be enabled");
+        assertEq(tools[1].policyIpfsCid, "", "Tool2 should have no policy");
+        assertEq(tools[1].policyEnabled, false, "Tool2 policy should be disabled");
+
+        // Test - Get permitted tools for non-permitted delegatee
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateePolicy[] memory noTools = 
+            PKPToolRegistryToolFacet(address(diamond)).getPermittedToolsForDelegatee(TEST_PKP_TOKEN_ID, TEST_DELEGATEE_2);
+        
+        assertEq(noTools.length, 0, "Non-permitted delegatee should have no tools");
+
+        // Test - Verify zero address check
+        vm.expectRevert(abi.encodeWithSignature("InvalidDelegatee()"));
+        PKPToolRegistryToolFacet(address(diamond)).getPermittedToolsForDelegatee(TEST_PKP_TOKEN_ID, address(0));
     }
 } 

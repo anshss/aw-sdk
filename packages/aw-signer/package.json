@@ -5,7 +5,9 @@
     "access": "public"
   },
   "scripts": {
-    "test:e2e": "jest test/e2e --testTimeout=120000 --runInBand"
+    "test:e2e": "jest test/e2e --testTimeout=120000 --runInBand",
+    "test:e2e:admin": "jest test/e2e/admin.spec.ts --testTimeout=120000 --runInBand",
+    "test:e2e:delegatee": "jest test/e2e/delegatee.spec.ts --testTimeout=120000 --runInBand"
   },
   "dependencies": {
     "@lit-protocol/auth-helpers": "7.0.2",
