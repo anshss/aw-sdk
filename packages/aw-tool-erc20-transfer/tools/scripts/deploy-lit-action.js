@@ -54,25 +54,37 @@ async function main() {
     // Upload each built action to IPFS
     const deployResults = await Promise.all(
       Object.entries(networks).map(async ([network, config]) => {
-        const actionPath = path.join(distDir, config.outputFile);
-        if (!fs.existsSync(actionPath)) {
-          throw new Error(
-            `Built action not found at ${actionPath}. Please run build:action first.`
-          );
-        }
+        const fileResults = await Promise.all(
+          config.outputFiles.map(async (outputFile) => {
+            const actionPath = path.join(distDir, outputFile);
+            if (!fs.existsSync(actionPath)) {
+              throw new Error(
+                `Built action not found at ${actionPath}. Please run build:action first.`
+              );
+            }
 
-        console.log(`Deploying ${network} Lit Action to IPFS...`);
-        const ipfsCid = await uploadToIPFS(actionPath);
-        console.log(`Deployed ${network} Lit Action to IPFS: ${ipfsCid}`);
-        return { network, ipfsCid };
+            console.log(`Deploying ${outputFile} to IPFS...`);
+            const ipfsCid = await uploadToIPFS(actionPath);
+            console.log(`Deployed ${outputFile} to IPFS: ${ipfsCid}`);
+            return { file: outputFile, ipfsCid };
+          })
+        );
+
+        return {
+          network,
+          files: fileResults,
+        };
       })
     );
 
     // Write deployment results to a JSON file
     const deployConfig = deployResults.reduce(
-      (acc, { network, ipfsCid }) => ({
+      (acc, { network, files }) => ({
         ...acc,
-        [network]: ipfsCid,
+        [network]: {
+          tool: files.find((f) => !f.file.includes('policy'))?.ipfsCid,
+          defaultPolicy: files.find((f) => f.file.includes('policy'))?.ipfsCid,
+        },
       }),
       {}
     );

@@ -9,34 +9,6 @@ import { createAndSignTransaction } from './utils/erc20/create-and-sign-tx';
 import { broadcastTransaction } from './utils/erc20/broadcast-tx';
 
 declare global {
-  // Injected By Lit
-  const Lit: any;
-  const LitAuth: any;
-  const ethers: {
-    providers: {
-      JsonRpcProvider: any;
-    };
-    utils: {
-      Interface: any;
-      parseUnits: any;
-      formatUnits: any;
-      formatEther: any;
-      arrayify: any;
-      keccak256: any;
-      serializeTransaction: any;
-      joinSignature: any;
-      isHexString: any;
-      getAddress: any;
-      defaultAbiCoder: any;
-    };
-    BigNumber: any;
-    Contract: any;
-  };
-
-  // Injected by build script
-  const LIT_NETWORK: string;
-  const PKP_TOOL_REGISTRY_ADDRESS: string;
-
   // Required Inputs
   const params: {
     pkpEthAddress: string;
@@ -80,22 +52,28 @@ export default async () => {
       delegateeAddress,
       toolIpfsCid
     );
-    await Lit.Actions.call({
-      ipfsId: toolPolicyIpfsCid,
-      params: {
-        pkpToolRegistryContract,
-        pkpTokenId: pkp.tokenId,
-        delegateeAddress,
-        toolParameters: {
-          tokenInfo,
-          rpcUrl: params.rpcUrl,
-          chainId: params.chainId,
-          tokenIn: params.tokenIn,
-          recipientAddress: params.recipientAddress,
-          amountIn: params.amountIn,
+    if (toolPolicyIpfsCid !== '0x') {
+      await Lit.Actions.call({
+        ipfsId: toolPolicyIpfsCid,
+        params: {
+          pkpToolRegistryContract,
+          pkpTokenId: pkp.tokenId,
+          delegateeAddress,
+          toolParameters: {
+            tokenInfo,
+            rpcUrl: params.rpcUrl,
+            chainId: params.chainId,
+            tokenIn: params.tokenIn,
+            recipientAddress: params.recipientAddress,
+            amountIn: params.amountIn,
+          },
         },
-      },
-    });
+      });
+    } else {
+      console.log(
+        `No policy found for tool ${toolIpfsCid} on PKP ${pkp.tokenId} for delegatee ${delegateeAddress}`
+      );
+    }
 
     const gasData = await getGasData(provider, pkp.ethAddress);
     const gasLimit = await estimateGasLimit(
