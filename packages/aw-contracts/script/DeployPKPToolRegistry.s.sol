@@ -198,20 +198,22 @@ contract DeployPKPToolRegistry is Script {
     }
 
     function getToolFacetSelectors() public pure returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](13);
+        bytes4[] memory selectors = new bytes4[](15);
         selectors[0] = PKPToolRegistryToolFacet.isToolRegistered.selector;
         selectors[1] = PKPToolRegistryToolFacet.isToolPermittedForDelegatee.selector;
         selectors[2] = PKPToolRegistryToolFacet.getRegisteredTools.selector;
-        selectors[3] = PKPToolRegistryToolFacet.getRegisteredToolsAndPolicies.selector;
-        selectors[4] = PKPToolRegistryToolFacet.getToolsWithPolicy.selector;
-        selectors[5] = PKPToolRegistryToolFacet.getToolsWithoutPolicy.selector;
-        selectors[6] = PKPToolRegistryToolFacet.registerTools.selector;
-        selectors[7] = PKPToolRegistryToolFacet.removeTools.selector;
-        selectors[8] = PKPToolRegistryToolFacet.enableTools.selector;
-        selectors[9] = PKPToolRegistryToolFacet.disableTools.selector;
-        selectors[10] = PKPToolRegistryBase.getPKPNFTContract.selector;
-        selectors[11] = PKPToolRegistryToolFacet.permitToolsForDelegatees.selector;
-        selectors[12] = PKPToolRegistryToolFacet.unpermitToolsForDelegatees.selector;
+        selectors[3] = PKPToolRegistryToolFacet.getAllRegisteredTools.selector;
+        selectors[4] = PKPToolRegistryToolFacet.getRegisteredToolAndDelegatees.selector;
+        selectors[5] = PKPToolRegistryToolFacet.getRegisteredToolsAndDelegatees.selector;
+        selectors[6] = PKPToolRegistryToolFacet.getToolsWithPolicy.selector;
+        selectors[7] = PKPToolRegistryToolFacet.getToolsWithoutPolicy.selector;
+        selectors[8] = PKPToolRegistryToolFacet.registerTools.selector;
+        selectors[9] = PKPToolRegistryToolFacet.removeTools.selector;
+        selectors[10] = PKPToolRegistryToolFacet.enableTools.selector;
+        selectors[11] = PKPToolRegistryToolFacet.disableTools.selector;
+        selectors[12] = PKPToolRegistryBase.getPKPNFTContract.selector;
+        selectors[13] = PKPToolRegistryToolFacet.permitToolsForDelegatees.selector;
+        selectors[14] = PKPToolRegistryToolFacet.unpermitToolsForDelegatees.selector;
         return selectors;
     }
 

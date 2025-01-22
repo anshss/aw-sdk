@@ -27,7 +27,7 @@ contract PKPToolRegistryLifecycleTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Verify tools are registered and enabled
-        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 2, "Wrong number of registered tools");
         
         (bool isRegistered1, bool isEnabled1) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
@@ -154,7 +154,7 @@ contract PKPToolRegistryLifecycleTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Verify tools are removed
-        registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 0, "All tools should be removed");
 
         vm.stopPrank();

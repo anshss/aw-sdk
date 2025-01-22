@@ -39,7 +39,7 @@ import {
   getPkpToolRegistryContract,
   // getRegisteredTools,
   // getToolPolicy,
-} from './utils/pkp-tool-registry';
+} from './utils/pkp-tool-registry/pkp-tool-registry';
 
 /**
  * The `Delegatee` class is responsible for managing the Delegatee role in the Lit Protocol.

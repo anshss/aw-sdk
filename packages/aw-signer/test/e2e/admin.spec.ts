@@ -20,6 +20,9 @@ describe('Admin E2E', () => {
     'Qmd66gsFKfavcUdYeM4ZN1z1c6VG1fZPEKtSG7WsdrsmMn';
   const DELEGATEE_1 = ethers.Wallet.createRandom().address;
   //   const DELEGATEE_2 = ethers.Wallet.createRandom().address;
+  const POLICY_IPFS_CID = 'QmTestPolicyIpfsCid';
+  const POLICY_1_ENABLED = true;
+  //   const POLICY_2_ENABLED = false;
 
   let admin: Admin;
 
@@ -73,9 +76,11 @@ describe('Admin E2E', () => {
       pkpTokenId = pkpMetadata.info.tokenId;
     }, 60000);
 
-    it('should permit a tool for PKP', async () => {
+    it('should register a tool for PKP, but it should not be enabled', async () => {
       const { litContractsTxReceipt, toolRegistryContractTxReceipt } =
-        await admin.permitTool(pkpTokenId, ERC20_TRANSFER_TOOL_IPFS_CID);
+        await admin.registerTool(pkpTokenId, ERC20_TRANSFER_TOOL_IPFS_CID, {
+          enableTools: false,
+        });
 
       expect(litContractsTxReceipt).toBeDefined();
       expect(litContractsTxReceipt.status).toBe(1);
@@ -84,29 +89,50 @@ describe('Admin E2E', () => {
       expect(toolRegistryContractTxReceipt.status).toBe(1);
     }, 60000);
 
-    it('should get registered tool with no policy for PKP', async () => {
-      const registeredTools = await admin.getRegisteredToolsForPkp(pkpTokenId);
+    it('should get a registered tool by its IPFS CID for a given PKP', async () => {
+      // Retrieve the registered tool
+      const toolInfo = await admin.getRegisteredTool(
+        pkpTokenId,
+        ERC20_TRANSFER_TOOL_IPFS_CID
+      );
 
-      console.log(registeredTools);
+      expect(toolInfo).toBeDefined();
+      expect(toolInfo.toolIpfsCid).toBe(ERC20_TRANSFER_TOOL_IPFS_CID);
+      expect(toolInfo.toolEnabled).toBe(false);
+    }, 60000);
 
-      //   expect(registeredTools).toBeDefined();
-      //   expect(Array.isArray(registeredTools.toolsWithPolicies)).toBe(true);
-      //   expect(Array.isArray(registeredTools.toolsWithoutPolicies)).toBe(true);
-      //   expect(Array.isArray(registeredTools.toolsUnknownWithPolicies)).toBe(
-      //     true
-      //   );
-      //   expect(Array.isArray(registeredTools.toolsUnknownWithoutPolicies)).toBe(
-      //     true
-      //   );
+    it('should enable a registered tool for PKP', async () => {
+      const txReceipt = await admin.enableTool(
+        pkpTokenId,
+        ERC20_TRANSFER_TOOL_IPFS_CID
+      );
+      expect(txReceipt).toBeDefined();
+      expect(txReceipt.status).toBe(1);
+    }, 60000);
 
-      //   expect(registeredTools.toolsWithPolicies.length).toBe(0);
-      //   expect(registeredTools.toolsWithoutPolicies.length).toBe(1);
-      //   expect(registeredTools.toolsUnknownWithPolicies.length).toBe(0);
-      //   expect(registeredTools.toolsUnknownWithoutPolicies.length).toBe(0);
+    it('should get enabled registered tool with no policy for PKP', async () => {
+      const registeredTools = await admin.getRegisteredToolsAndDelegateesForPkp(
+        pkpTokenId
+      );
 
-      //   expect(registeredTools.toolsWithoutPolicies[0].ipfsCid).toBe(
-      //     ERC20_TRANSFER_TOOL_IPFS_CID
-      //   );
+      expect(registeredTools).toBeDefined();
+      expect(typeof registeredTools.toolsWithPolicies).toBe('object');
+      expect(typeof registeredTools.toolsWithoutPolicies).toBe('object');
+      expect(typeof registeredTools.toolsUnknownWithPolicies).toBe('object');
+      expect(Array.isArray(registeredTools.toolsUnknownWithoutPolicies)).toBe(
+        true
+      );
+
+      // Check if ERC20 Transfer tool is registered without policy
+      const erc20Tool =
+        registeredTools.toolsWithoutPolicies[ERC20_TRANSFER_TOOL_IPFS_CID];
+      expect(erc20Tool).toBeDefined();
+      expect(erc20Tool.name).toBe('ERC20Transfer');
+      expect(erc20Tool.description).toBe(
+        'A Lit Action that sends ERC-20 tokens.'
+      );
+      expect(erc20Tool.network).toBe('datil-test');
+      expect(erc20Tool.toolEnabled).toBe(true);
     }, 60000);
 
     it('should add a delegatee for PKP', async () => {
@@ -117,8 +143,6 @@ describe('Admin E2E', () => {
 
       // Verify that the delegatee was added
       const delegatees = await admin.getDelegatees(pkpTokenId);
-
-      console.log('delegatees', delegatees);
 
       expect(delegatees).toBeDefined();
       expect(Array.isArray(delegatees)).toBe(true);
@@ -136,6 +160,72 @@ describe('Admin E2E', () => {
         ethers.Wallet.createRandom().address
       );
       expect(isDelegatee).toBe(false);
+    }, 60000);
+
+    it('should retrieve the policy for a specific tool and delegatee', async () => {
+      // Retrieve the tool policy for the delegatee
+      const toolPolicy = await admin.getToolPolicyForDelegatee(
+        pkpTokenId,
+        ERC20_TRANSFER_TOOL_IPFS_CID,
+        DELEGATEE_1
+      );
+
+      expect(toolPolicy).toBeDefined();
+      expect(toolPolicy.policyIpfsCid).toBe(null);
+      expect(toolPolicy.enabled).toBe(false);
+    }, 60000);
+
+    it('should set the policy for a specific tool and delegatee', async () => {
+      await admin.setToolPolicyForDelegatee(
+        pkpTokenId,
+        ERC20_TRANSFER_TOOL_IPFS_CID,
+        DELEGATEE_1,
+        POLICY_IPFS_CID,
+        POLICY_1_ENABLED
+      );
+
+      // Retrieve the tool policy for the delegatee
+      const toolPolicy = await admin.getToolPolicyForDelegatee(
+        pkpTokenId,
+        ERC20_TRANSFER_TOOL_IPFS_CID,
+        DELEGATEE_1
+      );
+
+      expect(toolPolicy).toBeDefined();
+      expect(toolPolicy.policyIpfsCid).toBe(POLICY_IPFS_CID);
+      expect(toolPolicy.enabled).toBe(POLICY_1_ENABLED);
+    }, 60000);
+
+    it('should get registered tool with policy for PKP', async () => {
+      const registeredTools = await admin.getRegisteredToolsAndDelegateesForPkp(
+        pkpTokenId
+      );
+
+      expect(registeredTools).toBeDefined();
+      expect(typeof registeredTools.toolsWithPolicies).toBe('object');
+      expect(typeof registeredTools.toolsWithoutPolicies).toBe('object');
+      expect(typeof registeredTools.toolsUnknownWithPolicies).toBe('object');
+      expect(Array.isArray(registeredTools.toolsUnknownWithoutPolicies)).toBe(
+        true
+      );
+
+      // Check if ERC20 Transfer tool is registered with policy
+      const erc20Tool =
+        registeredTools.toolsWithPolicies[ERC20_TRANSFER_TOOL_IPFS_CID];
+      expect(erc20Tool).toBeDefined();
+      expect(erc20Tool.name).toBe('ERC20Transfer');
+      expect(erc20Tool.description).toBe(
+        'A Lit Action that sends ERC-20 tokens.'
+      );
+      expect(erc20Tool.network).toBe('datil-test');
+      expect(erc20Tool.toolEnabled).toBe(true);
+      expect(typeof erc20Tool.delegateePolicies).toBe('object');
+
+      // Check the delegatee policy structure
+      const delegateePolicy = erc20Tool.delegateePolicies[DELEGATEE_1];
+      expect(delegateePolicy).toBeDefined();
+      expect(delegateePolicy.policyIpfsCid).toBe(POLICY_IPFS_CID);
+      expect(delegateePolicy.policyEnabled).toBe(POLICY_1_ENABLED);
     }, 60000);
   });
 

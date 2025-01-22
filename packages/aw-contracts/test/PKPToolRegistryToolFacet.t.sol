@@ -37,10 +37,10 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Verify registration
-        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 1, "Wrong number of registered tools");
-        assertEq(registeredTools[0], TEST_TOOL_CID, "Wrong tool CID registered");
-
+        assertEq(registeredTools[0].toolIpfsCid, TEST_TOOL_CID, "Wrong tool CID registered");
+        assertTrue(registeredTools[0].toolEnabled, "Tool should be enabled");
         (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
         assertTrue(isRegistered, "Tool should be registered");
         assertTrue(isEnabled, "Tool should be enabled");
@@ -64,10 +64,12 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
 
         // Verify registration
-        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 2, "Wrong number of registered tools");
-        assertEq(registeredTools[0], TEST_TOOL_CID, "Wrong first tool CID registered");
-        assertEq(registeredTools[1], TEST_TOOL_CID_2, "Wrong second tool CID registered");
+        assertEq(registeredTools[0].toolIpfsCid, TEST_TOOL_CID, "Wrong first tool CID registered");
+        assertEq(registeredTools[1].toolIpfsCid, TEST_TOOL_CID_2, "Wrong second tool CID registered");
+        assertTrue(registeredTools[0].toolEnabled, "Tool should be enabled");
+        assertTrue(registeredTools[1].toolEnabled, "Tool should be enabled");
 
         for (uint256 i = 0; i < toolIpfsCids.length; i++) {
             (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, toolIpfsCids[i]);
@@ -125,7 +127,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Verify removal
-        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 0, "Tool was not removed");
 
         (bool isRegistered, bool isEnabled) = PKPToolRegistryToolFacet(address(diamond)).isToolRegistered(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
@@ -153,7 +155,7 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
         PKPToolRegistryToolFacet(address(diamond)).removeTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
 
         // Verify removal
-        string[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID);
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getAllRegisteredTools(TEST_PKP_TOKEN_ID);
         assertEq(registeredTools.length, 0, "Tools were not removed");
 
         for (uint256 i = 0; i < toolIpfsCids.length; i++) {
@@ -484,6 +486,265 @@ contract PKPToolRegistryToolFacetTest is Test, TestHelper {
 
         vm.expectRevert(LibPKPToolRegistryBase.NotPKPOwner.selector);
         PKPToolRegistryToolFacet(address(diamond)).unpermitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test getting registered tools and their policies
+    function test_getRegisteredToolsAndDelegatees() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+
+        // Register first tool
+        string[] memory firstToolIpfsCids = new string[](1);
+        firstToolIpfsCids[0] = toolIpfsCids[0];
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, firstToolIpfsCids, true);
+
+        // Register second tool and disable by default
+        string[] memory secondToolIpfsCids = new string[](1);
+        secondToolIpfsCids[0] = toolIpfsCids[1];
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, secondToolIpfsCids, false);
+
+        // Add delegatees
+        address[] memory delegatees = new address[](2);
+        delegatees[0] = TEST_DELEGATEE;
+        delegatees[1] = TEST_DELEGATEE_2;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Permit tools for delegatees
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegatees);
+
+        // Set policies for tools and delegatees
+        string[] memory policyIpfsCids = new string[](2);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        policyIpfsCids[1] = TEST_POLICY_CID_2;
+
+        // Set policies for first tool
+        string[] memory firstToolPolicyIpfsCids = new string[](1);
+        firstToolPolicyIpfsCids[0] = policyIpfsCids[0];
+        address[] memory firstToolDelegatees = new address[](1);
+        firstToolDelegatees[0] = delegatees[0];
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            firstToolIpfsCids,
+            firstToolDelegatees,
+            firstToolPolicyIpfsCids,
+            true
+        );
+
+        // Set policies for second tool
+        string[] memory secondToolPolicyIpfsCids = new string[](1);
+        secondToolPolicyIpfsCids[0] = policyIpfsCids[1];
+        address[] memory secondToolDelegatees = new address[](1);
+        secondToolDelegatees[0] = delegatees[1];
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            secondToolIpfsCids,
+            secondToolDelegatees,
+            secondToolPolicyIpfsCids,
+            false
+        );
+
+        // Get registered tools and policies
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolsAndDelegatees(TEST_PKP_TOKEN_ID);
+
+        // Verify number of tools
+        assertEq(toolsInfo.length, 2, "Wrong number of registered tools");
+
+        // Verify first tool info
+        assertEq(toolsInfo[0].toolIpfsCid, TEST_TOOL_CID, "Wrong first tool CID");
+        assertTrue(toolsInfo[0].toolEnabled, "First tool should be enabled");
+        assertEq(toolsInfo[0].delegatees.length, 1, "Wrong number of delegatees for first tool");
+        assertEq(toolsInfo[0].delegatees[0], TEST_DELEGATEE, "Wrong delegatee for first tool");
+        assertEq(toolsInfo[0].delegateesPolicyIpfsCids[0], TEST_POLICY_CID, "Wrong policy CID for first tool");
+        assertTrue(toolsInfo[0].delegateesPolicyEnabled[0], "First tool policy should be enabled");
+
+        // Verify second tool info
+        assertEq(toolsInfo[1].toolIpfsCid, TEST_TOOL_CID_2, "Wrong second tool CID");
+        assertFalse(toolsInfo[1].toolEnabled, "Second tool should be disabled");
+        assertEq(toolsInfo[1].delegatees.length, 1, "Wrong number of delegatees for second tool");
+        assertEq(toolsInfo[1].delegatees[0], TEST_DELEGATEE_2, "Wrong delegatee for second tool");
+        assertEq(toolsInfo[1].delegateesPolicyIpfsCids[0], TEST_POLICY_CID_2, "Wrong policy CID for second tool");
+        assertFalse(toolsInfo[1].delegateesPolicyEnabled[0], "Second tool policy should be disabled");
+
+        vm.stopPrank();
+    }
+
+    function test_getToolsWithPolicy() public {
+        vm.startPrank(deployer);
+
+        // Register multiple tools
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add delegatees
+        address[] memory delegateesToAdd = new address[](2);
+        delegateesToAdd[0] = TEST_DELEGATEE;
+        delegateesToAdd[1] = TEST_DELEGATEE_2;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
+
+        // Set policy for first tool only
+        string[] memory toolsForPolicy = new string[](1);
+        toolsForPolicy[0] = TEST_TOOL_CID;
+        address[] memory delegateesForPolicy = new address[](1);
+        delegateesForPolicy[0] = TEST_DELEGATEE;
+        string[] memory policyIpfsCids = new string[](1);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            toolsForPolicy,
+            delegateesForPolicy,
+            policyIpfsCids,
+            true
+        );
+
+        // Get tools with policies
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies[] memory toolsWithPolicy = PKPToolRegistryToolFacet(address(diamond))
+            .getToolsWithPolicy(TEST_PKP_TOKEN_ID);
+
+        // Verify results
+        assertEq(toolsWithPolicy.length, 1, "Wrong number of tools with policy");
+        assertEq(toolsWithPolicy[0].toolIpfsCid, TEST_TOOL_CID, "Wrong tool CID");
+        assertTrue(toolsWithPolicy[0].toolEnabled, "Tool should be enabled");
+        assertEq(toolsWithPolicy[0].delegatees.length, 1, "Should have one delegatee");
+        assertEq(toolsWithPolicy[0].delegatees[0], TEST_DELEGATEE, "Wrong delegatee");
+        assertEq(toolsWithPolicy[0].delegateesPolicyIpfsCids[0], TEST_POLICY_CID, "Wrong policy CID");
+        assertTrue(toolsWithPolicy[0].delegateesPolicyEnabled[0], "Policy should be enabled");
+
+        vm.stopPrank();
+    }
+
+    function test_getToolsWithoutPolicy() public {
+        vm.startPrank(deployer);
+
+        // Register multiple tools
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add delegatees
+        address[] memory delegateesToAdd = new address[](2);
+        delegateesToAdd[0] = TEST_DELEGATEE;
+        delegateesToAdd[1] = TEST_DELEGATEE_2;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
+
+        // Set policy for first tool only
+        string[] memory toolsForPolicy = new string[](1);
+        toolsForPolicy[0] = TEST_TOOL_CID;
+        address[] memory delegateesForPolicy = new address[](1);
+        delegateesForPolicy[0] = TEST_DELEGATEE;
+        string[] memory policyIpfsCids = new string[](1);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            toolsForPolicy,
+            delegateesForPolicy,
+            policyIpfsCids,
+            true
+        );
+
+        // Get tools without policies
+        PKPToolRegistryToolFacet.ToolInfoWithDelegatees[] memory toolsWithoutPolicy = PKPToolRegistryToolFacet(address(diamond))
+            .getToolsWithoutPolicy(TEST_PKP_TOKEN_ID);
+
+        // Verify results
+        assertEq(toolsWithoutPolicy.length, 1, "Wrong number of tools without policy");
+        assertEq(toolsWithoutPolicy[0].toolIpfsCid, TEST_TOOL_CID_2, "Wrong tool CID");
+        assertTrue(toolsWithoutPolicy[0].toolEnabled, "Tool should be enabled");
+        assertEq(toolsWithoutPolicy[0].delegatees.length, 0, "Tool should have no delegatees");
+
+        vm.stopPrank();
+    }
+
+    function test_getRegisteredToolAndDelegatees() public {
+        vm.startPrank(deployer);
+
+        // Register multiple tools
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Add delegatees
+        address[] memory delegateesToAdd = new address[](2);
+        delegateesToAdd[0] = TEST_DELEGATEE;
+        delegateesToAdd[1] = TEST_DELEGATEE_2;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegateesToAdd);
+
+        // Permit tools for delegatees
+        PKPToolRegistryToolFacet(address(diamond)).permitToolsForDelegatees(TEST_PKP_TOKEN_ID, toolIpfsCids, delegateesToAdd);
+
+        // Set policies for first tool
+        string[] memory firstToolIpfsCids = new string[](1);
+        firstToolIpfsCids[0] = toolIpfsCids[0];
+        string[] memory firstToolPolicyIpfsCids = new string[](1);
+        firstToolPolicyIpfsCids[0] = TEST_POLICY_CID;
+        address[] memory firstToolDelegatees = new address[](1);
+        firstToolDelegatees[0] = delegateesToAdd[0];
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            firstToolIpfsCids,
+            firstToolDelegatees,
+            firstToolPolicyIpfsCids,
+            true
+        );
+
+        // Set policies for second tool
+        string[] memory secondToolIpfsCids = new string[](1);
+        secondToolIpfsCids[0] = toolIpfsCids[1];
+        string[] memory secondToolPolicyIpfsCids = new string[](1);
+        secondToolPolicyIpfsCids[0] = TEST_POLICY_CID_2;
+        address[] memory secondToolDelegatees = new address[](1);
+        secondToolDelegatees[0] = delegateesToAdd[1];
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            secondToolIpfsCids,
+            secondToolDelegatees,
+            secondToolPolicyIpfsCids,
+            true
+        );
+
+        // Call getRegisteredToolAndDelegatees
+        PKPToolRegistryToolFacet.ToolInfoWithDelegateesAndPolicies memory toolInfo = PKPToolRegistryToolFacet(address(diamond)).getRegisteredToolAndDelegatees(TEST_PKP_TOKEN_ID, TEST_TOOL_CID);
+
+        // Verify number of tools
+        // Verify tool info
+        assertEq(toolInfo.toolIpfsCid, TEST_TOOL_CID, "Wrong tool CID");
+        assertTrue(toolInfo.toolEnabled, "Tool should be enabled");
+        assertEq(toolInfo.delegatees.length, 1, "Wrong number of delegatees for tool");
+        assertEq(toolInfo.delegatees[0], TEST_DELEGATEE, "Wrong delegatee for tool");
+        assertEq(toolInfo.delegateesPolicyIpfsCids[0], TEST_POLICY_CID, "Wrong policy CID for tool");
+        assertTrue(toolInfo.delegateesPolicyEnabled[0], "Tool policy should be enabled");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test getting specific registered tools for a PKP token
+    function test_getRegisteredTools() public {
+        vm.startPrank(deployer);
+
+        string[] memory toolIpfsCids = new string[](2);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        toolIpfsCids[1] = TEST_TOOL_CID_2;
+
+        // Register the tools
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Retrieve the registered tools
+        PKPToolRegistryToolFacet.ToolInfo[] memory registeredTools = PKPToolRegistryToolFacet(address(diamond)).getRegisteredTools(TEST_PKP_TOKEN_ID, toolIpfsCids);
+
+        // Verify the retrieved tools
+        assertEq(registeredTools.length, 2, "Wrong number of registered tools");
+        assertEq(registeredTools[0].toolIpfsCid, TEST_TOOL_CID, "Wrong first tool CID");
+        assertTrue(registeredTools[0].toolEnabled, "First tool should be enabled");
+        assertEq(registeredTools[1].toolIpfsCid, TEST_TOOL_CID_2, "Wrong second tool CID");
+        assertTrue(registeredTools[1].toolEnabled, "Second tool should be enabled");
 
         vm.stopPrank();
     }
