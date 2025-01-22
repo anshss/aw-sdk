@@ -2,49 +2,48 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 
 /**
- * Default development IPFS CIDs (Content Identifiers) for each Lit network.
- * These are placeholders used when the actual deployed CIDs are not available.
+ * Default development CIDs for different environments.
+ * @type {Object.<string, NetworkCids>}
+ * @property {NetworkCids} datil-dev - CIDs for the development environment.
+ * @property {NetworkCids} datil-test - CIDs for the test environment.
+ * @property {NetworkCids} datil - CIDs for the production environment.
  */
 const DEFAULT_CIDS = {
-  'datil-dev': 'DEV_IPFS_CID',
-  'datil-test': 'TEST_IPFS_CID',
-  datil: 'PROD_IPFS_CID',
+  'datil-dev': {
+    tool: 'DEV_TOOL_IPFS_CID',
+    defaultPolicy: 'DEV_POLICY_IPFS_CID',
+  },
+  'datil-test': {
+    tool: 'TEST_TOOL_IPFS_CID',
+    defaultPolicy: 'TEST_POLICY_IPFS_CID',
+  },
+  datil: {
+    tool: 'PROD_TOOL_IPFS_CID',
+    defaultPolicy: 'PROD_POLICY_IPFS_CID',
+  },
 } as const;
 
 /**
- * Attempts to read the deployed IPFS CIDs from the build output file (`ipfs.json`).
- * If the file is not found or cannot be read, falls back to the default development CIDs.
+ * Tries to read the IPFS CIDs from the build output.
+ * Falls back to default development CIDs if the file is not found or cannot be read.
+ * @type {Record<keyof typeof DEFAULT_CIDS, NetworkCids>}
  */
-let deployedCids: Record<keyof typeof DEFAULT_CIDS, string> = DEFAULT_CIDS;
+let deployedCids = DEFAULT_CIDS;
 
-try {
-  // Path to the `ipfs.json` file in the build output directory
-  const ipfsPath = join(__dirname, '../../../dist/ipfs.json');
-
-  // Check if the `ipfs.json` file exists
-  if (existsSync(ipfsPath)) {
-    // Dynamically import the `ipfs.json` file
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const ipfsJson = require(ipfsPath);
-
-    // Use the CIDs from the `ipfs.json` file
-    deployedCids = ipfsJson;
-  } else {
-    // Log a warning if the `ipfs.json` file is not found
-    console.warn(
-      'ipfs.json not found. Using development CIDs. Please run deploy script to update.'
-    );
-  }
-} catch (error) {
-  // Log a warning if there is an error reading the `ipfs.json` file
-  console.warn(
-    'Failed to read ipfs.json. Using development CIDs:',
-    error instanceof Error ? error.message : String(error)
+const ipfsPath = join(__dirname, '../../../dist/ipfs.json');
+if (existsSync(ipfsPath)) {
+  // We know this import will work because we checked the file exists
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const ipfsJson = require(ipfsPath);
+  deployedCids = ipfsJson;
+} else {
+  throw new Error(
+    'Failed to read ipfs.json. You should only see this error if you are running the monorepo locally. You should run npx nx deploy:lit-action to update the ipfs.json files.'
   );
 }
 
 /**
- * Exported IPFS CIDs for each Lit network's Lit Action.
- * These are either the deployed CIDs (if available) or the default development CIDs.
+ * IPFS CIDs for each network's Lit Action.
+ * @type {Record<keyof typeof DEFAULT_CIDS, NetworkCids>}
  */
 export const IPFS_CIDS = deployedCids;

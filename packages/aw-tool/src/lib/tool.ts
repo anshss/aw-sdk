@@ -23,6 +23,7 @@ export type SupportedLitNetwork =
 export interface NetworkConfig {
   litNetwork: string;
   ipfsCid: string;
+  defaultPolicyIpfsCid: string;
 }
 
 /**
@@ -34,14 +35,17 @@ export const NETWORK_CONFIGS: Record<string, NetworkConfig> = {
   'datil-dev': {
     litNetwork: 'datil-dev', // Lit network identifier for the development environment
     ipfsCid: '', // IPFS CID for the development environment (to be populated if needed)
+    defaultPolicyIpfsCid: '', // IPFS CID for the development environment's default policy (to be populated if needed)
   },
   'datil-test': {
     litNetwork: 'datil-test', // Lit network identifier for the testing environment
     ipfsCid: '', // IPFS CID for the testing environment (to be populated if needed)
+    defaultPolicyIpfsCid: '', // IPFS CID for the testing environment's default policy (to be populated if needed)
   },
   datil: {
     litNetwork: 'datil', // Lit network identifier for the production environment
     ipfsCid: '', // IPFS CID for the production environment (to be populated if needed)
+    defaultPolicyIpfsCid: '', // IPFS CID for the production environment's default policy (to be populated if needed)
   },
 };
 
@@ -74,6 +78,7 @@ export interface AwTool<
   name: string; // The name of the tool
   description: string; // A description of the tool's functionality
   ipfsCid: string; // The IPFS CID for the tool's Lit Action
+  defaultPolicyIpfsCid: string; // The IPFS CID for the tool's default policy
 
   // Parameter handling
   parameters: {

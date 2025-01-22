@@ -118,7 +118,8 @@ const createNetworkTool = (
 ): AwTool<UniswapSwapLitActionParameters, UniswapSwapPolicyType> => ({
   name: 'UniswapSwap',
   description: `A Lit Action that swaps tokens on Uniswap.`,
-  ipfsCid: IPFS_CIDS[network],
+  ipfsCid: IPFS_CIDS[network].tool,
+  defaultPolicyIpfsCid: IPFS_CIDS[network].defaultPolicy,
   parameters: {
     type: {} as UniswapSwapLitActionParameters,
     schema: UniswapSwapLitActionSchema,

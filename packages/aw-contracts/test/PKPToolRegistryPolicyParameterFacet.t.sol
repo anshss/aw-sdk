@@ -32,14 +32,13 @@ contract PKPToolRegistryPolicyParameterFacetTest is TestHelper {
         vm.stopPrank();
     }
 
-    function test_getToolPolicyParameters_EmptyInitially() public {
-        (string[] memory paramNames, bytes[] memory paramValues) = policyParameterFacet.getToolPolicyParameters(
+    function test_getAllToolPolicyParameters_EmptyInitially() public {
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
         );
-        assertEq(paramNames.length, 0);
-        assertEq(paramValues.length, 0);
+        assertEq(parameters.length, 0);
     }
 
     function test_getToolPolicyParameters_AfterSetting() public {
@@ -60,28 +59,28 @@ contract PKPToolRegistryPolicyParameterFacetTest is TestHelper {
         );
         vm.stopPrank();
 
-        (string[] memory returnedNames, bytes[] memory returnedValues) = policyParameterFacet.getToolPolicyParameters(
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
             TEST_DELEGATEE
         );
 
-        assertEq(returnedNames.length, 2);
-        assertEq(returnedValues.length, 2);
-        assertEq(returnedNames[0], TEST_PARAM_NAME);
-        assertEq(returnedNames[1], TEST_PARAM_NAME_2);
-        assertEq(returnedValues[0], TEST_PARAM_VALUE);
-        assertEq(returnedValues[1], TEST_PARAM_VALUE_2);
+        assertEq(parameters.length, 2);
+        assertEq(parameters[0].name, TEST_PARAM_NAME);
+        assertEq(parameters[0].value, TEST_PARAM_VALUE);
+        assertEq(parameters[1].name, TEST_PARAM_NAME_2);
+        assertEq(parameters[1].value, TEST_PARAM_VALUE_2);
     }
 
     function test_getToolPolicyParameter_NonExistent() public {
-        bytes memory value = policyParameterFacet.getToolPolicyParameter(
+        string[] memory paramNames = new string[](1);
+        paramNames[0] = TEST_PARAM_NAME;
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            TEST_PARAM_NAME
+            TEST_DELEGATEE
         );
-        assertEq(value.length, 0);
+        assertEq(parameters.length, 0);
     }
 
     function test_getToolPolicyParameter_AfterSetting() public {
@@ -100,13 +99,14 @@ contract PKPToolRegistryPolicyParameterFacetTest is TestHelper {
         );
         vm.stopPrank();
 
-        bytes memory value = policyParameterFacet.getToolPolicyParameter(
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            TEST_PARAM_NAME
+            TEST_DELEGATEE
         );
-        assertEq(value, TEST_PARAM_VALUE);
+        assertEq(parameters.length, 1);
+        assertEq(parameters[0].name, TEST_PARAM_NAME);
+        assertEq(parameters[0].value, TEST_PARAM_VALUE);
     }
 
     function test_setToolPolicyParametersForDelegatee_NotOwner() public {
@@ -193,22 +193,24 @@ contract PKPToolRegistryPolicyParameterFacetTest is TestHelper {
         vm.stopPrank();
 
         // Verify the parameter was removed
-        bytes memory value = policyParameterFacet.getToolPolicyParameter(
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            TEST_PARAM_NAME
+            TEST_DELEGATEE
         );
-        assertEq(value.length, 0);
+        assertEq(parameters.length, 1);
+        assertEq(parameters[0].name, TEST_PARAM_NAME_2);
+        assertEq(parameters[0].value, TEST_PARAM_VALUE_2);
 
         // Verify the other parameter still exists
-        value = policyParameterFacet.getToolPolicyParameter(
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parameters2 = policyParameterFacet.getAllToolPolicyParameters(
             TEST_PKP_TOKEN_ID,
             TEST_TOOL_CID,
-            TEST_DELEGATEE,
-            TEST_PARAM_NAME_2
+            TEST_DELEGATEE
         );
-        assertEq(value, TEST_PARAM_VALUE_2);
+        assertEq(parameters2.length, 1);
+        assertEq(parameters2[0].name, TEST_PARAM_NAME_2);
+        assertEq(parameters2[0].value, TEST_PARAM_VALUE_2);
     }
 
     function test_removeToolPolicyParametersForDelegatee_NotOwner() public {
