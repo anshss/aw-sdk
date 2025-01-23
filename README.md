@@ -8,6 +8,7 @@ Welcome to the **Lit Protocol Agent Wallet** project! This repository provides a
 - [Features](#features)
 - [Key Definitions](#key-definitions)
 - [Architecture](#architecture)
+- [Creating a New Tool](#creating-a-new-tool)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -67,14 +68,6 @@ The framework effectively separates the interests of the Agent owner and the dev
   - Ensures that the Agent's private key is never fully reconstructed by any single party.
   - Prevents the Admin, delegatee, or Lit from recreating the private key, enhancing security.
 
-### Interaction with LLMs
-
-The Agent Wallet integrates with LLMs (Large Language Models) through the `aw-subagent-openai` package, which acts as an intermediary between the AI Agent and the tool execution layer. The subagent's primary responsibilities are:
-- Parse the AI Agent's natural language intents into specific tool executions
-- Select the appropriate tool based on the Agent's intent
-- Validate and format parameters for tool execution
-
-The architecture ensures that all interactions are secure and policy-compliant, with LLMs having no direct access to signing operations or wallet controls. The subagent only helps interpret the AI Agent's intent and cannot bypass the policies set by the Admin.
 
 ### Package Dependencies
 
@@ -183,6 +176,35 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
 - **Components**:
   - Command implementations
   - User interaction prompts
+
+## Creating a New Tool
+
+To create a new Agent Wallet tool package, use the provided script:
+
+```bash
+pnpm new-tool <tool-name>
+```
+
+For example:
+```bash
+pnpm new-tool my-feature
+```
+
+This will:
+1. Generate a new tool package in `packages/aw-tool-my-feature`
+2. Set up all necessary configuration files
+3. Create template files for your tool's logic
+
+After creation, you'll need to:
+1. Implement your tool's logic in:
+   - `src/lib/lit-actions/tool.ts` (Lit Action code)
+   - `src/lib/lit-actions/policy.ts` (Lit Action policy validation)
+   - `src/lib/policy.ts` (Tool policy configuration)
+   - `src/lib/tool.ts` (Tool functionality)
+
+2. Register your tool in `aw-tool-registry`:
+   - Import your tool in `registry.ts`
+   - Add your package as a dependency
 
 ## Getting Started
 
