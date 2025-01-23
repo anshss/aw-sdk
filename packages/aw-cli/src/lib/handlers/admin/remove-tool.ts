@@ -62,8 +62,8 @@ export const handleRemoveTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
     // If no permitted tools are found, throw an error.
     if (
       permittedTools === null ||
-      (permittedTools.toolsWithPolicies.length === 0 &&
-        permittedTools.toolsWithoutPolicies.length === 0)
+      (Object.keys(permittedTools.toolsWithPolicies).length === 0 &&
+        Object.keys(permittedTools.toolsWithoutPolicies).length === 0)
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,

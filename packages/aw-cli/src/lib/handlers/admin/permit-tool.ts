@@ -35,7 +35,7 @@ const permitTool = async (awAdmin: AwAdmin, pkp: PkpInfo, tool: AwTool) => {
   logger.loading('Permitting tool...');
 
   // Permit the tool in the AW system.
-  await awAdmin.permitTool(pkp.info.tokenId, tool.ipfsCid);
+  await awAdmin.registerTool(pkp.info.tokenId, tool.ipfsCid);
 
   // Log a success message once the tool is permitted.
   logger.success('Tool permitted successfully.');

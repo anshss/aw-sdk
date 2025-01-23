@@ -12,22 +12,32 @@ const categoryChoices: Record<
   Choice[]
 > = {
   tools: [
+    { title: 'List Permitted Tools', value: 'getRegisteredTools' },
     { title: 'Permit Tool', value: 'permitTool' },
     { title: 'Remove Tool', value: 'removeTool' },
-    { title: 'List Permitted Tools', value: 'getRegisteredTools' },
+    { title: 'Enable Tool', value: 'enableTool' },
+    { title: 'Disable Tool', value: 'disableTool' },
   ],
   policies: [
     { title: 'Get Tool Policy', value: 'getToolPolicy' },
     { title: 'Set Tool Policy', value: 'setToolPolicy' },
     { title: 'Remove Tool Policy', value: 'removeToolPolicy' },
+    { title: 'Enable Tool Policy', value: 'enableToolPolicy' },
+    { title: 'Disable Tool Policy', value: 'disableToolPolicy' },
+    { title: 'Get Tool Policy Parameter', value: 'getToolPolicyParameter' },
+    { title: 'Set Tool Policy Parameter', value: 'setToolPolicyParameter' },
+    {
+      title: 'Remove Tool Policy Parameter',
+      value: 'removeToolPolicyParameter',
+    },
   ],
   delegatees: [
     { title: 'List Delegatees', value: 'getDelegatees' },
     { title: 'Check if Address is Delegatee', value: 'isDelegatee' },
     { title: 'Add Delegatee', value: 'addDelegatee' },
     { title: 'Remove Delegatee', value: 'removeDelegatee' },
-    { title: 'Batch Add Delegatees', value: 'batchAddDelegatees' },
-    { title: 'Batch Remove Delegatees', value: 'batchRemoveDelegatees' },
+    { title: 'Permit Tool for Delegatee', value: 'permitToolForDelegatee' },
+    { title: 'Unpermit Tool for Delegatee', value: 'unpermitToolForDelegatee' },
   ],
 };
 

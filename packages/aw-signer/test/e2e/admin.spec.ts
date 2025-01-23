@@ -23,7 +23,7 @@ if (!PRIVATE_KEY) {
 describe('Admin E2E', () => {
   const STORAGE_PATH = path.join(__dirname, '../../.aw-signer-admin-storage');
   const ERC20_TRANSFER_TOOL_IPFS_CID =
-    'Qmd66gsFKfavcUdYeM4ZN1z1c6VG1fZPEKtSG7WsdrsmMn';
+    'QmdaabYYC3oDsNho3cJEYPuK62xpCmMrbhN9FmVnjBYpk2';
   const DELEGATEE_1 = ethers.Wallet.createRandom().address;
   //   const DELEGATEE_2 = ethers.Wallet.createRandom().address;
   const POLICY_IPFS_CID = 'QmTestPolicyIpfsCid';
@@ -162,6 +162,8 @@ describe('Admin E2E', () => {
       );
       expect(erc20Tool.network).toBe('datil-test');
       expect(erc20Tool.toolEnabled).toBe(true);
+      expect(Array.isArray(erc20Tool.delegatees)).toBe(true);
+      expect(erc20Tool.delegatees).toHaveLength(0);
     }, 60000);
 
     it('should add a delegatee for PKP', async () => {
@@ -258,6 +260,8 @@ describe('Admin E2E', () => {
       );
       expect(erc20Tool.network).toBe('datil-test');
       expect(erc20Tool.toolEnabled).toBe(true);
+      expect(Array.isArray(erc20Tool.delegatees)).toBe(true);
+      expect(erc20Tool.delegatees).toContain(DELEGATEE_1);
       expect(typeof erc20Tool.delegateePolicies).toBe('object');
 
       // Check the delegatee policy structure

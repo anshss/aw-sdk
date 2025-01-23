@@ -33,12 +33,12 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
     const selectedPkp = await promptSelectPkp(pkps);
 
     // Retrieve the list of registered tools for the selected PKP.
-    const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
+    const registeredTools = await awDelegatee.getPermittedToolsForPkp(
       selectedPkp.tokenId
     );
 
     // If no tools with policies are found, throw an error.
-    if (registeredTools.toolsWithPolicies.length === 0) {
+    if (Object.keys(registeredTools.toolsWithPolicies).length === 0) {
       throw new AwCliError(
         AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_TOOLS_WITH_POLICY,
         'No registered tools with a policy for this PKP.'
@@ -46,7 +46,7 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
     }
 
     const selectedTool = await promptSelectTool(
-      registeredTools.toolsWithPolicies,
+      Object.values(registeredTools.toolsWithPolicies),
       []
     );
 

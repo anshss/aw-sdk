@@ -23,10 +23,14 @@ import {
   handleIsDelegatee,
   handleAddDelegatee,
   handleRemoveDelegatee,
-  handleBatchAddDelegatee,
-  handleBatchRemoveDelegatee,
   handleMintPkp,
   handleTransferOwnership,
+  handleEnableTool,
+  handleDisableTool,
+  handleEnableToolPolicy,
+  handleDisableToolPolicy,
+  handlePermitToolForDelegatee,
+  handleUnpermitToolForDelegatee,
 } from '../handlers/admin';
 
 /**
@@ -140,6 +144,12 @@ export class Admin {
       case 'removeTool':
         await handleRemoveTool(admin.awAdmin, pkp);
         break;
+      case 'enableTool':
+        await handleEnableTool(admin.awAdmin, pkp);
+        break;
+      case 'disableTool':
+        await handleDisableTool(admin.awAdmin, pkp);
+        break;
       case 'getRegisteredTools':
         await handleGetTools(admin.awAdmin, pkp);
         break;
@@ -151,6 +161,21 @@ export class Admin {
         break;
       case 'removeToolPolicy':
         await handleRemoveToolPolicy(admin.awAdmin, pkp);
+        break;
+      case 'enableToolPolicy':
+        await handleEnableToolPolicy(admin.awAdmin, pkp);
+        break;
+      case 'disableToolPolicy':
+        await handleDisableToolPolicy(admin.awAdmin, pkp);
+        break;
+      case 'getToolPolicyParameter':
+        // await handleGetToolPolicyParameter(admin.awAdmin, pkp);
+        break;
+      case 'setToolPolicyParameter':
+        // await handleSetToolPolicyParameter(admin.awAdmin, pkp);
+        break;
+      case 'removeToolPolicyParameter':
+        // await handleRemoveToolPolicyParameter(admin.awAdmin, pkp);
         break;
       case 'getDelegatees':
         await handleGetDelegatees(admin.awAdmin, pkp);
@@ -164,11 +189,14 @@ export class Admin {
       case 'removeDelegatee':
         await handleRemoveDelegatee(admin.awAdmin, pkp);
         break;
-      case 'batchAddDelegatees':
-        await handleBatchAddDelegatee(admin.awAdmin, pkp);
+      // case 'listPermittedToolsForDelegatee':
+      //   await handleListPermittedToolsForDelegatee(admin.awAdmin, pkp);
+      //   break;
+      case 'permitToolForDelegatee':
+        await handlePermitToolForDelegatee(admin.awAdmin, pkp);
         break;
-      case 'batchRemoveDelegatees':
-        await handleBatchRemoveDelegatee(admin.awAdmin, pkp);
+      case 'unpermitToolForDelegatee':
+        await handleUnpermitToolForDelegatee(admin.awAdmin, pkp);
         break;
       case 'transferOwnership':
         await handleTransferOwnership(admin.awAdmin, pkp);

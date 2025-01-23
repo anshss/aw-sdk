@@ -2,10 +2,8 @@
 import type {
   PkpInfo,
   Admin as AwAdmin,
-  AwTool,
+  RegisteredToolWithPolicies,
 } from '@lit-protocol/agent-wallet';
-
-// Import the prompts library for user interaction.
 import prompts from 'prompts';
 
 // Import the logger utility for logging messages.
@@ -26,7 +24,7 @@ import { handleGetTools } from './get-tools';
  * @throws AwCliError - If the user cancels the selection.
  */
 const promptSelectToolForPolicy = async (
-  toolsWithPolicies: AwTool<any, any>[]
+  toolsWithPolicies: RegisteredToolWithPolicies[]
 ) => {
   // Map the tools to a list of choices for the prompts library.
   const choices = toolsWithPolicies.map((tool) => ({
@@ -51,7 +49,42 @@ const promptSelectToolForPolicy = async (
   }
 
   // Return the selected tool.
-  return tool;
+  return tool as RegisteredToolWithPolicies;
+};
+
+/**
+ * Prompts the user to select a delegatee for a tool from a list of delegatees.
+ * This function throws an error if the user cancels the selection.
+ *
+ * @param delegatees - An array of delegatee addresses.
+ * @returns The selected delegatee address.
+ * @throws AwCliError - If the user cancels the selection.
+ */
+const promptSelectToolDelegateeForPolicy = async (delegatees: string[]) => {
+  // Map the delegatees to a list of choices for the prompts library.
+  const choices = delegatees.map((delegatee) => ({
+    title: delegatee,
+    value: delegatee,
+  }));
+
+  // Prompt the user to select a delegatee.
+  const { delegatee } = await prompts({
+    type: 'select',
+    name: 'delegatee',
+    message: 'Select a delegatee to view policy:',
+    choices,
+  });
+
+  // Throw an error if the user cancels the selection.
+  if (!delegatee) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
+      'Tool policy viewing cancelled.'
+    );
+  }
+
+  // Return the selected delegatee.
+  return delegatee;
 };
 
 /**
@@ -65,23 +98,24 @@ const promptSelectToolForPolicy = async (
 const getToolPolicy = async (
   awAdmin: AwAdmin,
   pkp: PkpInfo,
-  tool: AwTool<any, any>
+  tool: RegisteredToolWithPolicies,
+  delegatee: string
 ) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting tool policy...');
 
   // Retrieve the tool's policy and version from the AW system.
-  const { policy, version } = await awAdmin.getToolPolicy(
+  const { policyIpfsCid, enabled } = await awAdmin.getToolPolicyForDelegatee(
     pkp.info.tokenId,
-    tool.ipfsCid
+    tool.ipfsCid,
+    delegatee
   );
 
   // Log the tool's name, IPFS CID, policy version, and decoded policy.
   logger.info('Tool Policy:');
   logger.log(`${tool.name} (${tool.ipfsCid})`);
-  logger.log(`Version: ${version}`);
-  const decodedPolicy = tool.policy.decode(policy);
-  logger.log(`Policy: ${JSON.stringify(decodedPolicy, null, 2)}`);
+  logger.log(`Enabled: ${enabled}`);
+  logger.log(`Policy IPFS CID: ${policyIpfsCid}`);
 };
 
 /**
@@ -99,7 +133,7 @@ export const handleGetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
     // If no permitted tools are found, throw an error.
     if (
       permittedTools === null ||
-      permittedTools?.toolsWithPolicies.length === 0
+      Object.keys(permittedTools.toolsWithPolicies).length === 0
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
@@ -108,10 +142,15 @@ export const handleGetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
     }
 
     // Prompt the user to select a tool and retrieve its policy.
+    const selectedTool = await promptSelectToolForPolicy(
+      Object.values(permittedTools.toolsWithPolicies)
+    );
+
     await getToolPolicy(
       awAdmin,
       pkp,
-      await promptSelectToolForPolicy(permittedTools.toolsWithPolicies)
+      selectedTool,
+      await promptSelectToolDelegateeForPolicy(selectedTool.delegatees)
     );
   } catch (error) {
     // Handle specific errors related to tool policy retrieval.
