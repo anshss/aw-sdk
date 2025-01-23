@@ -49,6 +49,10 @@ console.error = (...args: any[]) => {
 };
 
 // Export original methods in case we need them
+/**
+ * const - Add description here
+ * @const
+ */
 export const originalConsole = {
   log: originalLog,
   warn: originalWarn,

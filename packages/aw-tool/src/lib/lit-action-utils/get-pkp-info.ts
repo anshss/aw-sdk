@@ -1,5 +1,16 @@
 import { NETWORK_CONFIG } from './network-config';
 
+/**
+ * Retrieves detailed information about a PKP (Programmable Key Pair) using its Ethereum address.
+ * This function queries the PubkeyRouter contract to fetch the PKP's token ID and public key.
+ * 
+ * @param pkpEthAddress - The Ethereum address associated with the PKP.
+ * @returns A promise that resolves to an object containing:
+ *   - tokenId: The PKP's token ID as a string
+ *   - ethAddress: The input Ethereum address
+ *   - publicKey: The PKP's public key
+ * @throws Error if the current Lit network is not supported.
+ */
 export const getPkpInfo = async (pkpEthAddress: string) => {
   console.log('Getting PKP info from PubkeyRouter...');
 

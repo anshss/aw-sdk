@@ -17,8 +17,8 @@ import { loadPkpsFromStorage, mintPkp, savePkpsToStorage } from './utils/pkp';
 import { AwSignerError, AwSignerErrorType } from './errors';
 
 /**
- * The `Admin` class is responsible for managing the Admin role in the Lit Protocol.
- * It handles tasks such as transferring ownership, permitting tools, managing policies, and managing delegatees.
+ * The `Admin` class is responsible for the ownership of the PKP (Programmable Key Pair),
+ * the registration and management of tools, policies, and delegatees.
  */
 export class Admin {
   private static readonly DEFAULT_STORAGE_PATH = './.aw-signer-admin-storage';
@@ -151,10 +151,20 @@ export class Admin {
     );
   }
 
+  /**
+   * Retrieves all PKPs stored in the Admin's (local) storage.
+   * @returns An array of PKP metadata.
+   */
   public async getPkps() {
     return loadPkpsFromStorage(this.storage);
   }
 
+  /**
+   * Retrieves a PKP by its token ID.
+   * @param tokenId - The token ID of the PKP.
+   * @returns A promise that resolves to the PKP metadata.
+   * @throws If the PKP is not found in storage.
+   */
   public async getPkpByTokenId(tokenId: string) {
     const pkps = await this.getPkps();
     const pkp = pkps.find((p) => p.info.tokenId === tokenId);
@@ -168,6 +178,11 @@ export class Admin {
     return pkp;
   }
 
+  /**
+   * Mints a new PKP and saves the metadata to the Admin's (local) storage.
+   * @returns A promise that resolves to the minted PKP metadata.
+   * @throws If the PKP minting fails.
+   */
   public async mintPkp() {
     const pkps = await this.getPkps();
     const mintMetadata = await mintPkp(this.litContracts, this.adminWallet);
@@ -207,7 +222,7 @@ export class Admin {
   }
 
   /**
-   * Permits a tool to be used with the PKP.
+   * Allows a tool to be used with the PKP.
    * @param ipfsCid - The IPFS CID of the tool.
    * @param signingScopes - The signing scopes for the tool (default is `SignAnything`).
    * @returns A promise that resolves to the transaction receipt.
@@ -250,7 +265,7 @@ export class Admin {
   }
 
   /**
-   * Removes a tool from the list of permitted tools.
+   * Removes a tool from the list of a PKP's permitted tools.
    * @param ipfsCid - The IPFS CID of the tool.
    * @returns A promise that resolves to the transaction receipt.
    * @throws If the Admin instance is not properly initialized.
@@ -376,7 +391,7 @@ export class Admin {
    * Get all registered tools and categorize them based on whether they have policies
    * @returns Object containing
    * - toolsWithPolicies: Object mapping tool IPFS CIDs to their metadata and delegatee policies
-   * - toolsWithoutPolicies: Array of tools that don't have policies
+   * - toolsWithoutPolicies: Object mapping tool IPFS CIDs to their metadata without policies
    * - toolsUnknownWithPolicies: Object mapping unknown tool IPFS CIDs to their delegatee policies
    * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
@@ -541,9 +556,11 @@ export class Admin {
   }
 
   /**
-   * Retrieves the policy for a specific tool.
+   * Retrieves the policy for a specific tool and delegatee.
+   * @param pkpTokenId - The token ID of the PKP.
    * @param ipfsCid - The IPFS CID of the tool.
-   * @returns An object containing the policy and version for the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns An object containing the policy IPFS CID and enabled status for the tool.
    * @throws If the tool policy registry contract is not initialized.
    */
   public async getToolPolicyForDelegatee(
@@ -567,10 +584,12 @@ export class Admin {
   }
 
   /**
-   * Sets or updates a policy for a specific tool.
+   * Sets or updates a policy for a specific tool and delegatee.
+   * @param pkpTokenId - The token ID of the PKP.
    * @param ipfsCid - The IPFS CID of the tool.
-   * @param policy - The policy bytes (must be ABI encoded).
-   * @param version - The version of the policy.
+   * @param delegatee - The address of the delegatee.
+   * @param policyIpfsCid - The IPFS CID of the policy to be set.
+   * @param enablePolicies - Whether to enable the policy after setting it.
    * @returns A promise that resolves to the transaction receipt.
    * @throws If the tool policy registry contract is not initialized.
    */

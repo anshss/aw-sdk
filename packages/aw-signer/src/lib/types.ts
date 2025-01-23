@@ -139,13 +139,18 @@ export interface CapacityCreditMintOptions {
   daysUntilUTCMidnightExpiration?: number;
 }
 
+/**
+ * Represents a tool that has been registered to a PKP but cannot be found in the Tool Registry.
+ * This typically occurs when a tool outside of the Tool Registry has been permitted by the Admin.
+ */
 export interface UnknownRegisteredToolWithPolicy {
+  /** The IPFS Content Identifier (CID) of the tool. */
   ipfsCid: string;
 
-  /** The policy associated with the tool. */
+  /** The policy associated with the tool, encoded as a string. */
   policy: string;
 
-  /** The version of the tool. */
+  /** The version identifier of the tool's policy format. */
   version: string;
 }
 
@@ -164,37 +169,87 @@ export interface DelegatedPkpInfo {
   publicKey: string;
 }
 
+/**
+ * Represents the result of matching a user's intent to a tool.
+ * Contains the analysis results, matched tool, and parameter information.
+ * @template TParams - The type of parameters expected by the tool.
+ */
 export interface IntentMatcherResponse<TParams extends Record<string, any>> {
+  /** The raw analysis results from processing the user's intent. */
   analysis: any;
+
+  /** The tool that was matched based on the intent, or null if no match was found. */
   matchedTool: AwTool | null;
+
+  /** Information about the parameters extracted from the intent. */
   params: {
+    /** Parameters that were successfully extracted from the intent. */
     foundParams: Partial<TParams>;
+
+    /** Required parameters that were not found in the intent. */
     missingParams: Array<keyof TParams>;
+
+    /** Any validation errors encountered while processing the parameters. */
     validationErrors?: Array<{ param: string; error: string }>;
   };
 }
 
+/**
+ * Interface for matching user intents to appropriate tools.
+ * Provides functionality to analyze intents and find matching tools from a registry.
+ */
 export interface IntentMatcher {
+  /**
+   * Analyzes a user's intent and attempts to match it to a registered tool.
+   * @param intent - The user's intent string to analyze.
+   * @param registeredTools - Array of available tools to match against.
+   * @returns A promise resolving to the intent matching results.
+   */
   analyzeIntentAndMatchTool(
     intent: string,
     registeredTools: AwTool<any, any>[]
   ): Promise<IntentMatcherResponse<any>>;
 }
 
+/**
+ * Interface for storing and retrieving credentials.
+ * Provides methods to manage credentials required by tools.
+ */
 export interface CredentialStore {
+  /**
+   * Retrieves stored credentials by their names.
+   * @template T - The type containing credential information.
+   * @param requiredCredentialNames - Names of the credentials to retrieve.
+   * @returns Object containing found credentials and names of missing credentials.
+   */
   getCredentials<T>(requiredCredentialNames: readonly string[]): Promise<{
     foundCredentials: Partial<CredentialsFor<T>>;
     missingCredentials: string[];
   }>;
+
+  /**
+   * Stores credentials for future use.
+   * @template T - The type containing credential information.
+   * @param credentials - The credentials to store.
+   */
   setCredentials<T>(credentials: Partial<CredentialsFor<T>>): Promise<void>;
 }
 
+/**
+ * Extracts the names of required credentials from a type.
+ * @template T - The type containing credential requirements.
+ * @returns The string literal type of credential names.
+ */
 export type CredentialNames<T> = T extends {
   requiredCredentialNames: readonly (infer U extends string)[];
 }
   ? U
   : never;
 
+/**
+ * Creates a type mapping credential names to their string values.
+ * @template T - The type containing credential requirements.
+ */
 export type CredentialsFor<T> = {
   [K in CredentialNames<T>]: string;
 };

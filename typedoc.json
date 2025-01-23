@@ -1,0 +1,30 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "./packages/agent-wallet/src/index.ts",
+    "./packages/aw-cli/src/index.ts",
+    "./packages/aw-signer/src/index.ts",
+    "./packages/aw-tool/src/index.ts",
+    "./packages/aw-tool-erc20-transfer/src/index.ts",
+    "./packages/aw-tool-sign-ecdsa/src/index.ts",
+    "./packages/aw-tool-uniswap-swap/src/index.ts",
+    "./packages/aw-subagent-openai/src/index.ts",
+    "./packages/aw-subagent-gaia/src/index.ts",
+    "./packages/aw-tool-registry/src/index.ts"
+  ],
+  "out": "./docs/api",
+  "skipErrorChecking": true,
+  "plugin": ["typedoc-theme-hierarchy"],
+  "theme": "hierarchy",
+  "customCss": "./doc.css",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "exclude": ["**/*+(index|.spec|.e2e|.test|.mock).ts"],
+  "tsconfig": "./tsconfig.docs.json",
+  "validation": {
+    "notExported": false,
+    "invalidLink": false,
+    "notDocumented": false
+  }
+} 

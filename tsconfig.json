@@ -1,37 +1,37 @@
 {
   "extends": "./tsconfig.base.json",
-  "compileOnSave": false,
   "files": [],
+  "include": [],
   "references": [
     {
-      "path": "./packages/aw-signer"
-    },
-    {
-      "path": "./packages/aw-tool-erc20-transfer"
-    },
-    {
-      "path": "./packages/aw-tool-registry"
-    },
-    {
       "path": "./packages/agent-wallet"
-    },
-    {
-      "path": "./packages/aw-subagent-openai"
-    },
-    {
-      "path": "./packages/aw-tool"
-    },
-    {
-      "path": "./packages/aw-tool-uniswap-swap"
-    },
-    {
-      "path": "./packages/aw-tool-sign-ecdsa"
     },
     {
       "path": "./packages/aw-cli"
     },
     {
+      "path": "./packages/aw-signer"
+    },
+    {
+      "path": "./packages/aw-tool"
+    },
+    {
+      "path": "./packages/aw-tool-erc20-transfer"
+    },
+    {
+      "path": "./packages/aw-tool-sign-ecdsa"
+    },
+    {
+      "path": "./packages/aw-tool-uniswap-swap"
+    },
+    {
+      "path": "./packages/aw-subagent-openai"
+    },
+    {
       "path": "./packages/aw-subagent-gaia"
+    },
+    {
+      "path": "./packages/aw-tool-registry"
     }
   ]
 }

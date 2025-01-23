@@ -207,6 +207,9 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
 
    ```bash
    git clone https://github.com/LIT-Protocol/agent-wallet.git
+   ```
+
+   ```bash
    cd agent-wallet
    ```
 
@@ -214,6 +217,9 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
 
    ```bash
    pnpm i
+   ```
+
+   ```bash
    pnpm build
    ```
 

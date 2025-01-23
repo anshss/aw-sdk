@@ -1,0 +1,299 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@lit-protocol/agent-wallet</title><meta name="description" content="Documentation for @lit-protocol/agent-wallet"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><link rel="stylesheet" href="assets/custom.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script><link rel="stylesheet" href="assets/hierarchy.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><div class="table-cell" id="tsd-search" data-base="."><div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><use href="assets/icons.svg#icon-search"></use></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div><div class="field"><div id="tsd-toolbar-links"></div></div><ul class="results"><li class="state loading">Preparing search index...</li><li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@lit-protocol/agent-wallet</a></div><div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><h2>@lit-protocol/agent-wallet</h2></div><div class="tsd-panel tsd-typography"><a id="md:lit-protocol-agent-wallet" class="tsd-anchor"></a><h1><a href="#md:lit-protocol-agent-wallet">Lit Protocol Agent Wallet</a></h1><p>Welcome to the <strong>Lit Protocol Agent Wallet</strong> project! This repository provides a secure and trustless solution for managing AI Agent wallets using the Lit SDK. The framework ensures that Agent owners retain full control over their funds, preventing tampering by Agent developers.</p>
+<a id="md:table-of-contents" class="tsd-anchor"></a><h2><a href="#md:table-of-contents">Table of Contents</a></h2><ul>
+<li><a href="#md:introduction">Introduction</a></li>
+<li><a href="#md:features">Features</a></li>
+<li><a href="#md:key-definitions">Key Definitions</a></li>
+<li><a href="#md:architecture">Architecture</a></li>
+<li><a href="#md:getting-started">Getting Started</a><ul>
+<li><a href="#md:prerequisites">Prerequisites</a></li>
+<li><a href="#md:installation">Installation</a></li>
+<li><a href="#md:usage">Usage</a></li>
+</ul>
+</li>
+<li><a href="#md:contributing">Contributing</a></li>
+<li><a href="#md:license">License</a></li>
+<li><a href="#md:contact">Contact</a></li>
+</ul>
+<a id="md:introduction" class="tsd-anchor"></a><h2><a href="#md:introduction">Introduction</a></h2><p>The Lit Protocol team has addressed a critical challenge in the AI Agent space: <strong>&quot;How do we trust an agent developer with an Agent&#39;s wallet?&quot;</strong> An innovative solution leveraging the Lit SDK has been developed to ensure the security and integrity of AI Agent wallets.</p>
+<p>Lit&#39;s Agent Wallet provides AI Agents with the ability to be immune to tampering by the Agent developer. This means that the Agent owner (which could be a Decentralized Autonomous Organization (DAO), a Safe Multisig, an Externally Owned Account (EOA), or any other type of account) can maintain full control over their Agent&#39;s funds, preventing them from being stolen by the developer responsible for executing the Agent&#39;s intents/actions.</p>
+<a id="md:features" class="tsd-anchor"></a><h2><a href="#md:features">Features</a></h2><ul>
+<li><strong>Tamper-Proof Wallets:</strong> Ensures that Agent developers cannot tamper with the Agent&#39;s funds.</li>
+<li><strong>Programmable Key Pairs (PKPs):</strong> Utilizes ECDSA keypairs represented by ERC-721 NFTs.</li>
+<li><strong>Immutable Actions:</strong> Executes AI Agent intents through immutable JavaScript code published to IPFS.</li>
+<li><strong>Policy Enforcement:</strong> Allows Admins to define and enforce strict policies on Agent operations.</li>
+<li><strong>Secure Delegation:</strong> Enables Admins to delegate execution rights while maintaining control over the Agent&#39;s assets.</li>
+</ul>
+<a id="md:key-definitions" class="tsd-anchor"></a><h2><a href="#md:key-definitions">Key Definitions</a></h2><p>Before diving deeper, the following key concepts from the Lit SDK are defined:</p>
+<ul>
+<li><strong>Programmable Key Pairs (PKPs):</strong> Decentralized key pairs whose private keys can never be exposed, represented by ERC-721 NFTs.</li>
+<li><strong>Lit Actions:</strong> Immutable JavaScript code snippets published to IPFS, used to execute Agent intents.</li>
+<li><strong>Subagent:</strong> A GPT-4o model that parses the AI intent to select the correct Lit Action based tool for the PKP to execute.</li>
+</ul>
+<a id="md:architecture" class="tsd-anchor"></a><h2><a href="#md:architecture">Architecture</a></h2><p>The framework effectively separates the interests of the Agent owner and the developer through distinct roles:</p>
+<a id="md:roles" class="tsd-anchor"></a><h3><a href="#md:roles">Roles</a></h3><ul>
+<li><p><strong>Admin (Agent Owner):</strong></p>
+<ul>
+<li>Holds ownership of the PKP NFT.</li>
+<li>Defines the tools available for the Agent to execute.</li>
+<li>Sets policies to restrict and control the usage of these tools.</li>
+<li>Can be any type of account (e.g., DAO, Safe Multisig, EOA, or other account types).</li>
+</ul>
+<p><em>Example Policies:</em></p>
+<ul>
+<li>Restricting token transfers to specific addresses.</li>
+<li>Limiting the amount and type of ERC-20 tokens transferable.</li>
+<li>Capping daily transfer amounts (e.g., $5,000 worth of ERC-20 tokens per day).</li>
+</ul>
+</li>
+<li><p><strong>Delegatee (Developer):</strong></p>
+<ul>
+<li>Party chosen by the admin to execute Agent intents/actions.</li>
+<li>Operates within the confines of tools and policies defined by the Admin.</li>
+<li>Must be explicitly authorized by the Admin to perform actions on behalf of the Agent.</li>
+<li>Limited by the tools and policies defined by the admin.</li>
+</ul>
+</li>
+</ul>
+<a id="md:security-mechanisms" class="tsd-anchor"></a><h3><a href="#md:security-mechanisms">Security Mechanisms</a></h3><ul>
+<li><strong>Distributed Key Generation (DKG):</strong><ul>
+<li>Ensures that the Agent&#39;s private key is never fully reconstructed by any single party.</li>
+<li>Prevents the Admin, delegatee, or Lit from recreating the private key, enhancing security.</li>
+</ul>
+</li>
+</ul>
+<a id="md:interaction-with-llms" class="tsd-anchor"></a><h3><a href="#md:interaction-with-llms">Interaction with LLMs</a></h3><p>The Agent Wallet integrates with LLMs (Large Language Models) through the <code>aw-subagent-openai</code> package, which acts as an intermediary between the AI Agent and the tool execution layer. The subagent&#39;s primary responsibilities are:</p>
+<ul>
+<li>Parse the AI Agent&#39;s natural language intents into specific tool executions</li>
+<li>Select the appropriate tool based on the Agent&#39;s intent</li>
+<li>Validate and format parameters for tool execution</li>
+</ul>
+<p>The architecture ensures that all interactions are secure and policy-compliant, with LLMs having no direct access to signing operations or wallet controls. The subagent only helps interpret the AI Agent&#39;s intent and cannot bypass the policies set by the Admin.</p>
+<a id="md:package-dependencies" class="tsd-anchor"></a><h3><a href="#md:package-dependencies">Package Dependencies</a></h3><p>The project is structured into several interconnected packages, each with specific responsibilities. The core TypeScript/JavaScript packages and their dependencies are shown below:</p>
+<p><img src="https://github.com/user-attachments/assets/904ffeb6-aafa-4b7d-ba31-2414fab8f273" alt="Dependency graph (1)"></p>
+<p>Additionally, the project includes:</p>
+<ul>
+<li><strong>@lit-protocol/aw-contracts</strong>: A Foundry project containing the smart contract implementations. While not part of the Node.js package dependency tree, these contracts are fundamental to the system as they are deployed on-chain and interacted with by the TypeScript/JavaScript packages.</li>
+</ul>
+<p>Key packages and their purposes:</p>
+<ul>
+<li><strong>aw-tool</strong>: Base package defining core interfaces, types, and utilities for implementing tools/actions</li>
+<li><strong>aw-tool-registry</strong>: Central registry for managing and accessing all available tools/actions</li>
+<li><strong>aw-signer</strong>: Core package handling signing operations, PKP interactions, and policy enforcement</li>
+<li><strong>agent-wallet</strong>: Main package implementing the agent wallet functionality and integrating all components</li>
+<li><strong>aw-cli</strong>: Command-line interface for interacting with the agent wallet system</li>
+<li><strong>aw-subagent-openai</strong>: OpenAI integration for intelligent agent functionality and intent parsing</li>
+<li><strong>aw-contracts</strong>: Smart contract implementations and interfaces for the Agent Wallet system</li>
+<li><strong>aw-tool-erc20-transfer</strong>: Specialized tool for handling ERC20 token transfers</li>
+<li><strong>aw-tool-uniswap-swap</strong>: Tool implementation for executing Uniswap swaps</li>
+<li><strong>aw-tool-sign-ecdsa</strong>: Tool for ECDSA signing operations</li>
+</ul>
+<a id="md:package-architecture" class="tsd-anchor"></a><h2><a href="#md:package-architecture">Package Architecture</a></h2><p>The Agent Wallet is composed of several packages, each with a specific purpose and responsibility:</p>
+<a id="md:core-packages" class="tsd-anchor"></a><h3><a href="#md:core-packages">Core Packages</a></h3><a id="md:lit-protocolaw-tool" class="tsd-anchor"></a><h4><a href="#md:lit-protocolaw-tool">@lit-protocol/aw-tool</a></h4><ul>
+<li><strong>Purpose</strong>: Base package defining core interfaces and types for all tools</li>
+<li><strong>Key Features</strong>:<ul>
+<li>Defines <code>AwTool</code> interface and network configurations</li>
+<li>Implements network-specific configurations</li>
+<li>Provides foundational types for all tools</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: Minimal (constants, tslib, zod)</li>
+</ul>
+<a id="md:lit-protocolaw-tool-registry" class="tsd-anchor"></a><h4><a href="#md:lit-protocolaw-tool-registry">@lit-protocol/aw-tool-registry</a></h4><ul>
+<li><strong>Purpose</strong>: Central registry for managing and accessing tools</li>
+<li><strong>Key Features</strong>:<ul>
+<li>Tool registration and lookup functionality</li>
+<li>Network-specific tool management</li>
+<li>IPFS CID-based tool resolution</li>
+</ul>
+</li>
+<li><strong>Key Functions</strong>:<ul>
+<li><code>registerTool</code>: Register new tools</li>
+<li><code>getToolByName</code>: Lookup tools by name</li>
+<li><code>getToolByIpfsCid</code>: Find tools by IPFS CID</li>
+<li><code>listToolsByNetwork</code>: List tools per network</li>
+</ul>
+</li>
+</ul>
+<a id="md:tool-implementation-packages" class="tsd-anchor"></a><h3><a href="#md:tool-implementation-packages">Tool Implementation Packages</a></h3><a id="md:tool-packages-erc20-transfer-uniswap-swap-sign-ecdsa" class="tsd-anchor"></a><h4><a href="#md:tool-packages-erc20-transfer-uniswap-swap-sign-ecdsa">Tool Packages (erc20-transfer, uniswap-swap, sign-ecdsa)</a></h4><ul>
+<li><strong>Purpose</strong>: Implement specific blockchain operations</li>
+<li><strong>Common Structure</strong>:<ul>
+<li>Tool implementation</li>
+<li>IPFS-deployed Lit Actions</li>
+<li>Policy definitions</li>
+</ul>
+</li>
+<li><strong>Examples</strong>:<ul>
+<li><code>aw-tool-uniswap-swap</code>: Uniswap V3 swap functionality</li>
+<li><code>aw-tool-erc20-transfer</code>: ERC20 token transfers</li>
+<li><code>aw-tool-sign-ecdsa</code>: ECDSA signing operations</li>
+</ul>
+</li>
+</ul>
+<a id="md:security-and-management" class="tsd-anchor"></a><h3><a href="#md:security-and-management">Security and Management</a></h3><a id="md:lit-protocolaw-signer" class="tsd-anchor"></a><h4><a href="#md:lit-protocolaw-signer">@lit-protocol/aw-signer</a></h4><ul>
+<li><strong>Purpose</strong>: PKP management and signing operations</li>
+<li><strong>Key Features</strong>:<ul>
+<li>PKP minting and management</li>
+<li>Policy enforcement</li>
+<li>Delegatee management</li>
+<li>Tool execution</li>
+</ul>
+</li>
+<li><strong>Components</strong>:<ul>
+<li>Admin role implementation</li>
+<li>Delegatee role implementation</li>
+<li>Tool policy registry interaction</li>
+</ul>
+</li>
+</ul>
+<a id="md:ai-integration" class="tsd-anchor"></a><h3><a href="#md:ai-integration">AI Integration</a></h3><a id="md:lit-protocolaw-subagent-openai" class="tsd-anchor"></a><h4><a href="#md:lit-protocolaw-subagent-openai">@lit-protocol/aw-subagent-openai</a></h4><ul>
+<li><strong>Purpose</strong>: OpenAI integration for intent parsing</li>
+<li><strong>Key Features</strong>:<ul>
+<li>Natural language intent parsing</li>
+<li>Tool selection based on intent</li>
+<li>Parameter validation against schemas</li>
+</ul>
+</li>
+<li><strong>Integration</strong>: Works with tool registry for available tools</li>
+</ul>
+<a id="md:integration-and-interface" class="tsd-anchor"></a><h3><a href="#md:integration-and-interface">Integration and Interface</a></h3><a id="md:lit-protocolagent-wallet" class="tsd-anchor"></a><h4><a href="#md:lit-protocolagent-wallet">@lit-protocol/agent-wallet</a></h4><ul>
+<li><strong>Purpose</strong>: Main integration package</li>
+<li><strong>Features</strong>:<ul>
+<li>Unified interface for wallet operations</li>
+<li>Re-exports core functionality</li>
+<li>Type definitions</li>
+</ul>
+</li>
+<li><strong>Exports</strong>: Core functionality from aw-signer and aw-subagent-openai</li>
+</ul>
+<a id="md:lit-protocolaw-cli" class="tsd-anchor"></a><h4><a href="#md:lit-protocolaw-cli">@lit-protocol/aw-cli</a></h4><ul>
+<li><strong>Purpose</strong>: Command-line interface</li>
+<li><strong>Features</strong>:<ul>
+<li>Role-based commands (Admin/Delegatee)</li>
+<li>Tool management interface</li>
+<li>Interactive parameter collection</li>
+<li>Policy management</li>
+</ul>
+</li>
+<li><strong>Components</strong>:<ul>
+<li>Command implementations</li>
+<li>User interaction prompts</li>
+</ul>
+</li>
+</ul>
+<a id="md:getting-started" class="tsd-anchor"></a><h2><a href="#md:getting-started">Getting Started</a></h2><a id="md:prerequisites" class="tsd-anchor"></a><h3><a href="#md:prerequisites">Prerequisites</a></h3><p>To get started with the Lit Protocol Agent Wallet, ensure the following prerequisites are met:</p>
+<ul>
+<li><p><strong>Node.js and Package Managers:</strong></p>
+<ul>
+<li>Node.js (v18.12 or greater)</li>
+<li>Git</li>
+<li>pnpm (install via <code>npm install -g pnpm</code>)</li>
+<li>Yarn or npm (alternative package managers)</li>
+</ul>
+</li>
+<li><p><strong>Blockchain Requirements:</strong></p>
+<ul>
+<li>An Ethereum wallet with a private key for the Admin role</li>
+<li>A separate Ethereum wallet with a private key for the Delegatee role</li>
+<li>Lit&#39;s tstLPX tokens from the <a href="https://chronicle-yellowstone-faucet.getlit.dev/">faucet</a> for gas fees on Chronicle Yellowstone</li>
+</ul>
+</li>
+</ul>
+<a id="md:installation" class="tsd-anchor"></a><h3><a href="#md:installation">Installation</a></h3><ol>
+<li><p><strong>Clone the Repository:</strong></p>
+<pre><code class="language-bash"><span class="hl-0">git</span><span class="hl-1"> </span><span class="hl-2">clone</span><span class="hl-1"> </span><span class="hl-2">https://github.com/LIT-Protocol/agent-wallet.git</span>
+</code><button>Copy</button></pre>
+<pre><code class="language-bash"><span class="hl-0">cd</span><span class="hl-1"> </span><span class="hl-2">agent-wallet</span>
+</code><button>Copy</button></pre>
+</li>
+<li><p><strong>Install Dependencies and Build:</strong></p>
+<pre><code class="language-bash"><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-2">i</span>
+</code><button>Copy</button></pre>
+<pre><code class="language-bash"><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-2">build</span>
+</code><button>Copy</button></pre>
+</li>
+<li><p><strong>Add a Pinata JWT Token:</strong></p>
+<pre><code class="language-bash"><span class="hl-0">cp</span><span class="hl-1"> </span><span class="hl-2">.env.example</span><span class="hl-1"> </span><span class="hl-2">.env</span>
+</code><button>Copy</button></pre>
+<p>Then add your Pinata JWT token to the <code>.env</code> file.</p>
+</li>
+<li><p><strong>Deploy Tools and Start the CLI:</strong></p>
+<pre><code class="language-bash"><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-2">start:cli</span>
+</code><button>Copy</button></pre>
+<p>This command will:</p>
+<ul>
+<li>Build all packages</li>
+<li>Deploy the Lit Actions to IPFS for each tool:<ul>
+<li>Uniswap Swap tool</li>
+<li>ECDSA Signing tool</li>
+<li>ERC20 Transfer tool</li>
+</ul>
+</li>
+<li>Start the interactive CLI</li>
+</ul>
+<p><strong>Note:</strong> After running this command the first time and deploying the tools, you can run <code>pnpm start:cli:no-build</code> to skip the build step.</p>
+</li>
+<li><p><strong>Initial Setup Process:</strong></p>
+<p>The setup process involves two main roles: Admin and Delegatee. You&#39;ll need to set up the Admin first, then add a Delegatee.</p>
+<p>a. <strong>First CLI Session (Admin Setup):</strong></p>
+<ol>
+<li>Select a Lit Network (e.g., Datil Dev)</li>
+<li>Choose the &quot;Admin&quot; role</li>
+<li>Enter your Admin private key when prompted</li>
+<li>Select &quot;Add Delegatee&quot; from the menu</li>
+<li>Enter the Ethereum address of your Delegatee</li>
+<li>Use the menu to permit tools and set policies as needed</li>
+<li>Exit the CLI once Delegatee setup is complete</li>
+</ol>
+<p>b. <strong>Second CLI Session (Delegatee Setup):</strong></p>
+<ol>
+<li>Start the CLI again with <code>pnpm start:cli</code></li>
+<li>Select the same Lit Network as before</li>
+<li>Choose the &quot;Delegatee&quot; role</li>
+<li>Enter the private key of the Delegatee address you added in the Admin session</li>
+<li>You can now execute tools within the policies set by the Admin</li>
+</ol>
+<p>   Note: Before a Delegatee can use any tools, the Admin must first permit them using the &quot;Permit Tool&quot; option in the Admin menu.</p>
+<p>c. <strong>As an Admin:</strong></p>
+<ul>
+<li>Permit tools for use:<ol>
+<li>Select &quot;Permit Tool&quot; from the menu</li>
+<li>Choose the tool to permit (e.g., erc20-transfer, uniswap-swap)</li>
+<li>The tool will now be available for Delegatees to use</li>
+</ol>
+</li>
+<li>Set up policies:<ol>
+<li>Select &quot;Set Tool Policy&quot; to configure usage limits</li>
+<li>Policies can restrict token amounts, addresses, and other parameters</li>
+</ol>
+</li>
+<li>Manage delegatees:<ol>
+<li>Add or remove delegatees</li>
+<li>Monitor delegatee activities</li>
+<li>Adjust tool permissions as needed</li>
+</ol>
+</li>
+</ul>
+<p>d. <strong>As a Delegatee:</strong></p>
+<ul>
+<li>Select from available PKPs</li>
+<li>Choose from tools permitted by the Admin</li>
+<li>Execute actions within the policy constraints set by the Admin</li>
+</ul>
+<p>For example, to execute a Uniswap swap, you&#39;ll need to provide:</p>
+<ul>
+<li>Token input address</li>
+<li>Token output address</li>
+<li>Amount to swap</li>
+<li>Chain ID</li>
+<li>RPC URL</li>
+</ul>
+</li>
+</ol>
+<p>The CLI will guide you through each step and provide feedback on the execution status of your commands.</p>
+<a id="md:additional-support" class="tsd-anchor"></a><h2><a href="#md:additional-support">Additional Support</a></h2><p>Need help? Here are some resources to get you started:</p>
+<ul>
+<li><strong>Documentation</strong>: Visit the <a href="https://developer.litprotocol.com/">Lit Protocol Documentation</a> for comprehensive guides and API references</li>
+<li><strong>Telegram</strong>: Connect with us on <a href="https://t.me/+aa73FAF9Vp82ZjJh">Telegram</a> for updates and community chat</li>
+</ul>
+<p>For bug reports and feature requests, please use the GitHub Issues section of this repository or notify us on Telegram.</p>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-index-accordion"><summary class="tsd-accordion-summary"><h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><use href="assets/icons.svg#icon-chevronDown"></use></svg>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><h4 class="uppercase">Member Visibility</h4><form><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></form></div><div class="tsd-theme-toggle"><h4 class="uppercase">Theme</h4><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-index-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><use href="assets/icons.svg#icon-chevronDown"></use></svg>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#md:lit-protocol-agent-wallet"><span>Lit <wbr/>Protocol <wbr/>Agent <wbr/>Wallet</span></a><ul><li><a href="#md:table-of-contents"><span>Table of <wbr/>Contents</span></a></li><li><a href="#md:introduction"><span>Introduction</span></a></li><li><a href="#md:features"><span>Features</span></a></li><li><a href="#md:key-definitions"><span>Key <wbr/>Definitions</span></a></li><li><a href="#md:architecture"><span>Architecture</span></a></li><li><ul><li><a href="#md:roles"><span>Roles</span></a></li><li><a href="#md:security-mechanisms"><span>Security <wbr/>Mechanisms</span></a></li><li><a href="#md:interaction-with-llms"><span>Interaction with LLMs</span></a></li><li><a href="#md:package-dependencies"><span>Package <wbr/>Dependencies</span></a></li></ul></li><li><a href="#md:package-architecture"><span>Package <wbr/>Architecture</span></a></li><li><ul><li><a href="#md:core-packages"><span>Core <wbr/>Packages</span></a></li><li><ul><li><a href="#md:lit-protocolaw-tool"><span>@lit-<wbr/>protocol/aw-<wbr/>tool</span></a></li><li><a href="#md:lit-protocolaw-tool-registry"><span>@lit-<wbr/>protocol/aw-<wbr/>tool-<wbr/>registry</span></a></li></ul></li><li><a href="#md:tool-implementation-packages"><span>Tool <wbr/>Implementation <wbr/>Packages</span></a></li><li><ul><li><a href="#md:tool-packages-erc20-transfer-uniswap-swap-sign-ecdsa"><span>Tool <wbr/>Packages (erc20-<wbr/>transfer, uniswap-<wbr/>swap, sign-<wbr/>ecdsa)</span></a></li></ul></li><li><a href="#md:security-and-management"><span>Security and <wbr/>Management</span></a></li><li><ul><li><a href="#md:lit-protocolaw-signer"><span>@lit-<wbr/>protocol/aw-<wbr/>signer</span></a></li></ul></li><li><a href="#md:ai-integration"><span>AI <wbr/>Integration</span></a></li><li><ul><li><a href="#md:lit-protocolaw-subagent-openai"><span>@lit-<wbr/>protocol/aw-<wbr/>subagent-<wbr/>openai</span></a></li></ul></li><li><a href="#md:integration-and-interface"><span>Integration and <wbr/>Interface</span></a></li><li><ul><li><a href="#md:lit-protocolagent-wallet"><span>@lit-<wbr/>protocol/agent-<wbr/>wallet</span></a></li><li><a href="#md:lit-protocolaw-cli"><span>@lit-<wbr/>protocol/aw-<wbr/>cli</span></a></li></ul></li></ul></li><li><a href="#md:getting-started"><span>Getting <wbr/>Started</span></a></li><li><ul><li><a href="#md:prerequisites"><span>Prerequisites</span></a></li><li><a href="#md:installation"><span>Installation</span></a></li></ul></li><li><a href="#md:additional-support"><span>Additional <wbr/>Support</span></a></li></ul></div></details></div><div class="site-menu"><div class="tree"><div class="tree-config"><button class="tree-config__button tree-config__button--expand js-tree-expand" title="Expand All"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 490.72 490.72" fill="currentColor"><path d="M480.027,288.027H10.693c-5.867,0-10.667,4.8-10.667,10.667c0,5.867,4.8,10.667,10.667,10.667h213.333v144.96l-45.76-45.76c-4.267-4.053-10.987-3.947-15.04,0.213c-3.947,4.16-3.947,10.667,0,14.827l64,64c4.16,4.16,10.88,4.16,15.04,0l64-64c4.053-4.267,3.947-10.987-0.213-15.04c-4.16-3.947-10.667-3.947-14.827,0l-45.867,45.76V309.36h234.667c5.867,0,10.667-4.8,10.667-10.667C490.693,292.827,485.893,288.027,480.027,288.027z"></path><path d="M10.693,224.027h469.333c5.867,0,10.667-4.8,10.667-10.667c0-5.867-4.8-10.667-10.667-10.667H245.36V36.4l45.76,45.76c4.267,4.053,10.987,3.947,15.04-0.213c3.947-4.16,3.947-10.667,0-14.827l-64-64c-4.16-4.16-10.88-4.16-15.04,0l-64,64c-4.053,4.267-3.947,10.987,0.213,15.04c4.16,3.947,10.667,3.947,14.827,0l45.867-45.76v166.293H10.693c-5.867,0-10.667,4.8-10.667,10.667C0.027,219.227,4.827,224.027,10.693,224.027z"></path></svg></button><button class="tree-config__button tree-config__button--collapse js-tree-collapse" title="Collapse All"><svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zm7-8a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 4.293V.5A.5.5 0 0 1 8 0zm-.5 11.707-1.146 1.147a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 11.707V15.5a.5.5 0 0 1-1 0v-3.793z"></path></svg></button><button class="tree-config__button tree-config__button--target js-tree-target" title="Scroll to current file"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M13 4.069V2h-2v2.069A8.008 8.008 0 0 0 4.069 11H2v2h2.069A8.007 8.007 0 0 0 11 19.931V22h2v-2.069A8.007 8.007 0 0 0 19.931 13H22v-2h-2.069A8.008 8.008 0 0 0 13 4.069zM12 18c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path></svg></button></div><div class="tree-content"><ul class="js-category-list category" data-id="root"><li><span class="js-category-title category__title" data-id="root-packages"><div class="category__folder" data-id="root-packages"></div>packages</span><ul class="js-category-list category" data-id="root-packages"><li><span class="js-category-title category__title" data-id="root-packages-agent-wallet"><div class="category__folder" data-id="root-packages-agent-wallet"></div>agent-wallet</span><ul class="js-category-list category" data-id="root-packages-agent-wallet"><li><span class="js-category-title category__title" data-id="root-packages-agent-wallet-src"><div class="category__folder" data-id="root-packages-agent-wallet-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-agent-wallet-src"><li><a class="category__link js-category-link category__link--ts" href="modules/agent_wallet_src.html" data-id="/modules/agent_wallet_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="enums/agent_wallet_src.AwSignerErrorType.html" data-id="/enums/agent_wallet_src.AwSignerErrorType.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-8"></use></svg>AwSignerErrorType</a></li><li><a class="category__link js-category-link" href="classes/agent_wallet_src.Admin.html" data-id="/classes/agent_wallet_src.Admin.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>Admin</a></li><li><a class="category__link js-category-link" href="classes/agent_wallet_src.AwSignerError.html" data-id="/classes/agent_wallet_src.AwSignerError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>AwSignerError</a></li><li><a class="category__link js-category-link" href="classes/agent_wallet_src.Delegatee.html" data-id="/classes/agent_wallet_src.Delegatee.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>Delegatee</a></li><li><a class="category__link js-category-link" href="classes/agent_wallet_src.OpenAiIntentMatcher.html" data-id="/classes/agent_wallet_src.OpenAiIntentMatcher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>OpenAiIntentMatcher</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.AgentConfig.html" data-id="/interfaces/agent_wallet_src.AgentConfig.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>AgentConfig</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.AwTool.html" data-id="/interfaces/agent_wallet_src.AwTool.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>AwTool</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.CapacityCreditDelegationAuthSigOptions.html" data-id="/interfaces/agent_wallet_src.CapacityCreditDelegationAuthSigOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>CapacityCreditDelegationAuthSigOptions</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.CapacityCreditInfo.html" data-id="/interfaces/agent_wallet_src.CapacityCreditInfo.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>CapacityCreditInfo</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.CapacityCreditMintOptions.html" data-id="/interfaces/agent_wallet_src.CapacityCreditMintOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>CapacityCreditMintOptions</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.CredentialStore.html" data-id="/interfaces/agent_wallet_src.CredentialStore.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>CredentialStore</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.DelegatedPkpInfo.html" data-id="/interfaces/agent_wallet_src.DelegatedPkpInfo.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>DelegatedPkpInfo</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.IntentMatcher.html" data-id="/interfaces/agent_wallet_src.IntentMatcher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>IntentMatcher</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.IntentMatcherResponse.html" data-id="/interfaces/agent_wallet_src.IntentMatcherResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>IntentMatcherResponse</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.PkpInfo.html" data-id="/interfaces/agent_wallet_src.PkpInfo.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>PkpInfo</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.ToolRegistryConfig.html" data-id="/interfaces/agent_wallet_src.ToolRegistryConfig.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>ToolRegistryConfig</a></li><li><a class="category__link js-category-link" href="interfaces/agent_wallet_src.UnknownRegisteredToolWithPolicy.html" data-id="/interfaces/agent_wallet_src.UnknownRegisteredToolWithPolicy.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>UnknownRegisteredToolWithPolicy</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.AdminConfig.html" data-id="/types/agent_wallet_src.AdminConfig.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>AdminConfig</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.CredentialNames.html" data-id="/types/agent_wallet_src.CredentialNames.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>CredentialNames</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.CredentialsFor.html" data-id="/types/agent_wallet_src.CredentialsFor.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>CredentialsFor</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.ErrorDetails.html" data-id="/types/agent_wallet_src.ErrorDetails.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>ErrorDetails</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.LitNetwork.html" data-id="/types/agent_wallet_src.LitNetwork.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>LitNetwork</a></li><li><a class="category__link js-category-link" href="types/agent_wallet_src.PermittedTools.html" data-id="/types/agent_wallet_src.PermittedTools.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>PermittedTools</a></li><li><a class="category__link js-category-link" href="functions/agent_wallet_src.getToolByIpfsCid.html" data-id="/functions/agent_wallet_src.getToolByIpfsCid.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>getToolByIpfsCid</a></li><li><a class="category__link js-category-link" href="functions/agent_wallet_src.getToolByName.html" data-id="/functions/agent_wallet_src.getToolByName.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>getToolByName</a></li><li><a class="category__link js-category-link" href="functions/agent_wallet_src.listAllTools.html" data-id="/functions/agent_wallet_src.listAllTools.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>listAllTools</a></li><li><a class="category__link js-category-link" href="functions/agent_wallet_src.listToolsByNetwork.html" data-id="/functions/agent_wallet_src.listToolsByNetwork.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>listToolsByNetwork</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-cli"><div class="category__folder" data-id="root-packages-aw-cli"></div>aw-cli</span><ul class="js-category-list category" data-id="root-packages-aw-cli"><li><span class="js-category-title category__title" data-id="root-packages-aw-cli-src"><div class="category__folder" data-id="root-packages-aw-cli-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-cli-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_cli_src.html" data-id="/modules/aw_cli_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="variables/aw_cli_src.originalConsole.html" data-id="/variables/aw_cli_src.originalConsole.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>originalConsole</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-signer"><div class="category__folder" data-id="root-packages-aw-signer"></div>aw-signer</span><ul class="js-category-list category" data-id="root-packages-aw-signer"><li><span class="js-category-title category__title" data-id="root-packages-aw-signer-src"><div class="category__folder" data-id="root-packages-aw-signer-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-signer-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_signer_src.html" data-id="/modules/aw_signer_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#Admin" data-id="/modules/aw_signer_src.html#Admin"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>Admin</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#AdminConfig" data-id="/modules/aw_signer_src.html#AdminConfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>AdminConfig</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#AgentConfig" data-id="/modules/aw_signer_src.html#AgentConfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>AgentConfig</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#AwSignerError" data-id="/modules/aw_signer_src.html#AwSignerError"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>AwSignerError</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#AwSignerErrorType" data-id="/modules/aw_signer_src.html#AwSignerErrorType"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>AwSignerErrorType</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CapacityCreditDelegationAuthSigOptions" data-id="/modules/aw_signer_src.html#CapacityCreditDelegationAuthSigOptions"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CapacityCreditDelegationAuthSigOptions</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CapacityCreditInfo" data-id="/modules/aw_signer_src.html#CapacityCreditInfo"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CapacityCreditInfo</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CapacityCreditMintOptions" data-id="/modules/aw_signer_src.html#CapacityCreditMintOptions"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CapacityCreditMintOptions</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CredentialNames" data-id="/modules/aw_signer_src.html#CredentialNames"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CredentialNames</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CredentialStore" data-id="/modules/aw_signer_src.html#CredentialStore"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CredentialStore</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#CredentialsFor" data-id="/modules/aw_signer_src.html#CredentialsFor"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>CredentialsFor</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#DelegatedPkpInfo" data-id="/modules/aw_signer_src.html#DelegatedPkpInfo"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>DelegatedPkpInfo</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#Delegatee" data-id="/modules/aw_signer_src.html#Delegatee"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>Delegatee</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#ErrorDetails" data-id="/modules/aw_signer_src.html#ErrorDetails"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>ErrorDetails</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#IntentMatcher" data-id="/modules/aw_signer_src.html#IntentMatcher"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>IntentMatcher</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#IntentMatcherResponse" data-id="/modules/aw_signer_src.html#IntentMatcherResponse"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>IntentMatcherResponse</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#LitNetwork" data-id="/modules/aw_signer_src.html#LitNetwork"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>LitNetwork</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#PkpInfo" data-id="/modules/aw_signer_src.html#PkpInfo"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>PkpInfo</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#ToolRegistryConfig" data-id="/modules/aw_signer_src.html#ToolRegistryConfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>ToolRegistryConfig</a></li><li><a class="category__link js-category-link" href="modules/aw_signer_src.html#UnknownRegisteredToolWithPolicy" data-id="/modules/aw_signer_src.html#UnknownRegisteredToolWithPolicy"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>UnknownRegisteredToolWithPolicy</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-subagent-gaia"><div class="category__folder" data-id="root-packages-aw-subagent-gaia"></div>aw-subagent-gaia</span><ul class="js-category-list category" data-id="root-packages-aw-subagent-gaia"><li><span class="js-category-title category__title" data-id="root-packages-aw-subagent-gaia-src"><div class="category__folder" data-id="root-packages-aw-subagent-gaia-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-subagent-gaia-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_subagent_gaia_src.html" data-id="/modules/aw_subagent_gaia_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="classes/aw_subagent_gaia_src.OpenAiIntentMatcher.html" data-id="/classes/aw_subagent_gaia_src.OpenAiIntentMatcher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>OpenAiIntentMatcher</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-subagent-openai"><div class="category__folder" data-id="root-packages-aw-subagent-openai"></div>aw-subagent-openai</span><ul class="js-category-list category" data-id="root-packages-aw-subagent-openai"><li><span class="js-category-title category__title" data-id="root-packages-aw-subagent-openai-src"><div class="category__folder" data-id="root-packages-aw-subagent-openai-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-subagent-openai-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_subagent_openai_src.html" data-id="/modules/aw_subagent_openai_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="classes/aw_subagent_openai_src.OpenAiIntentMatcher.html" data-id="/classes/aw_subagent_openai_src.OpenAiIntentMatcher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-128"></use></svg>OpenAiIntentMatcher</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-erc20-transfer"><div class="category__folder" data-id="root-packages-aw-tool-erc20-transfer"></div>aw-tool-erc20-transfer</span><ul class="js-category-list category" data-id="root-packages-aw-tool-erc20-transfer"><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-erc20-transfer-src"><div class="category__folder" data-id="root-packages-aw-tool-erc20-transfer-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-tool-erc20-transfer-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_tool_erc20_transfer_src.html" data-id="/modules/aw_tool_erc20_transfer_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="variables/aw_tool_erc20_transfer_src.ERC20Transfer.html" data-id="/variables/aw_tool_erc20_transfer_src.ERC20Transfer.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>ERC20Transfer</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-registry"><div class="category__folder" data-id="root-packages-aw-tool-registry"></div>aw-tool-registry</span><ul class="js-category-list category" data-id="root-packages-aw-tool-registry"><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-registry-src"><div class="category__folder" data-id="root-packages-aw-tool-registry-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-tool-registry-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_tool_registry_src.html" data-id="/modules/aw_tool_registry_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="modules/aw_tool_registry_src.html#PermittedTools" data-id="/modules/aw_tool_registry_src.html#PermittedTools"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>PermittedTools</a></li><li><a class="category__link js-category-link" href="modules/aw_tool_registry_src.html#getToolByIpfsCid" data-id="/modules/aw_tool_registry_src.html#getToolByIpfsCid"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>getToolByIpfsCid</a></li><li><a class="category__link js-category-link" href="modules/aw_tool_registry_src.html#getToolByName" data-id="/modules/aw_tool_registry_src.html#getToolByName"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>getToolByName</a></li><li><a class="category__link js-category-link" href="modules/aw_tool_registry_src.html#listAllTools" data-id="/modules/aw_tool_registry_src.html#listAllTools"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>listAllTools</a></li><li><a class="category__link js-category-link" href="modules/aw_tool_registry_src.html#listToolsByNetwork" data-id="/modules/aw_tool_registry_src.html#listToolsByNetwork"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>listToolsByNetwork</a></li><li><a class="category__link js-category-link" href="types/aw_tool_registry_src.LitNetwork.html" data-id="/types/aw_tool_registry_src.LitNetwork.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>LitNetwork</a></li><li><a class="category__link js-category-link" href="types/aw_tool_registry_src.NetworkSpecificTool.html" data-id="/types/aw_tool_registry_src.NetworkSpecificTool.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>NetworkSpecificTool</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_registry_src.registerTool.html" data-id="/functions/aw_tool_registry_src.registerTool.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>registerTool</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-sign-ecdsa"><div class="category__folder" data-id="root-packages-aw-tool-sign-ecdsa"></div>aw-tool-sign-ecdsa</span><ul class="js-category-list category" data-id="root-packages-aw-tool-sign-ecdsa"><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-sign-ecdsa-src"><div class="category__folder" data-id="root-packages-aw-tool-sign-ecdsa-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-tool-sign-ecdsa-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_tool_sign_ecdsa_src.html" data-id="/modules/aw_tool_sign_ecdsa_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="variables/aw_tool_sign_ecdsa_src.SignEcdsa.html" data-id="/variables/aw_tool_sign_ecdsa_src.SignEcdsa.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>SignEcdsa</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-uniswap-swap"><div class="category__folder" data-id="root-packages-aw-tool-uniswap-swap"></div>aw-tool-uniswap-swap</span><ul class="js-category-list category" data-id="root-packages-aw-tool-uniswap-swap"><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-uniswap-swap-src"><div class="category__folder" data-id="root-packages-aw-tool-uniswap-swap-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-tool-uniswap-swap-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_tool_uniswap_swap_src.html" data-id="/modules/aw_tool_uniswap_swap_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="variables/aw_tool_uniswap_swap_src.UniswapSwap.html" data-id="/variables/aw_tool_uniswap_swap_src.UniswapSwap.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>UniswapSwap</a></li></ul></li></ul></li></ul></li><li><span class="js-category-title category__title" data-id="root-packages-aw-tool"><div class="category__folder" data-id="root-packages-aw-tool"></div>aw-tool</span><ul class="js-category-list category" data-id="root-packages-aw-tool"><li><span class="js-category-title category__title" data-id="root-packages-aw-tool-src"><div class="category__folder" data-id="root-packages-aw-tool-src"></div>src</span><ul class="js-category-list category" data-id="root-packages-aw-tool-src"><li><a class="category__link js-category-link category__link--ts" href="modules/aw_tool_src.html" data-id="/modules/aw_tool_src.html">index.ts</a><ul><li><a class="category__link js-category-link" href="modules/aw_tool_src.html#AwTool" data-id="/modules/aw_tool_src.html#AwTool"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-4194304"></use></svg>AwTool</a></li><li><a class="category__link js-category-link" href="interfaces/aw_tool_src.NetworkConfig.html" data-id="/interfaces/aw_tool_src.NetworkConfig.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-256"></use></svg>NetworkConfig</a></li><li><a class="category__link js-category-link" href="types/aw_tool_src.EthereumAddress.html" data-id="/types/aw_tool_src.EthereumAddress.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>EthereumAddress</a></li><li><a class="category__link js-category-link" href="types/aw_tool_src.SupportedLitNetwork.html" data-id="/types/aw_tool_src.SupportedLitNetwork.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-2097152"></use></svg>SupportedLitNetwork</a></li><li><a class="category__link js-category-link" href="variables/aw_tool_src.BaseEthereumAddressSchema.html" data-id="/variables/aw_tool_src.BaseEthereumAddressSchema.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>BaseEthereumAddressSchema</a></li><li><a class="category__link js-category-link" href="variables/aw_tool_src.NETWORK_CONFIG.html" data-id="/variables/aw_tool_src.NETWORK_CONFIG.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>NETWORK_CONFIG</a></li><li><a class="category__link js-category-link" href="variables/aw_tool_src.NETWORK_CONFIGS.html" data-id="/variables/aw_tool_src.NETWORK_CONFIGS.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-32"></use></svg>NETWORK_CONFIGS</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_src.checkLitAuthAddressIsDelegatee.html" data-id="/functions/aw_tool_src.checkLitAuthAddressIsDelegatee.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>checkLitAuthAddressIsDelegatee</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_src.fetchToolPolicyFromRegistry.html" data-id="/functions/aw_tool_src.fetchToolPolicyFromRegistry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>fetchToolPolicyFromRegistry</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_src.getPkpInfo.html" data-id="/functions/aw_tool_src.getPkpInfo.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>getPkpInfo</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_src.getPkpToolRegistryContract.html" data-id="/functions/aw_tool_src.getPkpToolRegistryContract.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>getPkpToolRegistryContract</a></li><li><a class="category__link js-category-link" href="functions/aw_tool_src.getPolicyParameters.html" data-id="/functions/aw_tool_src.getPolicyParameters.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="assets/icons.svg#icon-64"></use></svg>getPolicyParameters</a></li></ul></li></ul></li></ul></li></ul></li></ul></div></div></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div><script src="assets/hierarchy.js"></script></body></html>

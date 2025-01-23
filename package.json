@@ -9,10 +9,18 @@
     "test": "npx nx run-many -t test -- --passWithNoTests",
     "deploy:tools": "npx nx deploy aw-tool-uniswap-swap && npx nx deploy aw-tool-sign-ecdsa && npx nx deploy aw-tool-erc20-transfer",
     "start:cli": "pnpm build && pnpm deploy:tools && NO_DEPRECATION=* node packages/aw-cli/dist/src/index.js",
-    "start:cli:no-build": "NO_DEPRECATION=* node packages/aw-cli/dist/src/index.js"
+    "start:cli:no-build": "NO_DEPRECATION=* node packages/aw-cli/dist/src/index.js",
+    "docs": "npx typedoc --options typedoc.json",
+    "docs:extract": "pnpm build && api-extractor run -c api-extractor.json -l",
+    "docs:clean": "rm -rf docs/api",
+    "docs:jsdoc": "node tools/add-jsdoc.js",
+    "docs:serve": "node tools/scripts/serve-docs.mjs",
+    "docs:dev": "rm -rf docs/api && npx typedoc --options typedoc.json && node tools/scripts/serve-docs.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
+    "@microsoft/api-documenter": "^7.23.20",
+    "@microsoft/api-extractor": "^7.42.3",
     "@nx/eslint": "20.3.0",
     "@nx/eslint-plugin": "20.3.0",
     "@nx/jest": "20.3.0",
@@ -31,6 +39,9 @@
     "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
+    "typedoc": "^0.25.7",
+    "typedoc-plugin-markdown": "^3.17.1",
+    "typedoc-theme-hierarchy": "^5.0.4",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.13.0",
     "verdaccio": "^5.0.4"
@@ -47,6 +58,5 @@
         }
       }
     }
-  },
-  "dependencies": {}
+  }
 }
