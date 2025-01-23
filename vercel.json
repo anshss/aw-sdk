@@ -1,5 +1,4 @@
 {
   "buildCommand": "pnpm install && pnpm docs",
-  "outputDirectory": "docs/api",
-  "framework": "static"
+  "outputDirectory": "docs/api"
 } 
