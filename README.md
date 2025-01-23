@@ -105,7 +105,6 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - Defines `AwTool` interface and network configurations
   - Implements network-specific configurations
   - Provides foundational types for all tools
-- **Dependencies**: Minimal (constants, tslib, zod)
 
 #### @lit-protocol/aw-tool-registry
 - **Purpose**: Central registry for managing and accessing tools
@@ -131,6 +130,34 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - `aw-tool-uniswap-swap`: Uniswap V3 swap functionality
   - `aw-tool-erc20-transfer`: ERC20 token transfers
   - `aw-tool-sign-ecdsa`: ECDSA signing operations
+
+#### Creating a New Tool Package
+To create a new Agent Wallet tool package, use the provided script:
+
+```bash
+pnpm new-tool <tool-name>
+```
+
+For example:
+```bash
+pnpm new-tool my-feature
+```
+
+This will:
+1. Generate a new tool package in `packages/aw-tool-my-feature`
+2. Set up all necessary configuration files
+3. Create template files for your tool's logic
+
+After creation, you'll need to:
+1. Implement your tool's logic in:
+   - `src/lib/lit-actions/tool.ts` (Lit Action code)
+   - `src/lib/lit-actions/policy.ts` (Lit Action policy validation)
+   - `src/lib/policy.ts` (Tool policy configuration)
+   - `src/lib/tool.ts` (Tool functionality)
+
+2. Register your tool in `aw-tool-registry`:
+   - Import your tool in `registry.ts`
+   - Add your package as a dependency
 
 ### Security and Management
 
@@ -176,35 +203,6 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
 - **Components**:
   - Command implementations
   - User interaction prompts
-
-## Creating a New Tool
-
-To create a new Agent Wallet tool package, use the provided script:
-
-```bash
-pnpm new-tool <tool-name>
-```
-
-For example:
-```bash
-pnpm new-tool my-feature
-```
-
-This will:
-1. Generate a new tool package in `packages/aw-tool-my-feature`
-2. Set up all necessary configuration files
-3. Create template files for your tool's logic
-
-After creation, you'll need to:
-1. Implement your tool's logic in:
-   - `src/lib/lit-actions/tool.ts` (Lit Action code)
-   - `src/lib/lit-actions/policy.ts` (Lit Action policy validation)
-   - `src/lib/policy.ts` (Tool policy configuration)
-   - `src/lib/tool.ts` (Tool functionality)
-
-2. Register your tool in `aw-tool-registry`:
-   - Import your tool in `registry.ts`
-   - Add your package as a dependency
 
 ## Getting Started
 
