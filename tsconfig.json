@@ -32,6 +32,36 @@
     },
     {
       "path": "./packages/aw-tool-registry"
+    },
+    {
+      "path": "./packages/aw-tool-test-tool"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
+    },
+    {
+      "path": "./packages/aw-tool-my-feature"
     }
   ]
 }

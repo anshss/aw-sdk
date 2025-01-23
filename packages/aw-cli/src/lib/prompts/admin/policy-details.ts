@@ -93,7 +93,7 @@ const promptArrayValues = async (
  * and encodes the policy. It also confirms the policy details with the user before proceeding.
  *
  * @param tool - The tool for which to configure the policy.
- * @returns An object containing the policy IPFS CID and parameters.
+ * @returns An object containing the encoded policy and version.
  * @throws AwCliError - If the user cancels the operation or provides invalid input.
  */
 export const promptPolicyDetails = async (tool: AwTool<any, any>) => {
@@ -103,66 +103,28 @@ export const promptPolicyDetails = async (tool: AwTool<any, any>) => {
   logger.log(`Description: ${tool.description}`);
   logger.log('');
 
-  // If the tool has a default policy, ask if they want to use it
-  let policyIpfsCid: string | undefined;
-  if (tool.defaultPolicyIpfsCid) {
-    logger.info(`Tool has a default policy (${tool.defaultPolicyIpfsCid})`);
-    const { useDefault } = await prompts({
-      type: 'confirm',
-      name: 'useDefault',
-      message: 'Would you like to use the default policy?',
-      initial: true,
-    });
-
-    if (useDefault) {
-      policyIpfsCid = tool.defaultPolicyIpfsCid;
-    }
-  }
-
-  // If not using default policy or no default policy exists, prompt for policy IPFS CID
-  if (!policyIpfsCid) {
-    const { customPolicyIpfsCid } = await prompts({
-      type: 'text',
-      name: 'customPolicyIpfsCid',
-      message: 'Enter the IPFS CID of the policy:',
-      validate: (value) => {
-        if (!value) return 'Policy IPFS CID is required';
-        return true;
-      },
-    });
-
-    if (!customPolicyIpfsCid) {
-      throw new AwCliError(
-        AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
-        'Tool policy setting cancelled.'
-      );
-    }
-
-    policyIpfsCid = customPolicyIpfsCid;
-  }
-
   // Get the schema object shape from the tool's policy.
   const schema = tool.policy.schema as z.ZodObject<any>;
   const policyFields = Object.entries(schema.shape);
-  const parameters: Record<string, any> = {};
+  const policyValues: Record<string, any> = {};
 
   // Iterate over each policy field and prompt the user for input.
   for (const [field, fieldSchema] of policyFields) {
     // Skip the 'type' field as it is fixed.
     if (field === 'type') {
-      parameters[field] = tool.name;
+      policyValues[field] = tool.name;
       continue;
     }
 
     // Skip the 'version' field as it is fixed.
     if (field === 'version') {
-      parameters[field] = '1.0.0';
+      policyValues[field] = '1.0.0';
       continue;
     }
 
     // Handle array fields using the `promptArrayValues` function.
     if (fieldSchema instanceof z.ZodArray) {
-      parameters[field] = await promptArrayValues(field, fieldSchema.element);
+      policyValues[field] = await promptArrayValues(field, fieldSchema.element);
       continue;
     }
 
@@ -194,17 +156,15 @@ export const promptPolicyDetails = async (tool: AwTool<any, any>) => {
     }
 
     // Add the validated value to the policy object.
-    parameters[field] = value;
+    policyValues[field] = value;
   }
 
   // Validate the entire policy object using the tool's schema.
-  const validatedParameters = tool.policy.schema.parse(parameters);
+  const validatedPolicy = tool.policy.schema.parse(policyValues);
 
   // Display the policy details and ask for confirmation.
   logger.info('Policy Details:');
-  logger.log(`IPFS CID: ${policyIpfsCid}`);
-  logger.log('Parameters:');
-  Object.entries(validatedParameters).forEach(([key, value]) => {
+  Object.entries(validatedPolicy).forEach(([key, value]) => {
     if (Array.isArray(value)) {
       logger.log(`${key}:`);
       if (value.length === 0) {
@@ -232,6 +192,9 @@ export const promptPolicyDetails = async (tool: AwTool<any, any>) => {
     );
   }
 
-  // Return the policy IPFS CID and parameters
-  return { policyIpfsCid, parameters: validatedParameters };
+  // Encode the validated policy.
+  const encodedPolicy = tool.policy.encode(validatedPolicy);
+
+  // Return the encoded policy and version.
+  return { policy: encodedPolicy, version: validatedPolicy.version };
 };

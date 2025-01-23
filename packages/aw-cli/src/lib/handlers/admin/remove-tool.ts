@@ -1,50 +1,99 @@
-// Import the Admin class and necessary types.
-import { Admin as AwAdmin, type PkpInfo } from '@lit-protocol/agent-wallet';
+// Import the AwAdmin and AwTool types from the '@lit-protocol/agent-wallet' package.
+import type {
+  PkpInfo,
+  Admin as AwAdmin,
+  AwTool,
+} from '@lit-protocol/agent-wallet';
 
-// Import prompts and utilities.
+// Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
-import { AwCliError } from '../../errors';
-import { promptSelectToolForRemoval, promptConfirmRemoval } from '../../prompts/admin/remove-tool';
+
+// Import custom error types and utilities.
+import { AwCliError, AwCliErrorType } from '../../errors';
+
+// Import prompt utilities for user interaction.
+import {
+  promptConfirmRemoval,
+  promptSelectToolForRemoval,
+} from '../../prompts/admin/remove-tool';
+
+// Import the handleGetTools function to retrieve permitted tools.
+import { handleGetTools } from './get-tools';
 
 /**
- * Handles the removal of a tool from the AW system.
- * @param awAdmin - The AwAdmin instance.
- * @param pkp - The PKP information.
- * @throws {AwCliError} If the user cancels the removal process.
+ * Removes a tool from the Full Self-Signing (AW) system.
+ * This function prompts the user to confirm the action, removes the tool,
+ * and logs the progress and success of the operation.
+ *
+ * @param awAdmin - An instance of the AwAdmin class.
+ * @param pkp - The PKP to remove the tool from.
+ * @param tool - The tool to remove.
  */
-export async function handleRemoveTool(awAdmin: AwAdmin, pkp: PkpInfo) {
+const removeTool = async (
+  awAdmin: AwAdmin,
+  pkp: PkpInfo,
+  tool: AwTool<any, any>
+) => {
+  // Prompt the user to confirm the tool removal action.
+  await promptConfirmRemoval(tool);
+
+  // Log a loading message to indicate the operation is in progress.
+  logger.loading('Removing tool...');
+
+  // Remove the tool from the AW system.
+  await awAdmin.removeTool(pkp.info.tokenId, tool.ipfsCid);
+
+  // Log a success message once the tool is removed.
+  logger.success('Tool removed successfully.');
+};
+
+/**
+ * Handles the process of removing a tool from the AW system.
+ * This function retrieves the list of permitted tools, prompts the user to select a tool to remove,
+ * and handles any errors that occur during the process.
+ *
+ * @param awAdmin - An instance of the AwAdmin class.
+ */
+export const handleRemoveTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
-    // Get registered tools
-    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(pkp.info.tokenId);
-    if (!registeredTools || (!Object.keys(registeredTools.toolsWithPolicies).length && !Object.keys(registeredTools.toolsWithoutPolicies).length)) {
-      logger.info('No tools are currently permitted.');
-      return;
+    // Retrieve the list of permitted tools.
+    const permittedTools = await handleGetTools(awAdmin, pkp);
+
+    // If no permitted tools are found, throw an error.
+    if (
+      permittedTools === null ||
+      (permittedTools.toolsWithPolicies.length === 0 &&
+        permittedTools.toolsWithoutPolicies.length === 0)
+    ) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
+        'No tools are currently permitted.'
+      );
     }
 
-    // Convert RegisteredToolsResult to PermittedTools
-    const permittedTools = {
-      toolsWithPolicies: Object.entries(registeredTools.toolsWithPolicies).map(([ipfsCid, tool]) => ({
-        ...tool,
-        ipfsCid,
-      })),
-      toolsWithoutPolicies: Object.entries(registeredTools.toolsWithoutPolicies).map(([ipfsCid, tool]) => ({
-        ...tool,
-        ipfsCid,
-      })),
-    };
-
-    // Prompt user to select a tool and confirm removal
-    const tool = await promptSelectToolForRemoval(permittedTools);
-    await promptConfirmRemoval(tool);
-
-    // Remove the tool
-    logger.info('Removing tool...');
-    await awAdmin.removeTool(pkp.info.tokenId, tool.ipfsCid);
-    logger.success('Tool removed successfully.');
+    // Prompt the user to select a tool to remove and remove it.
+    await removeTool(
+      awAdmin,
+      pkp,
+      await promptSelectToolForRemoval(permittedTools)
+    );
   } catch (error) {
+    // Handle specific errors related to tool removal.
     if (error instanceof AwCliError) {
-      throw error;
+      if (error.type === AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS) {
+        // Log an error message if no permitted tools are found.
+        logger.error('No permitted tools found.');
+        return;
+      }
+
+      if (error.type === AwCliErrorType.ADMIN_REMOVE_TOOL_CANCELLED) {
+        // Log an error message if the user cancels the operation.
+        logger.error('Tool removal cancelled.');
+        return;
+      }
     }
-    logger.error('Failed to remove tool', error as Error);
+
+    // Re-throw any other errors to be handled by the caller.
+    throw error;
   }
-}
+};

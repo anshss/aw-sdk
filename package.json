@@ -15,7 +15,8 @@
     "docs:clean": "rm -rf docs/api",
     "docs:jsdoc": "node tools/add-jsdoc.js",
     "docs:serve": "node tools/scripts/serve-docs.mjs",
-    "docs:dev": "rm -rf docs/api && npx typedoc --options typedoc.json && node tools/scripts/serve-docs.mjs"
+    "docs:dev": "rm -rf docs/api && npx typedoc --options typedoc.json && node tools/scripts/serve-docs.mjs",
+    "new-tool": "node tools/scripts/create-tool.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

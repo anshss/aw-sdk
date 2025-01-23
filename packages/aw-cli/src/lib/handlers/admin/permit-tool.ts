@@ -32,13 +32,13 @@ const permitTool = async (awAdmin: AwAdmin, pkp: PkpInfo, tool: AwTool) => {
   await promptConfirmPermit(tool);
 
   // Log a loading message to indicate the operation is in progress.
-  logger.loading('Registering tool...');
+  logger.loading('Permitting tool...');
 
-  // Register the tool in the AW system.
-  await awAdmin.registerTool(pkp.info.tokenId, tool.ipfsCid);
+  // Permit the tool in the AW system.
+  await awAdmin.permitTool(pkp.info.tokenId, tool.ipfsCid);
 
   // Log a success message once the tool is permitted.
-  logger.success('Tool registered successfully.');
+  logger.success('Tool permitted successfully.');
 };
 
 /**
