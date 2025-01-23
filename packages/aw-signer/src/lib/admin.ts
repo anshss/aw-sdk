@@ -824,28 +824,6 @@ export class Admin {
   }
 
   /**
-   * Removes a delegatee for the PKP.
-   * @param pkpTokenId - The PKP token ID.
-   * @param delegatee - The address to remove as a delegatee.
-   * @returns A promise that resolves to the transaction receipt.
-   * @throws If the tool policy registry contract is not initialized.
-   */
-  public async removeDelegatee(pkpTokenId: string, delegatee: string) {
-    if (!this.toolRegistryContract) {
-      throw new Error('Tool policy manager not initialized');
-    }
-
-    const tx = await this.toolRegistryContract.removeDelegatees(
-      (
-        await this.getPkpByTokenId(pkpTokenId)
-      ).info.tokenId,
-      [delegatee]
-    );
-
-    return await tx.wait();
-  }
-
-  /**
    * Disconnects the Lit node client.
    */
   public disconnect() {
