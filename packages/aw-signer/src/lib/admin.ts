@@ -786,6 +786,35 @@ export class Admin {
   }
 
   /**
+   * Retrieves all policy parameters for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to an array of all policy parameter names and values.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async getAllToolPolicyParametersForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const parameters =
+      await this.toolRegistryContract.getAllToolPolicyParameters(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid,
+        delegatee
+      );
+
+    return parameters;
+  }
+
+  /**
    * Sets multiple policy parameters for a tool and delegatee.
    * @param pkpTokenId - The PKP token ID.
    * @param ipfsCid - The IPFS CID of the tool.

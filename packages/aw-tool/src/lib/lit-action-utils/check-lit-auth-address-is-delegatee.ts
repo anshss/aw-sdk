@@ -6,14 +6,26 @@ export const checkLitAuthAddressIsDelegatee = async (
   pkpToolRegistryContract: any,
   pkpTokenId: string
 ) => {
-  console.log(
-    `Checking if Lit Auth address: ${LitAuth.authSigAddress} is a delegatee for PKP ${pkpTokenId}...`
-  );
-
   // Check if the session signer is a delegatee
   const sessionSigner = ethers.utils.getAddress(LitAuth.authSigAddress);
 
-  if (await pkpToolRegistryContract.isPkpDelegatee(pkpTokenId, sessionSigner)) {
+  console.log(
+    `Checking if Lit Auth address: ${sessionSigner} is a delegatee for PKP ${pkpTokenId}...`
+  );
+
+  let isDelegatee = false;
+  try {
+    isDelegatee = await pkpToolRegistryContract.isPkpDelegatee(
+      pkpTokenId,
+      sessionSigner
+    );
+  } catch (error) {
+    throw new Error(
+      `Error calling pkpToolRegistryContract.isPkpDelegatee: ${error}`
+    );
+  }
+
+  if (isDelegatee) {
     console.log(
       `Session signer ${sessionSigner} is a delegatee for PKP ${pkpTokenId}`
     );

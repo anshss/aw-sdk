@@ -1,6 +1,5 @@
 // Import the AwTool and AwAdmin types from the '@lit-protocol/agent-wallet' package.
 import type {
-  AwTool,
   Admin as AwAdmin,
   PkpInfo,
   RegisteredToolWithPolicies,
@@ -14,34 +13,6 @@ import { logger } from '../../utils/logger';
 
 // Import custom error types and utilities.
 import { AwCliError, AwCliErrorType } from '../../errors';
-
-// Import the handleGetTools function to retrieve permitted tools.
-import { handleGetTools } from './get-tools';
-
-/**
- * Prompts the user to confirm the removal of a tool's policy.
- * This function throws an error if the user cancels the confirmation.
- *
- * @param tool - The tool for which the policy will be removed.
- * @throws AwCliError - If the user cancels the confirmation.
- */
-const promptConfirmPolicyRemoval = async (tool: AwTool<any, any>) => {
-  // Prompt the user to confirm the policy removal.
-  const { confirmed } = await prompts({
-    type: 'confirm',
-    name: 'confirmed',
-    message: `Are you sure you want to remove the policy for tool ${tool.name} (${tool.ipfsCid})?`,
-    initial: false,
-  });
-
-  // Throw an error if the user cancels the confirmation.
-  if (!confirmed) {
-    throw new AwCliError(
-      AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_CANCELLED,
-      'Tool policy removal cancelled.'
-    );
-  }
-};
 
 /**
  * Prompts the user to select a tool for policy removal and confirms the action.
@@ -76,9 +47,6 @@ const promptSelectToolForPolicyRemoval = async (
     );
   }
 
-  // Confirm the policy removal with the user.
-  await promptConfirmPolicyRemoval(tool);
-
   // Return the selected tool.
   return tool;
 };
@@ -102,15 +70,15 @@ const promptSelectToolDelegateeForPolicy = async (delegatees: string[]) => {
   const { delegatee } = await prompts({
     type: 'select',
     name: 'delegatee',
-    message: 'Select a delegatee to view policy:',
+    message: 'Select a delegatee to remove policy:',
     choices,
   });
 
   // Throw an error if the user cancels the selection.
   if (!delegatee) {
     throw new AwCliError(
-      AwCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
-      'Tool policy viewing cancelled.'
+      AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_CANCELLED,
+      'Tool policy removal cancelled.'
     );
   }
 
@@ -159,13 +127,14 @@ export const handleRemoveToolPolicy = async (
   pkp: PkpInfo
 ) => {
   try {
-    // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no tools with policies are found, throw an error.
     if (
-      permittedTools === null ||
-      Object.keys(permittedTools.toolsWithPolicies).length === 0
+      registeredTools === null ||
+      Object.keys(registeredTools.toolsWithPolicies).length === 0
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_REMOVE_TOOL_POLICY_NO_TOOLS,
@@ -174,7 +143,7 @@ export const handleRemoveToolPolicy = async (
     }
 
     const tool = await promptSelectToolForPolicyRemoval(
-      Object.values(permittedTools.toolsWithPolicies)
+      Object.values(registeredTools.toolsWithPolicies)
     );
 
     const delegatee = await promptSelectToolDelegateeForPolicy(tool.delegatees);

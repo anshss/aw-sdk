@@ -24,6 +24,7 @@ declare global {
       getAddress: any;
       defaultAbiCoder: any;
       toUtf8Bytes: any;
+      toUtf8String: any;
     };
     BigNumber: any;
     Contract: any;

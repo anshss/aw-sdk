@@ -55,15 +55,20 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
       selectedTool.ipfsCid
     );
 
-    const decodedPolicy = selectedTool.policy.decode(policy.policy);
+    // const decodedPolicy = selectedTool.policy.decode(policy.policy);
 
-    // Log the tool policy details.
+    // // Log the tool policy details.
+    // logger.info(
+    //   `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
+    // );
+    // logger.log(`Version: ${policy.version}`);
+    // logger.log('Policy:');
+    // logger.log(JSON.stringify(decodedPolicy, null, 2));
     logger.info(
       `Tool Policy for PKP ${selectedPkp.tokenId} and Tool ${selectedTool.ipfsCid}:`
     );
-    logger.log(`Version: ${policy.version}`);
-    logger.log('Policy:');
-    logger.log(JSON.stringify(decodedPolicy, null, 2));
+    logger.info(`Policy IPFS CID: ${policy.policyIpfsCid}`);
+    logger.info(`Policy Enabled: ${policy.enabled ? '✅' : '❌'}`);
   } catch (error) {
     // Handle specific errors related to tool policy retrieval.
     if (error instanceof AwCliError) {
@@ -83,6 +88,15 @@ export const handleGetToolPolicy = async (awDelegatee: AwDelegatee) => {
       }
       if (error.type === AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_POLICY) {
         logger.error(error.message);
+        return;
+      }
+      if (
+        error.type ===
+        AwCliErrorType.DELEGATEE_GET_TOOL_POLICY_NO_TOOLS_WITH_POLICY
+      ) {
+        logger.error(
+          'No registered tools with a policy found for the selected PKP.'
+        );
         return;
       }
     }

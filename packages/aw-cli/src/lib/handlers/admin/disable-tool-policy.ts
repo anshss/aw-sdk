@@ -5,16 +5,19 @@ import {
 } from '@lit-protocol/agent-wallet';
 import prompts from 'prompts';
 
-import { handleGetTools } from './get-tools';
 import { AwCliError, AwCliErrorType } from '../../errors';
 import { logger } from '../../utils/logger';
 
 const promptSelectToolToDisablePolicy = async (
   toolsWithPolicies: RegisteredToolWithPolicies[]
 ) => {
-  // Map the tools to a list of choices for the prompts library.
+  // Filter out tools that don't have delegatees with enabled tool policies.
   const choices = toolsWithPolicies
-    .filter((tool) => !tool.toolEnabled)
+    .filter((tool) =>
+      Object.values(tool.delegateePolicies).some(
+        (policy) => policy.policyEnabled
+      )
+    )
     .map((tool) => ({
       title: `${tool.name} (${tool.ipfsCid})`,
       value: tool,
@@ -32,7 +35,7 @@ const promptSelectToolToDisablePolicy = async (
   if (!tool) {
     throw new AwCliError(
       AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_CANCELLED,
-      'Disable tool policy cancelled.'
+      'Tool policy disabling cancelled.'
     );
   }
 
@@ -41,6 +44,13 @@ const promptSelectToolToDisablePolicy = async (
 };
 
 const promptSelectToolDelegateeForPolicy = async (delegatees: string[]) => {
+  if (delegatees.length === 0) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES,
+      'No delegatees with tool policy found.'
+    );
+  }
+
   // Map the delegatees to a list of choices for the prompts library.
   const choices = delegatees.map((delegatee) => ({
     title: delegatee,
@@ -72,11 +82,13 @@ export const handleDisableToolPolicy = async (
   pkp: PkpInfo
 ) => {
   try {
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     if (
-      permittedTools === null ||
-      Object.keys(permittedTools.toolsWithPolicies).length === 0
+      registeredTools === null ||
+      Object.keys(registeredTools.toolsWithPolicies).length === 0
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_NO_TOOLS_FOUND,
@@ -84,16 +96,44 @@ export const handleDisableToolPolicy = async (
       );
     }
 
+    const toolsWithEnabledPolicies = Object.values(
+      registeredTools.toolsWithPolicies
+    ).filter((tool) =>
+      Object.values(tool.delegateePolicies).some(
+        (policy) => policy.policyEnabled
+      )
+    );
+
+    if (toolsWithEnabledPolicies.length === 0) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_NO_ENABLED_TOOLS,
+        'No tools with enabled policies found.'
+      );
+    }
+
     // Prompt the user to select a tool and retrieve its policy.
     const selectedTool = await promptSelectToolToDisablePolicy(
-      Object.values(permittedTools.toolsWithPolicies)
+      toolsWithEnabledPolicies
     );
+
+    const delegateesWithEnabledPolicies = selectedTool.delegatees.filter(
+      (delegatee) => selectedTool.delegateePolicies[delegatee]?.policyEnabled
+    );
+
+    if (delegateesWithEnabledPolicies.length === 0) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_NO_ENABLED_TOOLS,
+        'No delegatees with enabled policies found for the selected tool.'
+      );
+    }
 
     await awAdmin.disableToolPolicyForDelegatee(
       pkp.info.tokenId,
       selectedTool.ipfsCid,
-      await promptSelectToolDelegateeForPolicy(selectedTool.delegatees)
+      await promptSelectToolDelegateeForPolicy(delegateesWithEnabledPolicies)
     );
+
+    logger.success('Tool policy disabled successfully.');
   } catch (error) {
     // Handle specific errors related to tool policy retrieval.
     if (error instanceof AwCliError) {
@@ -107,7 +147,19 @@ export const handleDisableToolPolicy = async (
 
       if (error.type === AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_CANCELLED) {
         // Log an error message if the user cancels the operation.
-        logger.error('Disable tool policy cancelled.');
+        logger.error('Tool policy disabling cancelled.');
+        return;
+      }
+
+      if (
+        error.type === AwCliErrorType.ADMIN_DISABLE_TOOL_POLICY_NO_ENABLED_TOOLS
+      ) {
+        logger.error('No tools with enabled policies found.');
+        return;
+      }
+
+      if (error.type === AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES) {
+        logger.error('No delegatees with enabled policies found.');
         return;
       }
     }

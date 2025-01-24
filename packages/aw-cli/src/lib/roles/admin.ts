@@ -31,6 +31,9 @@ import {
   handleDisableToolPolicy,
   handlePermitToolForDelegatee,
   handleUnpermitToolForDelegatee,
+  handleSetToolPolicyParameter,
+  handleGetToolPolicyParameter,
+  handleRemoveToolPolicyParameter,
 } from '../handlers/admin';
 
 /**
@@ -169,13 +172,13 @@ export class Admin {
         await handleDisableToolPolicy(admin.awAdmin, pkp);
         break;
       case 'getToolPolicyParameter':
-        // await handleGetToolPolicyParameter(admin.awAdmin, pkp);
+        await handleGetToolPolicyParameter(admin.awAdmin, pkp);
         break;
       case 'setToolPolicyParameter':
-        // await handleSetToolPolicyParameter(admin.awAdmin, pkp);
+        await handleSetToolPolicyParameter(admin.awAdmin, pkp);
         break;
       case 'removeToolPolicyParameter':
-        // await handleRemoveToolPolicyParameter(admin.awAdmin, pkp);
+        await handleRemoveToolPolicyParameter(admin.awAdmin, pkp);
         break;
       case 'getDelegatees':
         await handleGetDelegatees(admin.awAdmin, pkp);

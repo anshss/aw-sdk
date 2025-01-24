@@ -7,7 +7,7 @@ async function buildFile(entryPoint, outfile, network, config) {
     await esbuild.build({
       entryPoints: [entryPoint],
       bundle: true,
-      minify: true,
+      minify: false,
       format: 'iife',
       globalName: 'LitAction',
       outfile,

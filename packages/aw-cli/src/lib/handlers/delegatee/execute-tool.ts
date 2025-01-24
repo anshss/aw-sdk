@@ -84,9 +84,11 @@ export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
         selectedPkp.tokenId,
         selectedTool.ipfsCid
       );
-      const decodedPolicy = selectedTool.policy.decode(policy.policy);
-      logger.info('Tool Policy:');
-      logger.log(JSON.stringify(decodedPolicy, null, 2));
+      // const decodedPolicy = selectedTool.policy.decode(policy.policy);
+      // logger.info('Tool Policy:');
+      // logger.log(JSON.stringify(decodedPolicy, null, 2));
+      logger.info(`Policy IPFS CID: ${policy.policyIpfsCid}`);
+      logger.info(`Policy Enabled: ${policy.enabled ? '✅' : '❌'}`);
     }
 
     // Prompt the user to provide tool parameters.

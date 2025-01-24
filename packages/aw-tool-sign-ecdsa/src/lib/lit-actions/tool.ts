@@ -14,7 +14,7 @@ declare global {
   };
 }
 
-export default async () => {
+(async () => {
   try {
     console.log(`Using Lit Network: ${LIT_NETWORK}`);
     console.log(
@@ -34,16 +34,22 @@ export default async () => {
     );
     const pkp = await getPkpInfo(params.pkpEthAddress);
 
-    const toolPolicyIpfsCid = await fetchToolPolicyFromRegistry(
+    const toolPolicy = await fetchToolPolicyFromRegistry(
       pkpToolRegistryContract,
       pkp.tokenId,
       delegateeAddress,
       toolIpfsCid
     );
 
-    if (toolPolicyIpfsCid !== '0x') {
+    if (
+      toolPolicy.policyIpfsCid !== undefined &&
+      toolPolicy.policyIpfsCid !== '0x' &&
+      toolPolicy.policyIpfsCid !== ''
+    ) {
+      console.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
+
       await Lit.Actions.call({
-        ipfsId: toolPolicyIpfsCid,
+        ipfsId: toolPolicy.policyIpfsCid,
         params: {
           pkpToolRegistryContract,
           pkpTokenId: pkp.tokenId,
@@ -78,4 +84,4 @@ export default async () => {
       }),
     });
   }
-};
+})();

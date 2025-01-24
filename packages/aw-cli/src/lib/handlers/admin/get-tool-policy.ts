@@ -12,9 +12,6 @@ import { logger } from '../../utils/logger';
 // Import custom error types and utilities.
 import { AwCliError, AwCliErrorType } from '../../errors';
 
-// Import the handleGetTools function to retrieve permitted tools.
-import { handleGetTools } from './get-tools';
-
 /**
  * Prompts the user to select a tool from a list of tools with policies.
  * This function throws an error if the user cancels the selection.
@@ -114,7 +111,7 @@ const getToolPolicy = async (
   // Log the tool's name, IPFS CID, policy version, and decoded policy.
   logger.info('Tool Policy:');
   logger.log(`${tool.name} (${tool.ipfsCid})`);
-  logger.log(`Enabled: ${enabled}`);
+  logger.log(`Enabled: ${enabled ? '✅' : '❌'}`);
   logger.log(`Policy IPFS CID: ${policyIpfsCid}`);
 };
 
@@ -128,12 +125,14 @@ const getToolPolicy = async (
 export const handleGetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
     // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no permitted tools are found, throw an error.
     if (
-      permittedTools === null ||
-      Object.keys(permittedTools.toolsWithPolicies).length === 0
+      registeredTools === null ||
+      Object.keys(registeredTools.toolsWithPolicies).length === 0
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_GET_TOOL_POLICY_NO_TOOLS,
@@ -143,7 +142,7 @@ export const handleGetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
 
     // Prompt the user to select a tool and retrieve its policy.
     const selectedTool = await promptSelectToolForPolicy(
-      Object.values(permittedTools.toolsWithPolicies)
+      Object.values(registeredTools.toolsWithPolicies)
     );
 
     await getToolPolicy(

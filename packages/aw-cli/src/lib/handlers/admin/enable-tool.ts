@@ -5,7 +5,6 @@ import {
 } from '@lit-protocol/agent-wallet';
 import prompts from 'prompts';
 
-import { handleGetTools } from './get-tools';
 import { AwCliError, AwCliErrorType } from '../../errors';
 import { logger } from '../../utils/logger';
 
@@ -67,13 +66,15 @@ export const promptSelectToolToEnable = async (
 
 export const handleEnableTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no permitted tools are found, throw an error.
     if (
-      permittedTools === null ||
-      (Object.keys(permittedTools.toolsWithPolicies).length === 0 &&
-        Object.keys(permittedTools.toolsWithoutPolicies).length === 0)
+      registeredTools === null ||
+      (Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+        Object.keys(registeredTools.toolsWithoutPolicies).length === 0)
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
@@ -81,7 +82,7 @@ export const handleEnableTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
       );
     }
 
-    const selectedTool = await promptSelectToolToEnable(permittedTools);
+    const selectedTool = await promptSelectToolToEnable(registeredTools);
 
     await awAdmin.enableTool(pkp.info.tokenId, selectedTool.ipfsCid);
   } catch (error) {

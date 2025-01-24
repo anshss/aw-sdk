@@ -23,7 +23,7 @@ if (!PRIVATE_KEY) {
 describe('Admin E2E', () => {
   const STORAGE_PATH = path.join(__dirname, '../../.aw-signer-admin-storage');
   const ERC20_TRANSFER_TOOL_IPFS_CID =
-    'QmdaabYYC3oDsNho3cJEYPuK62xpCmMrbhN9FmVnjBYpk2';
+    'QmPBePemi154H73LDfK974nDDDfNU3CfUShtYMcLCA4sy6';
   const DELEGATEE_1 = ethers.Wallet.createRandom().address;
   //   const DELEGATEE_2 = ethers.Wallet.createRandom().address;
   const POLICY_IPFS_CID = 'QmTestPolicyIpfsCid';

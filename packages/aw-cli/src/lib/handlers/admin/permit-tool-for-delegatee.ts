@@ -89,9 +89,16 @@ export const handlePermitToolForDelegatee = async (
       );
     }
 
-    const delegatee = await promptSelectDelegateeToPermitToolFor(
-      await awAdmin.getDelegatees(pkp.info.tokenId)
-    );
+    const delegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
+
+    if (delegatees.length === 0) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_PERMIT_TOOL_FOR_DELEGATEE_NO_DELEGATEES_FOUND,
+        'No delegatees found for PKP.'
+      );
+    }
+
+    const delegatee = await promptSelectDelegateeToPermitToolFor(delegatees);
 
     const permittedTools = await awAdmin.getPermittedToolsForDelegatee(
       pkp.info.tokenId,
@@ -162,6 +169,14 @@ export const handlePermitToolForDelegatee = async (
       ) {
         // Log an error message if the user cancels the operation.
         logger.error('Permit tool for delegatee cancelled.');
+        return;
+      }
+
+      if (
+        error.type ===
+        AwCliErrorType.ADMIN_PERMIT_TOOL_FOR_DELEGATEE_NO_DELEGATEES_FOUND
+      ) {
+        logger.error('No delegatees found for PKP.');
         return;
       }
     }

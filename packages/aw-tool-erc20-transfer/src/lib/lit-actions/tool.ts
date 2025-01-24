@@ -1,12 +1,15 @@
-import { fetchToolPolicyFromRegistry } from './utils/fetch-tool-policy-from-registry';
-import { getTokenInfo } from './utils/erc20/get-erc20-info';
-import { getPkpInfo } from './utils/get-pkp-info';
-import { getPkpToolRegistryContract } from './utils/get-pkp-tool-registry-contract';
-import { NETWORK_CONFIG } from './utils/network-config';
-import { getGasData } from './utils/erc20/get-gas-data';
-import { estimateGasLimit } from './utils/erc20/estimate-gas-limit';
-import { createAndSignTransaction } from './utils/erc20/create-and-sign-tx';
-import { broadcastTransaction } from './utils/erc20/broadcast-tx';
+import {
+  fetchToolPolicyFromRegistry,
+  getPkpInfo,
+  getPkpToolRegistryContract,
+  NETWORK_CONFIG,
+} from '@lit-protocol/aw-tool';
+
+import { getTokenInfo } from './utils/get-erc20-info';
+import { getGasData } from './utils/get-gas-data';
+import { estimateGasLimit } from './utils/estimate-gas-limit';
+import { createAndSignTransaction } from './utils/create-and-sign-tx';
+import { broadcastTransaction } from './utils/broadcast-tx';
 
 declare global {
   // Required Inputs
@@ -20,7 +23,7 @@ declare global {
   };
 }
 
-export default async () => {
+(async () => {
   try {
     console.log(`Using Lit Network: ${LIT_NETWORK}`);
     console.log(
@@ -46,28 +49,41 @@ export default async () => {
       pkp.ethAddress
     );
 
-    const toolPolicyIpfsCid = await fetchToolPolicyFromRegistry(
+    console.log(`Token info: ${JSON.stringify(tokenInfo)}`);
+
+    const toolPolicy = await fetchToolPolicyFromRegistry(
       pkpToolRegistryContract,
       pkp.tokenId,
       delegateeAddress,
       toolIpfsCid
     );
-    if (toolPolicyIpfsCid !== '0x') {
-      await Lit.Actions.call({
-        ipfsId: toolPolicyIpfsCid,
-        params: {
-          pkpToolRegistryContract,
-          pkpTokenId: pkp.tokenId,
-          delegateeAddress,
-          toolParameters: {
-            tokenInfo,
-            rpcUrl: params.rpcUrl,
-            chainId: params.chainId,
-            tokenIn: params.tokenIn,
-            recipientAddress: params.recipientAddress,
-            amountIn: params.amountIn,
-          },
+    if (
+      toolPolicy.enabled &&
+      toolPolicy.policyIpfsCid !== undefined &&
+      toolPolicy.policyIpfsCid !== '0x' &&
+      toolPolicy.policyIpfsCid !== ''
+    ) {
+      console.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
+
+      const policyParams = {
+        parentToolIpfsCid: toolIpfsCid,
+        pkpToolRegistryContractAddress: PKP_TOOL_REGISTRY_ADDRESS,
+        pkpTokenId: pkp.tokenId,
+        delegateeAddress,
+        tokenInfo: {
+          amount: tokenInfo.amount.toString(),
+          tokenAddress: params.tokenIn,
+          recipientAddress: params.recipientAddress,
         },
+      };
+
+      console.log(
+        `Calling policy Lit Action with params: ${JSON.stringify(policyParams)}`
+      );
+
+      await Lit.Actions.call({
+        ipfsId: toolPolicy.policyIpfsCid,
+        params: policyParams,
       });
     } else {
       console.log(
@@ -149,4 +165,4 @@ export default async () => {
       }),
     });
   }
-};
+})();

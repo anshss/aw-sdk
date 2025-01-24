@@ -16,3 +16,6 @@ export * from './enable-tool-policy';
 export * from './disable-tool-policy';
 export * from './permit-tool-for-delegatee';
 export * from './unpermit-tool-for-delegatee';
+export * from './set-tool-policy-parameter';
+export * from './remove-tool-policy-parameter';
+export * from './get-tool-policy-parameter';

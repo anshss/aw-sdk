@@ -10,7 +10,6 @@ import prompts from 'prompts';
 
 import { logger } from '../../utils/logger';
 import { AwCliError, AwCliErrorType } from '../../errors';
-import { handleGetTools } from './get-tools';
 
 /**
  * Prompts the user to select a tool for setting or updating its policy.
@@ -85,7 +84,7 @@ const promptSelectToolDelegateeForPolicy = async (delegatees: string[]) => {
   const { delegatee } = await prompts({
     type: 'select',
     name: 'delegatee',
-    message: 'Select a delegatee to view policy:',
+    message: 'Select a delegatee to set the policy for:',
     choices,
   });
 
@@ -169,13 +168,15 @@ const setToolPolicy = async (
  */
 export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
-    // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no tools without policies are found, throw an error.
     if (
-      permittedTools === null ||
-      Object.keys(permittedTools.toolsWithoutPolicies).length === 0
+      registeredTools === null ||
+      (Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+        Object.keys(registeredTools.toolsWithoutPolicies).length === 0)
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_TOOLS,
@@ -183,11 +184,38 @@ export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
       );
     }
 
+    const pkpDelegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
+
+    if (pkpDelegatees.length === 0) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES,
+        'No delegatees found.'
+      );
+    }
+
     // Prompt the user to select a tool for setting or updating its policy.
-    const selectedTool = await promptSelectToolForPolicy(permittedTools);
+    const selectedTool = await promptSelectToolForPolicy(registeredTools);
+
+    const delegateesWithoutPolicy = [];
+    for (const delegatee of pkpDelegatees) {
+      const delegateePermittedTools =
+        await awAdmin.getPermittedToolsForDelegatee(
+          pkp.info.tokenId,
+          delegatee
+        );
+
+      if (
+        delegateePermittedTools.some(
+          (tool) => tool.toolIpfsCid === selectedTool.ipfsCid
+        ) &&
+        !selectedTool.delegatees.includes(delegatee)
+      ) {
+        delegateesWithoutPolicy.push(delegatee);
+      }
+    }
 
     const delegatee = await promptSelectToolDelegateeForPolicy(
-      selectedTool.delegatees
+      delegateesWithoutPolicy
     );
 
     // Prompt the user for policy details.

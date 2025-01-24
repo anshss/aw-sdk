@@ -19,6 +19,12 @@ export const fetchToolPolicyFromRegistry = async (
     )
   )[0];
 
-  console.log(`Tool Policy: ${toolPolicy}`);
+  console.log(
+    'Tool Policy:',
+    `Tool IPFS CID: ${toolPolicy.toolIpfsCid}`,
+    `Policy IPFS CID: ${toolPolicy.policyIpfsCid}`,
+    `Delegatee Address: ${toolPolicy.delegatee}`,
+    `Policy Enabled: ${toolPolicy.enabled}`
+  );
   return toolPolicy;
 };

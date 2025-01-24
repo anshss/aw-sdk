@@ -14,7 +14,7 @@ declare global {
   };
 }
 
-export default async () => {
+(async () => {
   const isDelegatee = await checkLitAuthAddressIsDelegatee(
     pkpToolRegistryContract,
     pkpTokenId
@@ -62,4 +62,4 @@ export default async () => {
   }
 
   console.log('Policy parameters validated');
-};
+})();
