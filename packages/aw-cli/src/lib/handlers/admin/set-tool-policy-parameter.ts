@@ -138,7 +138,8 @@ const promptPolicyParameter = async (
         title: 'Addresses - Array of Ethereum Addresses (Comma separated)',
         value: 'address[]',
       },
-      { title: 'Text - String Value', value: 'string' },
+      { title: 'String - String Value', value: 'string' },
+      { title: 'String[] - Array of Strings (Comma separated)', value: 'string[]' },
       { title: 'Boolean - True/False', value: 'boolean' },
     ],
   });
@@ -194,6 +195,12 @@ const promptPolicyParameter = async (
         const boolValue =
           parameterValue.toLowerCase() === 'true' || parameterValue === '1';
         processedValue = boolValue.toString();
+        break;
+      }
+      case 'string[]': {
+        const strings = parameterValue.split(',').map((str: string) => str.trim());
+        processedValue = JSON.stringify(strings);
+        logger.info(`Processed value: ${processedValue}`);
         break;
       }
       case 'string':
