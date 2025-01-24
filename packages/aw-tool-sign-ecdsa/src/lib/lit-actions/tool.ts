@@ -42,6 +42,7 @@ declare global {
     );
 
     if (
+      toolPolicy.enabled &&
       toolPolicy.policyIpfsCid !== undefined &&
       toolPolicy.policyIpfsCid !== '0x' &&
       toolPolicy.policyIpfsCid !== ''
@@ -51,9 +52,9 @@ declare global {
       await Lit.Actions.call({
         ipfsId: toolPolicy.policyIpfsCid,
         params: {
-          pkpToolRegistryContract,
+          parentToolIpfsCid: toolIpfsCid,
+          pkpToolRegistryContractAddress: PKP_TOOL_REGISTRY_ADDRESS,
           pkpTokenId: pkp.tokenId,
-          toolIpfsCid,
           delegateeAddress,
           toolParameters: {
             message: params.message,

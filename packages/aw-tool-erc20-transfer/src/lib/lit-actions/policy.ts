@@ -11,7 +11,7 @@ declare global {
   const pkpTokenId: string;
   const delegateeAddress: string;
   const tokenInfo: {
-    amount: any;
+    amount: string;
     tokenAddress: string;
     recipientAddress: string;
   };

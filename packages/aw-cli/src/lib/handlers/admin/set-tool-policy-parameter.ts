@@ -134,7 +134,10 @@ const promptPolicyParameter = async (
     choices: [
       { title: 'Number - Integer or Decimal', value: 'number' },
       { title: 'Address - Single Ethereum Address', value: 'address' },
-      { title: 'Addresses - Array of Ethereum Addresses', value: 'address[]' },
+      {
+        title: 'Addresses - Array of Ethereum Addresses (Comma separated)',
+        value: 'address[]',
+      },
       { title: 'Text - String Value', value: 'string' },
       { title: 'Boolean - True/False', value: 'boolean' },
     ],
