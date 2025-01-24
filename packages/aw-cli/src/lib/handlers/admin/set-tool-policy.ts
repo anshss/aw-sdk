@@ -1,25 +1,15 @@
 // Import the AwTool, AwAdmin, and PermittedTools types from the '@lit-protocol/agent-wallet' package.
 import type {
-  AwTool,
   PkpInfo,
   Admin as AwAdmin,
-  PermittedTools,
+  RegisteredToolWithPolicies,
+  RegisteredToolsResult,
+  ToolMetadata,
 } from '@lit-protocol/agent-wallet';
-
-// Import the prompts library for user interaction.
 import prompts from 'prompts';
 
-// Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
-
-// Import custom error types and utilities.
 import { AwCliError, AwCliErrorType } from '../../errors';
-
-// Import the handleGetTools function to retrieve permitted tools.
-import { handleGetTools } from './get-tools';
-
-// Import the prompt utility for collecting policy details.
-import { promptPolicyDetails } from '../../prompts/admin';
 
 /**
  * Prompts the user to select a tool for setting or updating its policy.
@@ -29,19 +19,23 @@ import { promptPolicyDetails } from '../../prompts/admin';
  * @returns The selected tool.
  * @throws AwCliError - If the user cancels the selection.
  */
-const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
+const promptSelectToolForPolicy = async (
+  registeredToolsResult: RegisteredToolsResult
+) => {
   // Combine tools with and without policies into a single list of choices.
   const choices = [
-    ...permittedTools.toolsWithPolicies.map((tool) => ({
+    ...Object.values(registeredToolsResult.toolsWithPolicies).map((tool) => ({
       title: `${tool.name} (${tool.ipfsCid})`,
       description: 'Update existing policy',
       value: tool,
     })),
-    ...permittedTools.toolsWithoutPolicies.map((tool) => ({
-      title: `${tool.name} (${tool.ipfsCid})`,
-      description: 'Set new policy',
-      value: tool,
-    })),
+    ...Object.values(registeredToolsResult.toolsWithoutPolicies).map(
+      (tool) => ({
+        title: `${tool.name} (${tool.ipfsCid})`,
+        description: 'Set new policy',
+        value: tool,
+      })
+    ),
   ];
 
   // Prompt the user to select a tool.
@@ -61,7 +55,75 @@ const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
   }
 
   // Return the selected tool.
-  return tool as AwTool<any, any>;
+  return tool as RegisteredToolWithPolicies | ToolMetadata;
+};
+
+/**
+ * Prompts the user to select a delegatee for a tool from a list of delegatees.
+ * This function throws an error if the user cancels the selection.
+ *
+ * @param delegatees - An array of delegatee addresses.
+ * @returns The selected delegatee address.
+ * @throws AwCliError - If the user cancels the selection.
+ */
+const promptSelectToolDelegateeForPolicy = async (delegatees: string[]) => {
+  if (delegatees.length === 0) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES,
+      'No delegatees found.'
+    );
+  }
+
+  // Map the delegatees to a list of choices for the prompts library.
+  const choices = delegatees.map((delegatee) => ({
+    title: delegatee,
+    value: delegatee,
+  }));
+
+  // Prompt the user to select a delegatee.
+  const { delegatee } = await prompts({
+    type: 'select',
+    name: 'delegatee',
+    message: 'Select a delegatee to set the policy for:',
+    choices,
+  });
+
+  // Throw an error if the user cancels the selection.
+  if (!delegatee) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_GET_TOOL_POLICY_CANCELLED,
+      'Tool policy viewing cancelled.'
+    );
+  }
+
+  // Return the selected delegatee.
+  return delegatee;
+};
+
+/**
+ * Prompts the user to enter the IPFS CID for the policy.
+ * This function validates the input to ensure it is a valid IPFS CID.
+ *
+ * @returns The entered IPFS CID.
+ * @throws AwCliError - If the user cancels the input or provides invalid input.
+ */
+const promptPolicyIpfsCid = async () => {
+  const { policyIpfsCid } = await prompts({
+    type: 'text',
+    name: 'policyIpfsCid',
+    message: 'Enter the IPFS CID for the policy:',
+  });
+
+  // If the user cancels the input, throw an error.
+  if (!policyIpfsCid) {
+    throw new AwCliError(
+      AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED,
+      'Tool policy setting cancelled.'
+    );
+  }
+
+  // Return the entered IPFS CID.
+  return policyIpfsCid;
 };
 
 /**
@@ -76,15 +138,21 @@ const promptSelectToolForPolicy = async (permittedTools: PermittedTools) => {
 const setToolPolicy = async (
   awAdmin: AwAdmin,
   pkp: PkpInfo,
-  tool: AwTool<any, any>,
-  policy: string,
-  version: string
+  tool: RegisteredToolWithPolicies | ToolMetadata,
+  delegatee: string,
+  policyIpfsCid: string
 ) => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Setting tool policy...');
 
   // Set the tool's policy in the AW system.
-  await awAdmin.setToolPolicy(pkp.info.tokenId, tool.ipfsCid, policy, version);
+  await awAdmin.setToolPolicyForDelegatee(
+    pkp.info.tokenId,
+    tool.ipfsCid,
+    delegatee,
+    policyIpfsCid,
+    true
+  );
 
   // Log a success message once the policy is set.
   logger.success('Tool policy set successfully.');
@@ -100,13 +168,15 @@ const setToolPolicy = async (
  */
 export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
-    // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no tools without policies are found, throw an error.
     if (
-      permittedTools === null ||
-      permittedTools.toolsWithoutPolicies.length === 0
+      registeredTools === null ||
+      (Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+        Object.keys(registeredTools.toolsWithoutPolicies).length === 0)
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_TOOLS,
@@ -114,14 +184,45 @@ export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
       );
     }
 
+    const pkpDelegatees = await awAdmin.getDelegatees(pkp.info.tokenId);
+
+    if (pkpDelegatees.length === 0) {
+      throw new AwCliError(
+        AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES,
+        'No delegatees found.'
+      );
+    }
+
     // Prompt the user to select a tool for setting or updating its policy.
-    const selectedTool = await promptSelectToolForPolicy(permittedTools);
+    const selectedTool = await promptSelectToolForPolicy(registeredTools);
+
+    const delegateesWithoutPolicy = [];
+    for (const delegatee of pkpDelegatees) {
+      const delegateePermittedTools =
+        await awAdmin.getPermittedToolsForDelegatee(
+          pkp.info.tokenId,
+          delegatee
+        );
+
+      if (
+        delegateePermittedTools.some(
+          (tool) => tool.toolIpfsCid === selectedTool.ipfsCid
+        ) &&
+        !selectedTool.delegatees.includes(delegatee)
+      ) {
+        delegateesWithoutPolicy.push(delegatee);
+      }
+    }
+
+    const delegatee = await promptSelectToolDelegateeForPolicy(
+      delegateesWithoutPolicy
+    );
 
     // Prompt the user for policy details.
-    const { policy, version } = await promptPolicyDetails(selectedTool);
+    const policyIpfsCid = await promptPolicyIpfsCid();
 
     // Set the policy for the selected tool.
-    await setToolPolicy(awAdmin, pkp, selectedTool, policy, version);
+    await setToolPolicy(awAdmin, pkp, selectedTool, delegatee, policyIpfsCid);
   } catch (error) {
     // Handle specific errors related to tool policy setting.
     if (error instanceof AwCliError) {
@@ -134,6 +235,12 @@ export const handleSetToolPolicy = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
       if (error.type === AwCliErrorType.ADMIN_SET_TOOL_POLICY_CANCELLED) {
         // Log an error message if the user cancels the operation.
         logger.error('Tool policy setting cancelled.');
+        return;
+      }
+
+      if (error.type === AwCliErrorType.ADMIN_SET_TOOL_POLICY_NO_DELEGATEES) {
+        // Log an error message if no delegatees are found.
+        logger.error('No delegatees found for the selected tool.');
         return;
       }
     }

@@ -36,39 +36,47 @@ const getRegisteredTools = async (awDelegatee: AwDelegatee) => {
   // Prompt the user to select a PKP.
   const selectedPkp = await promptSelectPkp(pkps);
 
-  const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
+  const registeredTools = await awDelegatee.getPermittedToolsForPkp(
     selectedPkp.tokenId
   );
 
   // Process tools with policies.
-  if (registeredTools.toolsWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithPolicies).length > 0) {
     logger.log(`Tools with Policies:`);
-    registeredTools.toolsWithPolicies.forEach((tool) => {
+    Object.values(registeredTools.toolsWithPolicies).forEach((tool) => {
       logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
-      logger.log(`      - ${tool.description}`);
+      logger.log(`      - Tool Enabled: ${tool.toolEnabled ? '✅' : '❌'}`);
+      logger.log(`      - Description: ${tool.description}`);
+      logger.log(`      - Policy: ${tool.policyIpfsCid}`);
+      logger.log(`      - Policy Enabled: ${tool.policyEnabled ? '✅' : '❌'}`);
     });
   }
 
   // Process tools without policies.
-  if (registeredTools.toolsWithoutPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithoutPolicies).length > 0) {
     logger.log(`Tools without Policies:`);
-    registeredTools.toolsWithoutPolicies.forEach((tool) => {
+    Object.values(registeredTools.toolsWithoutPolicies).forEach((tool) => {
       logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
-      logger.log(`      - ${tool.description}`);
+      logger.log(`      - Tool Enabled: ${tool.toolEnabled ? '✅' : '❌'}`);
+      logger.log(`      - Description: ${tool.description}`);
     });
   }
 
-  if (registeredTools.toolsUnknownWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsUnknownWithPolicies).length > 0) {
     logger.log(`Unknown Tools with Policies:`);
-    registeredTools.toolsUnknownWithPolicies.forEach((tool) => {
-      logger.log(`  - Unknown tool: ${tool.ipfsCid}`);
+    Object.values(registeredTools.toolsUnknownWithPolicies).forEach((tool) => {
+      logger.log(`  - ${tool.toolIpfsCid}`);
+      logger.log(`      - Tool Enabled: ${tool.toolEnabled ? '✅' : '❌'}`);
+      logger.log(`      - Policy: ${tool.policyIpfsCid}`);
+      logger.log(`      - Policy Enabled: ${tool.policyEnabled ? '✅' : '❌'}`);
     });
   }
 
   if (registeredTools.toolsUnknownWithoutPolicies.length > 0) {
     logger.log(`Unknown Tools without Policies:`);
-    registeredTools.toolsUnknownWithoutPolicies.forEach((ipfsCid) => {
-      logger.log(`  - Unknown tool: ${ipfsCid}`);
+    registeredTools.toolsUnknownWithoutPolicies.forEach((tool) => {
+      logger.log(`  - ${tool.toolIpfsCid}`);
+      logger.log(`      - Tool Enabled: ${tool.toolEnabled ? '✅' : '❌'}`);
     });
   }
 
@@ -99,7 +107,10 @@ export const handleGetRegisteredTools = async (awDelegatee: AwDelegatee) => {
     const { toolsWithPolicies, toolsWithoutPolicies } = result;
 
     // If no tools are found for the selected PKP, log an informational message and exit.
-    if (toolsWithPolicies.length === 0 && toolsWithoutPolicies.length === 0) {
+    if (
+      Object.keys(toolsWithPolicies).length === 0 &&
+      Object.keys(toolsWithoutPolicies).length === 0
+    ) {
       logger.info('No tools are registered for this PKP.');
       return;
     }

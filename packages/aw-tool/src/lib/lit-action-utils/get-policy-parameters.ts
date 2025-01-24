@@ -20,13 +20,10 @@ export const getPolicyParameters = async (
   console.log(
     `Getting policy parameters ${parameterNames} for PKP ${pkpTokenId}...`
   );
-  const [policyParameter] =
-    await pkpToolRegistryContract.getToolPolicyParameters(
-      pkpTokenId,
-      toolIpfsCid,
-      delegateeAddress,
-      parameterNames
-    );
-  console.log(`Policy parameter: ${policyParameter}`);
-  return policyParameter;
+  return pkpToolRegistryContract.getToolPolicyParameters(
+    pkpTokenId,
+    toolIpfsCid,
+    delegateeAddress,
+    parameterNames
+  );
 };

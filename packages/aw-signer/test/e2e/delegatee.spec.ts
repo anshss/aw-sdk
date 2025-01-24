@@ -39,7 +39,7 @@ describe('Delegatee E2E', () => {
     '../../.aw-signer-delegatee-storage'
   );
   const ERC20_TRANSFER_TOOL_IPFS_CID =
-    'Qmd66gsFKfavcUdYeM4ZN1z1c6VG1fZPEKtSG7WsdrsmMn';
+    'QmdaabYYC3oDsNho3cJEYPuK62xpCmMrbhN9FmVnjBYpk2';
   const POLICY_IPFS_CID = 'QmTestPolicyIpfsCid';
 
   let admin: Admin;

@@ -20,8 +20,9 @@ library LibPKPToolRegistryPolicyBase {
 /// @dev Extends PKPToolRegistryBase to provide policy management functionality
 /// @custom:security-contact security@litprotocol.com
 abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
-    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
 
     /// @notice Retrieves the storage layout for the contract
     /// @dev Overrides the base contract's layout function
@@ -87,6 +88,25 @@ abstract contract PKPToolRegistryPolicyBase is PKPToolRegistryBase {
 
         PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
         if (policy.policyIpfsCidHash == bytes32(0)) revert LibPKPToolRegistryPolicyBase.NoPolicySet(pkpTokenId, toolIpfsCid, delegatee);
+        
+        // Get all parameter hashes before we start cleaning up
+        uint256 numParams = policy.parameterNameHashes.length();
+        bytes32[] memory paramHashes = new bytes32[](numParams);
+        for (uint256 k = 0; k < numParams;) {
+            paramHashes[k] = policy.parameterNameHashes.at(k);
+            unchecked { ++k; }
+        }
+        
+        // Clean up all parameters
+        for (uint256 k = 0; k < numParams;) {
+            bytes32 paramNameHash = paramHashes[k];
+            policy.parameterNameHashes.remove(paramNameHash);
+            delete l.hashedParameterNameToOriginalName[paramNameHash];
+            delete policy.parameters[paramNameHash];
+            unchecked { ++k; }
+        }
+
+        // Finally remove the policy
         tool.delegateesWithCustomPolicy.remove(delegatee);
         delete tool.delegateeCustomPolicies[delegatee];
     }

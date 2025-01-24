@@ -3,50 +3,11 @@ import { getToolByIpfsCid } from '@lit-protocol/aw-tool-registry';
 import { ethers } from 'ethers';
 import bs58 from 'bs58';
 
-type RegistryToolResult = ReturnType<typeof getToolByIpfsCid>;
-
-type ToolMetadata = NonNullable<RegistryToolResult>['tool'] & {
-  network: NonNullable<RegistryToolResult>['network'];
-  toolEnabled?: boolean;
-};
-
-type RegisteredToolWithPolicies = ToolMetadata & {
-  delegateePolicies: {
-    [delegatee: string]: {
-      policyIpfsCid: string;
-      policyEnabled: boolean;
-    };
-  };
-};
-
-type RegisteredToolsResult = {
-  toolsWithPolicies: {
-    [ipfsCid: string]: RegisteredToolWithPolicies;
-  };
-  toolsWithoutPolicies: {
-    [ipfsCid: string]: ToolMetadata;
-  };
-  toolsUnknownWithPolicies: {
-    [ipfsCid: string]: {
-      toolEnabled: boolean;
-      delegateePolicies: {
-        [delegatee: string]: {
-          policyIpfsCid: string;
-          policyEnabled: boolean;
-        };
-      };
-    };
-  };
-  toolsUnknownWithoutPolicies: string[];
-};
-
-type ToolInfo = {
-  toolIpfsCid: string;
-  toolEnabled: boolean;
-  delegatees: string[];
-  delegateesPolicyIpfsCids: string[];
-  delegateesPolicyEnabled: boolean[];
-};
+import type {
+  ToolInfo,
+  RegisteredToolsResult,
+  RegistryToolResult,
+} from '../../types';
 
 /**
  * Process delegatee policies for a tool
@@ -88,6 +49,7 @@ const processUnknownTool = (
     result.toolsUnknownWithPolicies[toolInfo.toolIpfsCid] = {
       toolEnabled: toolInfo.toolEnabled,
       delegateePolicies,
+      delegatees: toolInfo.delegatees,
     };
   } else {
     result.toolsUnknownWithoutPolicies.push(toolInfo.toolIpfsCid);
@@ -109,6 +71,7 @@ const processKnownTool = (
       ...registryTool.tool,
       network: registryTool.network,
       toolEnabled: toolInfo.toolEnabled,
+      delegatees: toolInfo.delegatees,
       delegateePolicies,
     };
   } else {
@@ -116,6 +79,7 @@ const processKnownTool = (
       ...registryTool.tool,
       network: registryTool.network,
       toolEnabled: toolInfo.toolEnabled,
+      delegatees: toolInfo.delegatees,
     };
   }
 };
@@ -158,9 +122,13 @@ const processPermittedTools = async (
         if (registryTool === null) {
           result.toolsUnknownWithoutPolicies.push(ipfsCid);
         } else {
+          const toolInfo = toolsInfo.find(
+            (info) => info.toolIpfsCid === ipfsCid
+          );
           result.toolsWithoutPolicies[ipfsCid] = {
             ...registryTool.tool,
             network: registryTool.network,
+            delegatees: toolInfo ? toolInfo.delegatees : [],
           };
         }
       })
@@ -216,5 +184,3 @@ export const getRegisteredToolsAndDelegatees = async (
 
   return result;
 };
-
-export type { RegisteredToolsResult, RegisteredToolWithPolicies };

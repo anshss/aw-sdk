@@ -1,22 +1,27 @@
 import {
   checkLitAuthAddressIsDelegatee,
+  getPkpToolRegistryContract,
   getPolicyParameters,
 } from '@lit-protocol/aw-tool';
 
 declare global {
   // Required Inputs
-  const pkpToolRegistryContract: any;
+  const parentToolIpfsCid: string;
+  const pkpToolRegistryContractAddress: string;
   const pkpTokenId: string;
-  const toolIpfsCid: string;
   const delegateeAddress: string;
   const toolParameters: {
-    amountIn: any;
+    amountIn: string;
     tokenIn: string;
     tokenOut: string;
   };
 }
 
-export default async () => {
+(async () => {
+  const pkpToolRegistryContract = await getPkpToolRegistryContract(
+    pkpToolRegistryContractAddress
+  );
+
   const isDelegatee = await checkLitAuthAddressIsDelegatee(
     pkpToolRegistryContract,
     pkpTokenId
@@ -32,7 +37,7 @@ export default async () => {
   const policyParameters = await getPolicyParameters(
     pkpToolRegistryContract,
     pkpTokenId,
-    toolIpfsCid,
+    parentToolIpfsCid,
     delegateeAddress,
     ['maxAmount', 'allowedTokens']
   );
@@ -40,54 +45,67 @@ export default async () => {
   let maxAmount: any;
   let allowedTokens: string[] = [];
 
+  console.log(
+    `Retrieved policy parameters: ${JSON.stringify(policyParameters)}`
+  );
+
   for (const parameter of policyParameters) {
+    const value = ethers.utils.toUtf8String(parameter.value);
+
     switch (parameter.name) {
       case 'maxAmount':
-        maxAmount = ethers.utils.defaultAbiCoder.decode(
-          ['uint256'],
-          parameter.value
-        )[0];
+        maxAmount = ethers.BigNumber.from(value);
+        console.log(`Formatted maxAmount: ${maxAmount.toString()}`);
         break;
       case 'allowedTokens':
-        allowedTokens = ethers.utils.defaultAbiCoder.decode(
-          ['address[]'],
-          parameter.value
-        )[0];
+        allowedTokens = JSON.parse(value);
+        allowedTokens = allowedTokens.map((addr: string) =>
+          ethers.utils.getAddress(addr)
+        );
+        console.log(`Formatted allowedTokens: ${allowedTokens.join(', ')}`);
         break;
     }
   }
 
-  if (toolParameters.amountIn.gt(maxAmount)) {
+  // Convert string amount to BigNumber and compare
+  const amountBN = ethers.BigNumber.from(toolParameters.amountIn);
+  console.log(
+    `Checking if amount ${amountBN.toString()} exceeds maxAmount ${maxAmount.toString()}...`
+  );
+
+  if (amountBN.gt(maxAmount)) {
     throw new Error(
-      `Amount ${toolParameters.amountIn} exceeds the maximum amount ${maxAmount}`
+      `Amount ${ethers.utils.formatUnits(
+        amountBN
+      )} exceeds the maximum amount ${ethers.utils.formatUnits(maxAmount)}`
     );
   }
 
-  if (
-    allowedTokens.length > 0 &&
-    !allowedTokens
-      .map((addr: string) => ethers.utils.getAddress(addr))
-      .includes(ethers.utils.getAddress(toolParameters.tokenIn))
-  ) {
-    throw new Error(
-      `Token ${
-        toolParameters.tokenIn
-      } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
-    );
-  }
+  if (allowedTokens.length > 0) {
+    console.log(`Checking if ${toolParameters.tokenIn} is an allowed token...`);
+    if (
+      !allowedTokens.includes(ethers.utils.getAddress(toolParameters.tokenIn))
+    ) {
+      throw new Error(
+        `Token ${
+          toolParameters.tokenIn
+        } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
+      );
+    }
 
-  if (
-    allowedTokens.length > 0 &&
-    !allowedTokens
-      .map((addr: string) => ethers.utils.getAddress(addr))
-      .includes(ethers.utils.getAddress(toolParameters.tokenOut))
-  ) {
-    throw new Error(
-      `Token ${
-        toolParameters.tokenOut
-      } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
+    console.log(
+      `Checking if ${toolParameters.tokenOut} is an allowed token...`
     );
+    if (
+      !allowedTokens.includes(ethers.utils.getAddress(toolParameters.tokenOut))
+    ) {
+      throw new Error(
+        `Token ${
+          toolParameters.tokenOut
+        } not allowed. Allowed tokens: ${allowedTokens.join(', ')}`
+      );
+    }
   }
 
   console.log('Policy parameters validated');
-};
+})();
