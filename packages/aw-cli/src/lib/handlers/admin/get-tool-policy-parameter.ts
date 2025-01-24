@@ -121,10 +121,10 @@ const displayToolPolicyParameters = async (
           displayValue = value;
         }
 
-        logger.info(`${param.name}: ${displayValue}`);
+        logger.log(`${param.name}: ${displayValue}`);
       } catch (err) {
         // If UTF-8 decoding fails, show hex
-        logger.info(`${param.name}: ${ethers.utils.hexlify(param.value)}`);
+        logger.log(`${param.name}: ${ethers.utils.hexlify(param.value)}`);
       }
     }
   } catch (err: any) {
