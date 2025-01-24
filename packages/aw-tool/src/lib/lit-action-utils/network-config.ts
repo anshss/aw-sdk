@@ -1,3 +1,11 @@
+/**
+ * Configuration mapping for PubkeyRouter contract addresses across different Lit networks.
+ * This constant provides the correct contract addresses for each supported network environment.
+ * 
+ * @property datil-dev - Development network configuration with PubkeyRouter address
+ * @property datil-test - Test network configuration with PubkeyRouter address
+ * @property datil - Production network configuration with PubkeyRouter address
+ */
 // Network to PubkeyRouter address mapping
 export const NETWORK_CONFIG = {
   'datil-dev': {

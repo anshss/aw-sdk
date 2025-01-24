@@ -1,6 +1,11 @@
 /**
- * Checks if the session signer is a delegatee for the PKP.
- * @param {any} pkpToolRegistryContract - The PKP Tool Registry contract instance.
+ * Checks if the current Lit Auth session signer is a delegatee for the specified PKP.
+ * This function verifies whether the address associated with the current authentication
+ * signature has delegatee permissions for the given PKP token.
+ * 
+ * @param pkpToolRegistryContract - The PKP Tool Registry contract instance used to check delegatee status.
+ * @param pkpTokenId - The token ID of the PKP to check delegatee status against.
+ * @returns A promise that resolves to true if the session signer is a delegatee, false otherwise.
  */
 export const checkLitAuthAddressIsDelegatee = async (
   pkpToolRegistryContract: any,

@@ -39,8 +39,12 @@ import {
 } from './utils/pkp-tool-registry';
 
 /**
- * The `Delegatee` class is responsible for managing the Delegatee role in the Lit Protocol.
- * It handles tasks such as retrieving delegated PKPs, executing tools, and managing capacity credits.
+ * The `Delegatee` class is responsible for executing tools on behalf of the PKP Admin.
+ * They are limited to the tools and policies that the PKP Admin has permitted. The class
+ * manages the delegatee's authentication and wallet, retrieves permitted tools and their
+ * policies, executes tools within permitted boundaries, manages tool-specific credentials,
+ * and handles capacity credits for execution. It provides secure access to authorized tools
+ * while enforcing policy constraints set by the PKP Admin.
  */
 export class Delegatee implements CredentialStore {
   private static readonly DEFAULT_STORAGE_PATH =
@@ -271,6 +275,14 @@ export class Delegatee implements CredentialStore {
     return results[0];
   }
 
+  /**
+   * Matches a user's intent to an appropriate permitted tool.
+   * @param pkpTokenId - The token ID of the PKP.
+   * @param intent - The user's intent string.
+   * @param intentMatcher - The intent matcher implementation to use.
+   * @returns A promise that resolves to the matched tool and any extracted parameters.
+   * @throws If no matching tool is found or if the tool is not permitted.
+   */
   public async getToolViaIntent(
     pkpTokenId: string,
     intent: string,
@@ -287,6 +299,12 @@ export class Delegatee implements CredentialStore {
     ]);
   }
 
+  /**
+   * Executes a tool with the provided parameters.
+   * @param params - The parameters for tool execution, excluding session signatures.
+   * @returns A promise that resolves to the tool execution response.
+   * @throws If the execution fails or if the delegatee is not properly initialized.
+   */
   public async executeTool(
     params: Omit<JsonExecutionSdkParams, 'sessionSigs'>
   ): Promise<ExecuteJsResponse> {
@@ -362,6 +380,11 @@ export class Delegatee implements CredentialStore {
     }
   }
 
+  /**
+   * Retrieves stored credentials required by a tool.
+   * @param requiredCredentialNames - Names of the required credentials.
+   * @returns Object containing found credentials and list of any missing credentials.
+   */
   public async getCredentials<T>(
     requiredCredentialNames: readonly string[]
   ): Promise<{
@@ -386,6 +409,11 @@ export class Delegatee implements CredentialStore {
     };
   }
 
+  /**
+   * Stores credentials for future tool executions.
+   * @param credentials - Object containing credential key-value pairs to store.
+   * @throws If any credential value is not a string.
+   */
   public async setCredentials<T>(
     credentials: Partial<CredentialsFor<T>>
   ): Promise<void> {
@@ -400,6 +428,9 @@ export class Delegatee implements CredentialStore {
     }
   }
 
+  /**
+   * Disconnects the Lit node client.
+   */
   public disconnect() {
     this.litNodeClient.disconnect();
   }
