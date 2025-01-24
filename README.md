@@ -23,6 +23,10 @@ The Lit Protocol team has addressed a critical challenge in the AI Agent space: 
 
 Lit's Agent Wallet provides AI Agents with the ability to be immune to tampering by the Agent developer. This means that the Agent owner (which could be a Decentralized Autonomous Organization (DAO), a Safe Multisig, an Externally Owned Account (EOA), or any other type of account) can maintain full control over their Agent's funds, preventing them from being stolen by the developer responsible for executing the Agent's intents/actions.
 
+## Video Demo
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/e-4nqOHWF6k?si=iMf5IX57spy88kgs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Features
 
 - **Tamper-Proof Wallets:** Ensures that Agent developers cannot tamper with the Agent's funds.
