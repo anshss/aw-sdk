@@ -25,22 +25,74 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    /// @notice Get all registered parameter names and their values for a specific tool and delegatee
-    /// @dev Parameters are stored as hashed values but returned as original strings
+    struct Parameter {
+        string name;
+        bytes value;
+    }
+
+    /// @notice Get specific parameter values for a tool and delegatee
+    /// @dev Returns an array of Parameter structs containing names and values
     /// @param pkpTokenId The PKP token ID
     /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get parameters for (cannot be zero address)
-    /// @return parameterNames Array of registered parameter names in their original string form
-    /// @return parameterValues Array of parameter values in bytes form, corresponding to the names
+    /// @param delegatee The delegatee address to get the parameters for (cannot be zero address)
+    /// @param parameterNames The names of the parameters to get
+    /// @return parameters Array of Parameter structs containing names and values
     /// @custom:throws InvalidDelegatee if delegatee is the zero address
     /// @custom:throws ToolNotFound if tool is not registered or enabled
     function getToolPolicyParameters(
         uint256 pkpTokenId,
         string calldata toolIpfsCid,
+        address delegatee,
+        string[] calldata parameterNames
+    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (Parameter[] memory parameters) {
+        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyParameterFacet.InvalidDelegatee();
+        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyParameterFacet.EmptyIPFSCID();
+        if (parameterNames.length == 0) revert LibPKPToolRegistryPolicyParameterFacet.InvalidPolicyParameters();
+        
+        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
+        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
+        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
+        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
+        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
+        
+        // Count how many parameters exist in the set
+        uint256 count;
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            if (policy.parameterNameHashes.contains(paramNameHash)) {
+                unchecked { ++count; }
+            }
+        }
+        
+        // Initialize array with only existing parameters
+        parameters = new Parameter[](count);
+        uint256 index;
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            if (policy.parameterNameHashes.contains(paramNameHash)) {
+                parameters[index] = Parameter({
+                    name: parameterNames[i],
+                    value: policy.parameters[paramNameHash]
+                });
+                unchecked { ++index; }
+            }
+        }
+    }
+
+    /// @notice Get all registered parameter names and their values for a specific tool and delegatee
+    /// @dev Parameters are stored as hashed values but returned as original strings
+    /// @param pkpTokenId The PKP token ID
+    /// @param toolIpfsCid The IPFS CID of the tool
+    /// @param delegatee The delegatee address to get parameters for (cannot be zero address)
+    /// @return parameters Array of Parameter structs containing names and values
+    /// @custom:throws InvalidDelegatee if delegatee is the zero address
+    /// @custom:throws ToolNotFound if tool is not registered or enabled
+    function getAllToolPolicyParameters(
+        uint256 pkpTokenId,
+        string calldata toolIpfsCid,
         address delegatee
     ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (
-        string[] memory parameterNames,
-        bytes[] memory parameterValues
+        Parameter[] memory parameters
     ) {
         if (delegatee == address(0)) revert LibPKPToolRegistryPolicyParameterFacet.InvalidDelegatee();
         if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyParameterFacet.EmptyIPFSCID();
@@ -52,44 +104,16 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
         
         uint256 length = policy.parameterNameHashes.length();
-        parameterNames = new string[](length);
-        parameterValues = new bytes[](length);
+        parameters = new Parameter[](length);
         
         for (uint256 i = 0; i < length;) {
             bytes32 paramNameHash = policy.parameterNameHashes.at(i);
-            parameterNames[i] = l.hashedParameterNameToOriginalName[paramNameHash];
-            parameterValues[i] = policy.parameters[paramNameHash];
+            parameters[i] = Parameter({
+                name: l.hashedParameterNameToOriginalName[paramNameHash],
+                value: policy.parameters[paramNameHash]
+            });
             unchecked { ++i; }
         }
-    }
-
-    /// @notice Get a specific parameter value for a tool and delegatee
-    /// @dev Returns the raw bytes value that must be interpreted by the caller
-    /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get the parameter for (cannot be zero address)
-    /// @param parameterName The name of the parameter to get
-    /// @return parameterValue The parameter value in bytes form
-    /// @custom:throws InvalidDelegatee if delegatee is the zero address
-    /// @custom:throws ToolNotFound if tool is not registered or enabled
-    function getToolPolicyParameter(
-        uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee,
-        string calldata parameterName
-    ) external view verifyToolExists(pkpTokenId, toolIpfsCid) returns (bytes memory parameterValue) {
-        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyParameterFacet.InvalidDelegatee();
-        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyParameterFacet.EmptyIPFSCID();
-        if (bytes(parameterName).length == 0) revert LibPKPToolRegistryPolicyParameterFacet.InvalidPolicyParameters();
-        
-        PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
-        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
-        PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
-        PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
-        
-        bytes32 paramNameHash = keccak256(bytes(parameterName));
-        return policy.parameters[paramNameHash];
     }
 
     /// @notice Set parameters for a specific tool and delegatee

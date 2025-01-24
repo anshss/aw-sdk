@@ -34,7 +34,7 @@ abstract contract TestHelper is Test {
     string constant TEST_POLICY_CID = "QmPOLICY";
     string constant TEST_POLICY_CID_2 = "QmPOLICY2";
     string constant TEST_POLICY_CID_3 = "QmPolicyHash3";
-
+    string constant TEST_POLICY_CID_4 = "QmPolicyHash4";
     string constant TEST_PARAM_NAME = "maxAmount";
     string constant TEST_PARAM_NAME_2 = "minAmount";
     string constant TEST_PARAM_NAME_3 = "someAmount";

@@ -89,7 +89,7 @@ contract PKPToolRegistryDiamondTest is Test, TestHelper {
         
         // Verify upgrade by checking function selector mapping
         address facetAddress = IDiamondLoupe(address(diamond)).facetAddress(
-            PKPToolRegistryPolicyFacet.getToolPolicyForDelegatee.selector
+            PKPToolRegistryPolicyFacet.getToolPoliciesForDelegatees.selector
         );
         assertEq(facetAddress, address(newPolicyFacet), "Facet not upgraded");
 
@@ -175,13 +175,24 @@ contract PKPToolRegistryDiamondTest is Test, TestHelper {
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, delegatee1), "Delegatee 1 storage corrupted");
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(2, delegatee2), "Delegatee 2 storage corrupted");
         
-        (string memory policy1, bool isDelegateeSpecific1) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(1, toolIpfsCids[0], delegatee1);
-        assertEq(policy1, "policy-1", "Policy 1 storage corrupted");
-        assertTrue(isDelegateeSpecific1, "Policy 1 should be delegatee specific");
+        string[] memory queryTools = new string[](2);
+        queryTools[0] = toolIpfsCids[0];
+        queryTools[1] = toolIpfsCids[1];
+        address[] memory queryDelegatees = new address[](2);
+        queryDelegatees[0] = delegatee1;
+        queryDelegatees[1] = delegatee2;
         
-        (string memory policy2, bool isDelegateeSpecific2) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(1, toolIpfsCids[1], delegatee2);
-        assertEq(policy2, "policy-2", "Policy 2 storage corrupted");
-        assertTrue(isDelegateeSpecific2, "Policy 2 should be delegatee specific");
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, "policy-1", "Policy 1 storage corrupted");
+        assertTrue(policies[0].enabled, "Policy 1 should be enabled");
+        assertEq(policies[0].delegatee, delegatee1, "Wrong delegatee for policy 1");
+        assertEq(policies[1].policyIpfsCid, "policy-2", "Policy 2 storage corrupted");
+        assertTrue(policies[1].enabled, "Policy 2 should be enabled");
+        assertEq(policies[1].delegatee, delegatee2, "Wrong delegatee for policy 2");
         
         vm.stopPrank();
     }
@@ -229,16 +240,29 @@ contract PKPToolRegistryDiamondTest is Test, TestHelper {
         assertTrue(isRegistered && isEnabled, "Tool registration not preserved");
         assertTrue(PKPToolRegistryDelegateeFacet(address(diamond)).isPkpDelegatee(1, delegatee), "Delegatee not preserved");
         
-        (string memory policy, bool isDelegateeSpecific) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(1, toolIpfsCids[0], delegatee);
-        assertEq(policy, "upgrade-test-policy", "Policy not preserved");
-        assertTrue(isDelegateeSpecific, "Policy should be delegatee specific");
+        string[] memory queryTools = new string[](1);
+        queryTools[0] = toolIpfsCids[0];
+        address[] memory queryDelegatees = new address[](1);
+        queryDelegatees[0] = delegatee;
+        
+        PKPToolRegistryPolicyFacet.ToolPolicy[] memory policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, "upgrade-test-policy", "Policy not preserved");
+        assertTrue(policies[0].enabled, "Policy should be delegatee specific");
+        assertEq(policies[0].delegatee, delegatee, "Wrong delegatee for policy");
         
         // 4. Test new functionality after upgrade
-        string memory policyIpfsCid;
-        bool enabled;
-        (policyIpfsCid, enabled) = PKPToolRegistryPolicyFacet(address(diamond)).getToolPolicyForDelegatee(1, toolIpfsCids[0], delegatee);
-        assertEq(policyIpfsCid, "upgrade-test-policy", "Policy not set correctly after upgrade");
-        assertTrue(enabled, "Policy not enabled after upgrade");
+        policies = PKPToolRegistryPolicyFacet(address(diamond)).getToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            queryTools,
+            queryDelegatees
+        );
+        assertEq(policies[0].policyIpfsCid, "upgrade-test-policy", "Policy not set correctly after upgrade");
+        assertTrue(policies[0].enabled, "Policy not enabled after upgrade");
+        assertEq(policies[0].delegatee, delegatee, "Wrong delegatee for policy after upgrade");
         
         vm.stopPrank();
     }

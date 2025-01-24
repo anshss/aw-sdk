@@ -1,6 +1,6 @@
 -include .env
 
-.PHONY: help deploy-tool-registry build test deploy-dev-erc20 mint-dev-erc20 dev-erc20-balance
+.PHONY: help deploy-tool-registry build test deploy-dev-erc20 mint-dev-erc20 dev-erc20-balance get-abis
 
 help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -109,3 +109,20 @@ dev-erc20-balance: ## Check DevERC20 balance for an address. Usage: make dev-erc
 		--rpc-url $(DEVERC20_DEPLOYMENT_RPC_URL) \
 	| jq -r '.[0]' \
 	| xargs cast from-wei
+
+get-abis: ## Get human-readable ABIs for all facets
+	@echo "Getting ABI for PKPToolRegistryToolFacet..."
+	@forge inspect PKPToolRegistryToolFacet abi > out/PKPToolRegistryToolFacet.abi.json
+	@echo "Getting ABI for PKPToolRegistryDelegateeFacet..."
+	@forge inspect PKPToolRegistryDelegateeFacet abi > out/PKPToolRegistryDelegateeFacet.abi.json
+	@echo "Getting ABI for PKPToolRegistryPolicyFacet..."
+	@forge inspect PKPToolRegistryPolicyFacet abi > out/PKPToolRegistryPolicyFacet.abi.json
+	@echo "Getting ABI for PKPToolRegistryPolicyParameterFacet..."
+	@forge inspect PKPToolRegistryPolicyParameterFacet abi > out/PKPToolRegistryPolicyParameterFacet.abi.json
+	@echo "Getting ABI for DiamondCutFacet..."
+	@forge inspect DiamondCutFacet abi > out/DiamondCutFacet.abi.json
+	@echo "Getting ABI for DiamondLoupeFacet..."
+	@forge inspect DiamondLoupeFacet abi > out/DiamondLoupeFacet.abi.json
+	@echo "Getting ABI for OwnershipFacet..."
+	@forge inspect OwnershipFacet abi > out/OwnershipFacet.abi.json
+	@echo "ABIs written to out/*.abi.json"

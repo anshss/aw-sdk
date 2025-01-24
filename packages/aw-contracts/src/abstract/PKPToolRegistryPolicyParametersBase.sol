@@ -76,5 +76,7 @@ abstract contract PKPToolRegistryPolicyParametersBase is PKPToolRegistryBase {
         policy.parameterNameHashes.remove(paramNameHash);
         // Delete parameter value
         delete policy.parameters[paramNameHash];
+        // Clean up the global mapping
+        delete PKPToolRegistryStorage.layout().hashedParameterNameToOriginalName[paramNameHash];
     }
 } 

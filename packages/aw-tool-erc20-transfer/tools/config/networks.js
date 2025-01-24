@@ -3,18 +3,27 @@
  */
 module.exports = {
   'datil-dev': {
-    pkpToolRegistryAddress: '0xdE8807799579eef5b9A84A0b4164D28E804da571',
+    pkpToolRegistryAddress: '0x6D3Cfa27F0CEC501E0cf678Aa709eF18EcA7be6F',
     litNetwork: 'datil-dev',
-    outputFile: 'deployed-lit-action-datil-dev.js',
+    outputFiles: [
+      'deployed-lit-action-datil-dev.js',
+      'deployed-lit-action-policy-datil-dev.js',
+    ],
   },
   'datil-test': {
-    pkpToolRegistryAddress: '0x0b099F7e2520aCC52A361D1cB83fa43660C9a038',
+    pkpToolRegistryAddress: '0xbac264BB694cdF98d7eed906DC89A2C98e0347b6',
     litNetwork: 'datil-test',
-    outputFile: 'deployed-lit-action-datil-test.js',
+    outputFiles: [
+      'deployed-lit-action-datil-test.js',
+      'deployed-lit-action-policy-datil-test.js',
+    ],
   },
   datil: {
-    pkpToolRegistryAddress: '0xDeb70dCBC7432fEFEdaE900AFF11Dcc5169CfcBB',
+    pkpToolRegistryAddress: '0x365772e35b30BcC975a7A4EE0691e87aa055013E',
     litNetwork: 'datil',
-    outputFile: 'deployed-lit-action-datil.js',
+    outputFiles: [
+      'deployed-lit-action-datil.js',
+      'deployed-lit-action-policy-datil.js',
+    ],
   },
 };

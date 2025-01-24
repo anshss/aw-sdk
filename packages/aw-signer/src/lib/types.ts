@@ -1,6 +1,7 @@
 import { LIT_NETWORK } from '@lit-protocol/constants';
 import { type AwTool } from '@lit-protocol/aw-tool';
 import type { ethers } from 'ethers';
+import type { getToolByIpfsCid } from '@lit-protocol/aw-tool-registry';
 
 /**
  * Represents the Lit network environment.
@@ -15,7 +16,7 @@ export type LitNetwork =
  * Configuration for the Tool Policy Registry contract.
  * Includes the RPC URL and contract address for interacting with the registry.
  */
-export interface ToolPolicyRegistryConfig {
+export interface ToolRegistryConfig {
   /** The RPC URL for the blockchain network. */
   rpcUrl: string;
 
@@ -197,4 +198,60 @@ export type CredentialNames<T> = T extends {
 
 export type CredentialsFor<T> = {
   [K in CredentialNames<T>]: string;
+};
+
+export type RegistryToolResult = ReturnType<typeof getToolByIpfsCid>;
+
+export type ToolMetadata = NonNullable<RegistryToolResult>['tool'] & {
+  network: NonNullable<RegistryToolResult>['network'];
+  toolEnabled?: boolean;
+  delegatees: string[];
+};
+
+export type RegisteredToolWithPolicies = ToolMetadata & {
+  delegatees: string[];
+  delegateePolicies: {
+    [delegatee: string]: {
+      policyIpfsCid: string;
+      policyEnabled: boolean;
+    };
+  };
+};
+
+export type RegisteredToolsResult = {
+  toolsWithPolicies: {
+    [ipfsCid: string]: RegisteredToolWithPolicies;
+  };
+  toolsWithoutPolicies: {
+    [ipfsCid: string]: ToolMetadata;
+  };
+  toolsUnknownWithPolicies: {
+    [ipfsCid: string]: {
+      toolEnabled: boolean;
+      delegatees: string[];
+      delegateePolicies: {
+        [delegatee: string]: {
+          policyIpfsCid: string;
+          policyEnabled: boolean;
+        };
+      };
+    };
+  };
+  toolsUnknownWithoutPolicies: string[];
+};
+
+export type ToolInfo = {
+  toolIpfsCid: string;
+  toolEnabled: boolean;
+  delegatees: string[];
+  delegateesPolicyIpfsCids: string[];
+  delegateesPolicyEnabled: boolean[];
+};
+
+export type ToolInfoWithDelegateePolicy = {
+  toolIpfsCid: string;
+  toolEnabled: boolean;
+  delegatee: string;
+  policyIpfsCid: string;
+  policyEnabled: boolean;
 };

@@ -27,33 +27,53 @@ contract PKPToolRegistryPolicyFacet is PKPToolRegistryPolicyBase {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    /// @notice Get the policy IPFS CID for a specific tool and delegatee
+    struct ToolPolicy {
+        string toolIpfsCid;
+        string policyIpfsCid;
+        address delegatee;
+        bool enabled;
+    }
+
+    /// @notice Get the policy IPFS CIDs for specific tools and delegatees
     /// @param pkpTokenId The PKP token ID
-    /// @param toolIpfsCid The IPFS CID of the tool
-    /// @param delegatee The delegatee address to get the policy for
-    /// @return policyIpfsCid The policy IPFS CID for this delegatee, or empty string if not set
-    /// @return enabled Whether the policy is currently enabled
-    function getToolPolicyForDelegatee(
+    /// @param toolIpfsCids The array of IPFS CIDs of the tools
+    /// @param delegatees The array of delegatee addresses to get the policies for
+    /// @return toolPolicies Array of ToolPolicy structs for each tool and delegatee pair
+    function getToolPoliciesForDelegatees(
         uint256 pkpTokenId,
-        string calldata toolIpfsCid,
-        address delegatee
-    ) external view returns (string memory policyIpfsCid, bool enabled) {
-        if (bytes(toolIpfsCid).length == 0) revert LibPKPToolRegistryPolicyFacet.EmptyIPFSCID();
-        if (delegatee == address(0)) revert LibPKPToolRegistryPolicyFacet.InvalidDelegatee();
+        string[] calldata toolIpfsCids,
+        address[] calldata delegatees
+    ) external view returns (ToolPolicy[] memory toolPolicies) {
+        if (toolIpfsCids.length != delegatees.length) revert LibPKPToolRegistryPolicyFacet.ArrayLengthMismatch();
 
         PKPToolRegistryStorage.Layout storage l = PKPToolRegistryStorage.layout();
         PKPToolRegistryStorage.PKPData storage pkpData = l.pkpStore[pkpTokenId];
-        bytes32 toolCidHash = keccak256(bytes(toolIpfsCid));
-        
-        // Check if tool exists
-        if (!pkpData.toolCids.contains(toolCidHash)) {
-            revert LibPKPToolRegistryPolicyFacet.ToolNotFound(toolIpfsCid);
+
+        toolPolicies = new ToolPolicy[](toolIpfsCids.length);
+
+        for (uint256 i = 0; i < toolIpfsCids.length; i++) {
+            if (bytes(toolIpfsCids[i]).length == 0) revert LibPKPToolRegistryPolicyFacet.EmptyIPFSCID();
+            if (delegatees[i] == address(0)) revert LibPKPToolRegistryPolicyFacet.InvalidDelegatee();
+
+            bytes32 toolCidHash = keccak256(bytes(toolIpfsCids[i]));
+
+            // Check if tool exists
+            if (!pkpData.toolCids.contains(toolCidHash)) {
+                revert LibPKPToolRegistryPolicyFacet.ToolNotFound(toolIpfsCids[i]);
+            }
+
+            PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
+            PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatees[i]];
+
+            toolPolicies[i] = ToolPolicy({
+                toolIpfsCid: toolIpfsCids[i],
+                policyIpfsCid: l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash],
+                delegatee: delegatees[i],
+                enabled: policy.enabled
+            });
         }
-        
-        PKPToolRegistryStorage.ToolInfo storage tool = pkpData.toolMap[toolCidHash];
-        PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
-        
-        return (l.hashedPolicyCidToOriginalCid[policy.policyIpfsCidHash], policy.enabled);
+
+        return toolPolicies;
     }
 
     /// @notice Set custom policies for tools and delegatees

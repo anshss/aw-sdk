@@ -2,7 +2,7 @@
 import type {
   PkpInfo,
   Admin as AwAdmin,
-  PermittedTools,
+  RegisteredToolsResult,
 } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
@@ -22,18 +22,18 @@ import { logger } from '../../utils/logger';
 export const handleGetTools = async (
   awAdmin: AwAdmin,
   pkp: PkpInfo
-): Promise<PermittedTools | null> => {
+): Promise<RegisteredToolsResult | null> => {
   // Log a loading message to indicate the operation is in progress.
   logger.loading('Getting permitted tools');
 
-  const registeredTools = await awAdmin.getRegisteredToolsForPkp(
+  const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
     pkp.info.tokenId
   );
 
   // If no tools are found, log an informational message and return `null`.
   if (
-    registeredTools.toolsWithPolicies.length === 0 &&
-    registeredTools.toolsWithoutPolicies.length === 0
+    Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+    Object.keys(registeredTools.toolsWithoutPolicies).length === 0
   ) {
     logger.info('No tools are currently permitted.');
     return null;
@@ -41,27 +41,29 @@ export const handleGetTools = async (
 
   logger.info('Currently Permitted Tools:');
 
-  if (registeredTools.toolsWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithPolicies).length > 0) {
     logger.log('Tools with Policies:');
-    registeredTools.toolsWithPolicies.forEach((tool) => {
-      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+    for (const toolIpfsCid in registeredTools.toolsWithPolicies) {
+      const tool = registeredTools.toolsWithPolicies[toolIpfsCid];
+      logger.log(`  - ${tool.name} (${toolIpfsCid})`);
       logger.log(`      - ${tool.description}`);
-    });
+    }
   }
 
-  if (registeredTools.toolsWithoutPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsWithoutPolicies).length > 0) {
     logger.log('Tools without Policies:');
-    registeredTools.toolsWithoutPolicies.forEach((tool) => {
-      logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
+    for (const toolIpfsCid in registeredTools.toolsWithoutPolicies) {
+      const tool = registeredTools.toolsWithoutPolicies[toolIpfsCid];
+      logger.log(`  - ${tool.name} (${toolIpfsCid})`);
       logger.log(`      - ${tool.description}`);
-    });
+    }
   }
 
-  if (registeredTools.toolsUnknownWithPolicies.length > 0) {
+  if (Object.keys(registeredTools.toolsUnknownWithPolicies).length > 0) {
     logger.log('Unknown Tools with Policies:');
-    registeredTools.toolsUnknownWithPolicies.forEach((tool) => {
-      logger.log(`  - Unknown tool: ${tool.ipfsCid}`);
-    });
+    for (const toolIpfsCid in registeredTools.toolsUnknownWithPolicies) {
+      logger.log(`  - Unknown tool: ${toolIpfsCid}`);
+    }
   }
 
   if (registeredTools.toolsUnknownWithoutPolicies.length > 0) {
@@ -72,8 +74,8 @@ export const handleGetTools = async (
   }
 
   if (
-    registeredTools.toolsWithPolicies.length === 0 &&
-    registeredTools.toolsWithoutPolicies.length === 0
+    Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+    Object.keys(registeredTools.toolsWithoutPolicies).length === 0
   ) {
     logger.info(`No tools found for network: ${awAdmin.litNetwork}`);
     return null;

@@ -1,29 +1,27 @@
-import { LIT_ABILITY } from '@lit-protocol/constants';
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { LitNodeClientNodeJs } from '@lit-protocol/lit-node-client-nodejs';
+import {
+  AuthSig,
+  ExecuteJsResponse,
+  JsonExecutionSdkParams,
+} from '@lit-protocol/types';
 import {
   createSiweMessage,
   generateAuthSig,
   LitActionResource,
   LitPKPResource,
 } from '@lit-protocol/auth-helpers';
-import type {
-  AuthSig,
-  ExecuteJsResponse,
-  JsonExecutionSdkParams,
-} from '@lit-protocol/types';
-import { type AwTool } from '@lit-protocol/aw-tool';
+import { LIT_ABILITY } from '@lit-protocol/constants';
 import { ethers } from 'ethers';
 
 import type {
-  DelegatedPkpInfo,
   LitNetwork,
-  UnknownRegisteredToolWithPolicy,
   AgentConfig,
-  IntentMatcher,
   CredentialStore,
-  IntentMatcherResponse,
   CredentialsFor,
+  DelegatedPkpInfo,
+  IntentMatcher,
+  IntentMatcherResponse,
 } from './types';
 import {
   isCapacityCreditExpired,
@@ -36,9 +34,8 @@ import { LocalStorage } from './utils/storage';
 import { AwSignerError, AwSignerErrorType } from './errors';
 import {
   DEFAULT_REGISTRY_CONFIG,
-  getPkpToolPolicyRegistryContract,
-  getRegisteredTools,
-  getToolPolicy,
+  getPkpToolRegistryContract,
+  getPermittedToolsForDelegatee,
 } from './utils/pkp-tool-registry';
 
 /**
@@ -52,7 +49,7 @@ export class Delegatee implements CredentialStore {
   private readonly storage: LocalStorage;
   private readonly litNodeClient: LitNodeClientNodeJs;
   private readonly litContracts: LitContracts;
-  private readonly toolPolicyRegistryContract: ethers.Contract;
+  private readonly toolRegistryContract: ethers.Contract;
   private readonly delegateeWallet: ethers.Wallet;
 
   public readonly litNetwork: LitNetwork;
@@ -63,7 +60,7 @@ export class Delegatee implements CredentialStore {
    * @param storage - An instance of `LocalStorage` for storing delegatee information.
    * @param litNodeClient - An instance of `LitNodeClientNodeJs`.
    * @param litContracts - An instance of `LitContracts`.
-   * @param toolPolicyRegistryContract - An instance of the tool policy registry contract.
+   * @param toolRegistryContract - An instance of the tool policy registry contract.
    * @param delegateeWallet - The wallet used for Delegatee operations.
    */
   private constructor(
@@ -71,14 +68,14 @@ export class Delegatee implements CredentialStore {
     storage: LocalStorage,
     litNodeClient: LitNodeClientNodeJs,
     litContracts: LitContracts,
-    toolPolicyRegistryContract: ethers.Contract,
+    toolRegistryContract: ethers.Contract,
     delegateeWallet: ethers.Wallet
   ) {
     this.litNetwork = litNetwork;
     this.storage = storage;
     this.litNodeClient = litNodeClient;
     this.litContracts = litContracts;
-    this.toolPolicyRegistryContract = toolPolicyRegistryContract;
+    this.toolRegistryContract = toolRegistryContract;
     this.delegateeWallet = delegateeWallet;
   }
 
@@ -181,10 +178,7 @@ export class Delegatee implements CredentialStore {
       storage,
       litNodeClient,
       litContracts,
-      getPkpToolPolicyRegistryContract(
-        toolPolicyRegistryConfig,
-        delegateeWallet
-      ),
+      getPkpToolRegistryContract(toolPolicyRegistryConfig, delegateeWallet),
       delegateeWallet
     );
   }
@@ -195,7 +189,7 @@ export class Delegatee implements CredentialStore {
    * @throws If the tool policy registry contract, delegatee wallet, or Lit contracts are not initialized.
    */
   public async getDelegatedPkps(): Promise<DelegatedPkpInfo[]> {
-    if (!this.toolPolicyRegistryContract) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
@@ -208,7 +202,7 @@ export class Delegatee implements CredentialStore {
     }
 
     // Get token IDs of delegated PKPs
-    const tokenIds = await this.toolPolicyRegistryContract.getDelegatedPkps(
+    const tokenIds = await this.toolRegistryContract.getDelegatedPkps(
       this.delegateeWallet.address
     );
 
@@ -225,7 +219,7 @@ export class Delegatee implements CredentialStore {
         const ethAddress = ethers.utils.computeAddress(publicKey);
 
         return {
-          tokenId: tokenId.toString(),
+          tokenId: ethers.utils.hexlify(tokenId),
           ethAddress,
           publicKey,
         };
@@ -237,39 +231,22 @@ export class Delegatee implements CredentialStore {
 
   /**
    * Get all registered tools and categorize them based on whether they have policies
-   * @param pkpTokenId The token ID of the PKP to get tools for
    * @returns Object containing:
-   * - toolsWithPolicies: Array of tools that have policies and match the current network
-   * - toolsWithoutPolicies: Array of tools that don't have policies and match the current network
-   * - toolsUnknownWithPolicies: Array of tools with policies that aren't in the registry
+   * - toolsWithPolicies: Object mapping tool IPFS CIDs to their metadata and delegatee policies
+   * - toolsWithoutPolicies: Array of tools that don't have policies
+   * - toolsUnknownWithPolicies: Object mapping unknown tool IPFS CIDs to their delegatee policies
    * - toolsUnknownWithoutPolicies: Array of tool CIDs without policies that aren't in the registry
    */
-  public async getRegisteredToolsForPkp(pkpTokenId: string): Promise<{
-    toolsWithPolicies: Array<AwTool<any, any>>;
-    toolsWithoutPolicies: Array<AwTool<any, any>>;
-    toolsUnknownWithPolicies: UnknownRegisteredToolWithPolicy[];
-    toolsUnknownWithoutPolicies: string[];
-  }> {
-    if (!this.toolPolicyRegistryContract) {
+  public async getPermittedToolsForPkp(pkpTokenId: string) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    const registeredTools = await getRegisteredTools(
-      this.toolPolicyRegistryContract,
-      this.litContracts,
-      pkpTokenId
+    return getPermittedToolsForDelegatee(
+      this.toolRegistryContract,
+      pkpTokenId,
+      this.delegateeWallet.address
     );
-
-    return {
-      toolsWithPolicies: registeredTools.toolsWithPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsWithoutPolicies: registeredTools.toolsWithoutPolicies
-        .filter((tool) => tool.network === this.litNetwork)
-        .map((t) => t.tool),
-      toolsUnknownWithPolicies: registeredTools.toolsUnknownWithPolicies,
-      toolsUnknownWithoutPolicies: registeredTools.toolsUnknownWithoutPolicies,
-    };
   }
 
   /**
@@ -279,15 +256,19 @@ export class Delegatee implements CredentialStore {
    * @returns An object containing the policy and version for the tool.
    * @throws If the tool policy registry contract is not initialized.
    */
-  public async getToolPolicy(
-    pkpTokenId: string,
-    ipfsCid: string
-  ): Promise<{ policy: string; version: string }> {
-    if (!this.toolPolicyRegistryContract) {
+  public async getToolPolicy(pkpTokenId: string, ipfsCid: string) {
+    if (!this.toolRegistryContract) {
       throw new Error('Tool policy manager not initialized');
     }
 
-    return getToolPolicy(this.toolPolicyRegistryContract, pkpTokenId, ipfsCid);
+    const results =
+      await this.toolRegistryContract.getToolPoliciesForDelegatees(
+        pkpTokenId,
+        [ipfsCid],
+        [this.delegateeWallet.address]
+      );
+
+    return results[0];
   }
 
   public async getToolViaIntent(
@@ -297,12 +278,12 @@ export class Delegatee implements CredentialStore {
   ): Promise<IntentMatcherResponse<any>> {
     // Get registered tools
     const { toolsWithPolicies, toolsWithoutPolicies } =
-      await this.getRegisteredToolsForPkp(pkpTokenId);
+      await this.getPermittedToolsForPkp(pkpTokenId);
 
     // Analyze intent and find matching tool
     return intentMatcher.analyzeIntentAndMatchTool(intent, [
-      ...toolsWithPolicies,
-      ...toolsWithoutPolicies,
+      ...Object.values(toolsWithPolicies),
+      ...Object.values(toolsWithoutPolicies),
     ]);
   }
 
