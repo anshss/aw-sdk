@@ -519,6 +519,26 @@ contract PKPToolRegistryToolFacet is PKPToolRegistryBase {
 
                 // Remove the policy if it exists
                 if (tool.delegateesWithCustomPolicy.remove(delegatee)) {
+                    PKPToolRegistryStorage.Policy storage policy = tool.delegateeCustomPolicies[delegatee];
+                    
+                    // Get all parameter hashes before we start cleaning up
+                    bytes32[] memory paramHashes = new bytes32[](policy.parameterNameHashes.length());
+                    uint256 numParams = policy.parameterNameHashes.length();
+                    for (uint256 k = 0; k < numParams;) {
+                        paramHashes[k] = policy.parameterNameHashes.at(k);
+                        unchecked { ++k; }
+                    }
+                    
+                    // Clean up all parameters
+                    for (uint256 k = 0; k < numParams;) {
+                        bytes32 paramNameHash = paramHashes[k];
+                        policy.parameterNameHashes.remove(paramNameHash);
+                        delete l.hashedParameterNameToOriginalName[paramNameHash];
+                        delete policy.parameters[paramNameHash];
+                        unchecked { ++k; }
+                    }
+                    
+                    // Finally delete the policy struct
                     delete tool.delegateeCustomPolicies[delegatee];
                 }
 

@@ -2,7 +2,7 @@
 import prompts from 'prompts';
 
 // Import types from the '@lit-protocol/agent-wallet' package.
-import type { PermittedTools, AwTool } from '@lit-protocol/agent-wallet';
+import type { AwTool, RegisteredToolsResult } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
 import { logger } from '../../utils/logger';
@@ -20,18 +20,22 @@ import { AwCliError, AwCliErrorType } from '../../errors';
  * @throws AwCliError - If no permitted tools are found or the user cancels the selection.
  */
 export const promptSelectToolForRemoval = async (
-  alreadyPermittedTools: PermittedTools
+  alreadyPermittedTools: RegisteredToolsResult
 ): Promise<AwTool<any, any>> => {
   // Combine tools with and without policies into a single list of choices.
   const choices = [
-    ...alreadyPermittedTools.toolsWithPolicies.map((tool) => ({
-      title: `${tool.name} (${tool.ipfsCid})`,
-      value: tool,
-    })),
-    ...alreadyPermittedTools.toolsWithoutPolicies.map((tool) => ({
-      title: `${tool.name} (${tool.ipfsCid})`,
-      value: tool,
-    })),
+    ...Object.values(alreadyPermittedTools.toolsWithPolicies).map(
+      (tool: AwTool<any, any>) => ({
+        title: `${tool.name} (${tool.ipfsCid})`,
+        value: tool,
+      })
+    ),
+    ...Object.values(alreadyPermittedTools.toolsWithoutPolicies).map(
+      (tool: AwTool<any, any>) => ({
+        title: `${tool.name} (${tool.ipfsCid})`,
+        value: tool,
+      })
+    ),
   ];
 
   // If no permitted tools are found, throw an error.

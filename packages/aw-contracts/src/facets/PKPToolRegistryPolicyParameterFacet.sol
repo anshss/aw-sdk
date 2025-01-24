@@ -55,13 +55,27 @@ contract PKPToolRegistryPolicyParameterFacet is PKPToolRegistryPolicyParametersB
         PKPToolRegistryStorage.ToolInfo storage toolInfo = pkpData.toolMap[toolCidHash];
         PKPToolRegistryStorage.Policy storage policy = toolInfo.delegateeCustomPolicies[delegatee];
         
-        parameters = new Parameter[](parameterNames.length);
+        // Count how many parameters exist in the set
+        uint256 count;
         for (uint256 i = 0; i < parameterNames.length; i++) {
             bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
-            parameters[i] = Parameter({
-                name: parameterNames[i],
-                value: policy.parameters[paramNameHash]
-            });
+            if (policy.parameterNameHashes.contains(paramNameHash)) {
+                unchecked { ++count; }
+            }
+        }
+        
+        // Initialize array with only existing parameters
+        parameters = new Parameter[](count);
+        uint256 index;
+        for (uint256 i = 0; i < parameterNames.length; i++) {
+            bytes32 paramNameHash = keccak256(bytes(parameterNames[i]));
+            if (policy.parameterNameHashes.contains(paramNameHash)) {
+                parameters[index] = Parameter({
+                    name: parameterNames[i],
+                    value: policy.parameters[paramNameHash]
+                });
+                unchecked { ++index; }
+            }
         }
     }
 

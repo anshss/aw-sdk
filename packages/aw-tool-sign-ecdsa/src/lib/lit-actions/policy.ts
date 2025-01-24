@@ -1,20 +1,25 @@
 import {
   checkLitAuthAddressIsDelegatee,
+  getPkpToolRegistryContract,
   getPolicyParameters,
 } from '@lit-protocol/aw-tool';
 
 declare global {
   // Required Inputs
-  const pkpToolRegistryContract: any;
+  const parentToolIpfsCid: string;
+  const pkpToolRegistryContractAddress: string;
   const pkpTokenId: string;
-  const toolIpfsCid: string;
   const delegateeAddress: string;
   const toolParameters: {
     message: string;
   };
 }
 
-export default async () => {
+(async () => {
+  const pkpToolRegistryContract = await getPkpToolRegistryContract(
+    pkpToolRegistryContractAddress
+  );
+
   const isDelegatee = await checkLitAuthAddressIsDelegatee(
     pkpToolRegistryContract,
     pkpTokenId
@@ -27,39 +32,42 @@ export default async () => {
     );
   }
 
+  // Get allowed prefixes from policy parameters
   const policyParameters = await getPolicyParameters(
     pkpToolRegistryContract,
     pkpTokenId,
-    toolIpfsCid,
+    parentToolIpfsCid,
     delegateeAddress,
     ['allowedPrefixes']
   );
 
-  let allowedPrefixes: string[] = [];
-
-  for (const parameter of policyParameters) {
-    switch (parameter.name) {
-      case 'maxAmount':
-        allowedPrefixes = ethers.utils.defaultAbiCoder.decode(
-          ['string[] allowedPrefixes'],
-          parameter.value
-        )[0];
-        break;
-    }
+  // Extract and parse allowedPrefixes
+  const allowedPrefixesParam = policyParameters.find(
+    (p: { name: string; value: Uint8Array }) => p.name === 'allowedPrefixes'
+  );
+  if (!allowedPrefixesParam) {
+    throw new Error('No allowedPrefixes parameter found in policy');
   }
 
-  // Validate message prefix
-  if (
-    !allowedPrefixes.some((prefix: string) =>
-      toolParameters.message.startsWith(prefix)
-    )
-  ) {
+  const allowedPrefixes: string[] = JSON.parse(
+    ethers.utils.toUtf8String(allowedPrefixesParam.value)
+  );
+  if (!allowedPrefixes.length) {
+    throw new Error('No allowed prefixes defined in policy');
+  }
+
+  // Check if message starts with any allowed prefix
+  const messageHasAllowedPrefix = allowedPrefixes.some((prefix) =>
+    toolParameters.message.startsWith(prefix)
+  );
+
+  if (!messageHasAllowedPrefix) {
     throw new Error(
-      `Message does not start with any allowed prefix. Allowed prefixes: ${allowedPrefixes.join(
+      `Message must start with one of these prefixes: ${allowedPrefixes.join(
         ', '
       )}`
     );
   }
 
-  console.log('Policy parameters validated');
-};
+  console.log('Message prefix validated successfully');
+})();

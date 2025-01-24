@@ -6,7 +6,12 @@ import {
 import { LitContracts } from '@lit-protocol/contracts-sdk';
 import { ethers } from 'ethers';
 
-import { AdminConfig, AgentConfig, LitNetwork } from './types';
+import {
+  AdminConfig,
+  AgentConfig,
+  LitNetwork,
+  ToolInfoWithDelegateePolicy,
+} from './types';
 import {
   DEFAULT_REGISTRY_CONFIG,
   getPkpToolRegistryContract,
@@ -454,6 +459,28 @@ export class Admin {
   }
 
   /**
+   * Removes a delegatee for the PKP.
+   * @param pkpTokenId - The PKP token ID.
+   * @param delegatee - The address of the delegatee to remove.
+   * @returns A promise that resolves to the transaction receipt.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async removeDelegatee(pkpTokenId: string, delegatee: string) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const tx = await this.toolRegistryContract.removeDelegatees(
+      (
+        await this.getPkpByTokenId(pkpTokenId)
+      ).info.tokenId,
+      [delegatee]
+    );
+
+    return await tx.wait();
+  }
+
+  /**
    * Checks if a tool is permitted for a specific delegatee.
    * @param pkpTokenId - The PKP token ID.
    * @param toolIpfsCid - The IPFS CID of the tool.
@@ -482,6 +509,27 @@ export class Admin {
       isPermitted: result[0],
       isEnabled: result[1],
     };
+  }
+
+  /**
+   * Gets all tools that are permitted for a specific delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to an array of ToolInfoWithDelegateePolicy objects permitted for the delegatee.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async getPermittedToolsForDelegatee(
+    pkpTokenId: string,
+    delegatee: string
+  ): Promise<ToolInfoWithDelegateePolicy[]> {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    return this.toolRegistryContract.getPermittedToolsForDelegatee(
+      (await this.getPkpByTokenId(pkpTokenId)).info.tokenId,
+      ethers.utils.getAddress(delegatee)
+    );
   }
 
   /**
@@ -735,6 +783,35 @@ export class Admin {
       );
 
     return parameterValues;
+  }
+
+  /**
+   * Retrieves all policy parameters for a tool and delegatee.
+   * @param pkpTokenId - The PKP token ID.
+   * @param ipfsCid - The IPFS CID of the tool.
+   * @param delegatee - The address of the delegatee.
+   * @returns A promise that resolves to an array of all policy parameter names and values.
+   * @throws If the tool policy registry contract is not initialized.
+   */
+  public async getAllToolPolicyParametersForDelegatee(
+    pkpTokenId: string,
+    ipfsCid: string,
+    delegatee: string
+  ) {
+    if (!this.toolRegistryContract) {
+      throw new Error('Tool policy manager not initialized');
+    }
+
+    const parameters =
+      await this.toolRegistryContract.getAllToolPolicyParameters(
+        (
+          await this.getPkpByTokenId(pkpTokenId)
+        ).info.tokenId,
+        ipfsCid,
+        delegatee
+      );
+
+    return parameters;
   }
 
   /**

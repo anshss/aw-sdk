@@ -4,9 +4,9 @@ import prompts from 'prompts';
 // Import types and utilities from the '@lit-protocol/agent-wallet' package.
 import {
   listToolsByNetwork,
+  RegisteredToolsResult,
   type AwTool,
   type LitNetwork,
-  type PermittedTools,
 } from '@lit-protocol/agent-wallet';
 
 // Import the logger utility for logging messages.
@@ -27,19 +27,19 @@ import { AwCliError, AwCliErrorType } from '../../errors';
  */
 export const promptSelectToolToPermit = async (
   litNetwork: LitNetwork,
-  alreadyPermittedTools: PermittedTools | null
+  alreadyPermittedTools: RegisteredToolsResult | null
 ) => {
   // Retrieve the list of available tools for the specified Lit network.
   const availableTools = listToolsByNetwork(litNetwork);
 
   // Create a set of IPFS CIDs for already permitted tools for efficient lookup.
   const permittedCids = new Set([
-    ...(alreadyPermittedTools?.toolsWithPolicies.map(
-      (tool: AwTool<any, any>) => tool.ipfsCid
-    ) || []),
-    ...(alreadyPermittedTools?.toolsWithoutPolicies.map(
-      (tool: AwTool<any, any>) => tool.ipfsCid
-    ) || []),
+    ...(alreadyPermittedTools
+      ? Object.keys(alreadyPermittedTools.toolsWithPolicies)
+      : []),
+    ...(alreadyPermittedTools
+      ? Object.keys(alreadyPermittedTools.toolsWithoutPolicies)
+      : []),
   ]);
 
   // Filter out tools that are already permitted.

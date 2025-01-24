@@ -6,15 +6,15 @@ import { ToolRegistryConfig } from '../../types';
 export const DEFAULT_REGISTRY_CONFIG: Record<string, ToolRegistryConfig> = {
   'datil-dev': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0xad6123D29B470408bc536aA29d2233c8353a485e',
+    contractAddress: '0x6D3Cfa27F0CEC501E0cf678Aa709eF18EcA7be6F',
   },
   'datil-test': {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0x2f02090138e29a7d345993b85D665B4377Fb22b0',
+    contractAddress: '0xbac264BB694cdF98d7eed906DC89A2C98e0347b6',
   },
   datil: {
     rpcUrl: LIT_RPC.CHRONICLE_YELLOWSTONE,
-    contractAddress: '0xB41D75c11B557C1Df109940593c8cA75B2dd465c',
+    contractAddress: '0x365772e35b30BcC975a7A4EE0691e87aa055013E',
   },
 } as const;
 

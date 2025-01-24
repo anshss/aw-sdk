@@ -6,7 +6,5 @@ export * from './remove-tool';
 export * from './policy-details';
 export * from './delegatee-address';
 export * from './remove-delegatee';
-export * from './batch-add-delegatee';
-export * from './batch-remove-delegatee';
 export * from './select-pkp';
 export * from './new-pkp-owner';

@@ -1,7 +1,7 @@
 /**
  * Retrieves token information (decimals, balance, and parsed amount).
  * @param {any} provider - The Ethereum provider.
- * @returns {Promise<{ decimals: number, balance: any, amount: any }>} Token information.
+ * @returns {Promise<{ decimals: BigNumber, balance: BigNumber, amount: BigNumber }>} Token information.
  */
 export async function getTokenInfo(
   provider: any,

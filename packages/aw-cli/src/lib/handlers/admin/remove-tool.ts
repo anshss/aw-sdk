@@ -17,9 +17,6 @@ import {
   promptSelectToolForRemoval,
 } from '../../prompts/admin/remove-tool';
 
-// Import the handleGetTools function to retrieve permitted tools.
-import { handleGetTools } from './get-tools';
-
 /**
  * Removes a tool from the Full Self-Signing (AW) system.
  * This function prompts the user to confirm the action, removes the tool,
@@ -56,14 +53,15 @@ const removeTool = async (
  */
 export const handleRemoveTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
   try {
-    // Retrieve the list of permitted tools.
-    const permittedTools = await handleGetTools(awAdmin, pkp);
+    const registeredTools = await awAdmin.getRegisteredToolsAndDelegateesForPkp(
+      pkp.info.tokenId
+    );
 
     // If no permitted tools are found, throw an error.
     if (
-      permittedTools === null ||
-      (permittedTools.toolsWithPolicies.length === 0 &&
-        permittedTools.toolsWithoutPolicies.length === 0)
+      registeredTools === null ||
+      (Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+        Object.keys(registeredTools.toolsWithoutPolicies).length === 0)
     ) {
       throw new AwCliError(
         AwCliErrorType.ADMIN_REMOVE_TOOL_NO_PERMITTED_TOOLS,
@@ -75,7 +73,7 @@ export const handleRemoveTool = async (awAdmin: AwAdmin, pkp: PkpInfo) => {
     await removeTool(
       awAdmin,
       pkp,
-      await promptSelectToolForRemoval(permittedTools)
+      await promptSelectToolForRemoval(registeredTools)
     );
   } catch (error) {
     // Handle specific errors related to tool removal.

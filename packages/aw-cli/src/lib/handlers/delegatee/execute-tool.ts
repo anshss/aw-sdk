@@ -40,13 +40,13 @@ export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
     // Prompt the user to select a PKP.
     const selectedPkp = (await promptSelectPkp(pkps)) as DelegatedPkpInfo;
 
-    const registeredTools = await awDelegatee.getRegisteredToolsForPkp(
+    const registeredTools = await awDelegatee.getPermittedToolsForPkp(
       selectedPkp.tokenId
     );
 
     if (
-      registeredTools.toolsWithPolicies.length === 0 &&
-      registeredTools.toolsWithoutPolicies.length === 0
+      Object.keys(registeredTools.toolsWithPolicies).length === 0 &&
+      Object.keys(registeredTools.toolsWithoutPolicies).length === 0
     ) {
       throw new AwCliError(
         AwCliErrorType.DELEGATEE_SELECT_TOOL_NO_TOOLS,
@@ -54,39 +54,41 @@ export const handleExecuteTool = async (awDelegatee: AwDelegatee) => {
       );
     }
 
-    if (registeredTools.toolsWithPolicies.length > 0) {
+    if (Object.keys(registeredTools.toolsWithPolicies).length > 0) {
       logger.log(`Tools with Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithPolicies.forEach((tool) => {
+      Object.values(registeredTools.toolsWithPolicies).forEach((tool) => {
         logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
       });
     }
 
     // Process tools without policies.
-    if (registeredTools.toolsWithoutPolicies.length > 0) {
+    if (Object.keys(registeredTools.toolsWithoutPolicies).length > 0) {
       logger.log(`Tools without Policies for PKP ${selectedPkp.ethAddress}:`);
-      registeredTools.toolsWithoutPolicies.forEach((tool) => {
+      Object.values(registeredTools.toolsWithoutPolicies).forEach((tool) => {
         logger.log(`  - ${tool.name} (${tool.ipfsCid})`);
       });
     }
 
     // Select a tool
     const selectedTool = await promptSelectTool(
-      registeredTools.toolsWithPolicies,
-      registeredTools.toolsWithoutPolicies
+      Object.values(registeredTools.toolsWithPolicies),
+      Object.values(registeredTools.toolsWithoutPolicies)
     );
 
     // If the tool has a policy, display it
-    const toolWithPolicy = registeredTools.toolsWithPolicies.find(
-      (tool) => tool.ipfsCid === selectedTool.ipfsCid
-    );
+    const toolWithPolicy = Object.values(
+      registeredTools.toolsWithPolicies
+    ).find((tool) => tool.ipfsCid === selectedTool.ipfsCid);
     if (toolWithPolicy) {
       const policy = await awDelegatee.getToolPolicy(
         selectedPkp.tokenId,
         selectedTool.ipfsCid
       );
-      const decodedPolicy = selectedTool.policy.decode(policy.policy);
-      logger.info('Tool Policy:');
-      logger.log(JSON.stringify(decodedPolicy, null, 2));
+      // const decodedPolicy = selectedTool.policy.decode(policy.policy);
+      // logger.info('Tool Policy:');
+      // logger.log(JSON.stringify(decodedPolicy, null, 2));
+      logger.info(`Policy IPFS CID: ${policy.policyIpfsCid}`);
+      logger.info(`Policy Enabled: ${policy.enabled ? '✅' : '❌'}`);
     }
 
     // Prompt the user to provide tool parameters.
