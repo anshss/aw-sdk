@@ -128,8 +128,11 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - Policy definitions
 - **Examples**:
   - `aw-tool-uniswap-swap`: Uniswap V3 swap functionality
+    - Default policy IPFS CID: `Qmc6RAbV3WAqfNLvkAxp4hYjd4TDim4PwjWyhGbM9X7nbR`
   - `aw-tool-erc20-transfer`: ERC20 token transfers
+    - Default policy IPFS CID: `QmVHC5cTWE1nzBSzEASULdwfHo1QiYMEr5Ht83anxe6uWB`
   - `aw-tool-sign-ecdsa`: ECDSA signing operations
+    - Default policy IPFS CID: `QmPaViiSPUVViC2VkTn3PiRWpkqxnh44BxNY8TcHsuTpJi`
 
 #### Creating a New Tool Package
 To create a new Agent Wallet tool package, use the provided script:
