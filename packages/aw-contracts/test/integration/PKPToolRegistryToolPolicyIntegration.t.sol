@@ -14,8 +14,20 @@ import "../helpers/TestHelper.sol";
 contract PKPToolRegistryToolPolicyIntegrationTest is Test, TestHelper {
     using PKPToolRegistryStorage for PKPToolRegistryStorage.Layout;
 
+    uint256 constant PKP_TOKEN_ID = 1;
+    address constant PKP_OWNER = address(0x1234);
+    address constant DELEGATEE = address(0x5678);
+    PKPToolRegistryToolFacet toolRegistryToolFacet;
+    PKPToolRegistryPolicyFacet toolRegistryPolicyFacet;
+    PKPToolRegistryDelegateeFacet toolRegistryDelegateeFacet;
+    PKPToolRegistryPolicyParameterFacet toolRegistryPolicyParameterFacet;
+
     function setUp() public override {
         super.setUp();
+        toolRegistryToolFacet = PKPToolRegistryToolFacet(address(diamond));
+        toolRegistryPolicyFacet = PKPToolRegistryPolicyFacet(address(diamond));
+        toolRegistryDelegateeFacet = PKPToolRegistryDelegateeFacet(address(diamond));
+        toolRegistryPolicyParameterFacet = PKPToolRegistryPolicyParameterFacet(address(diamond));
     }
 
     /// @notice Test getting registered tools and their policies
@@ -857,5 +869,208 @@ contract PKPToolRegistryToolPolicyIntegrationTest is Test, TestHelper {
         assertEq(finalSetParams.length, 3, "Should have all three parameters");
 
         vm.stopPrank();
+    }
+
+    /// @notice Test that policy parameters are properly cleaned up when removing a delegatee
+    function test_policyParameterCleanupOnDelegateeRemoval() public {
+        vm.startPrank(deployer);
+
+        // Step 1: Register a tool
+        string[] memory toolIpfsCids = new string[](1);
+        toolIpfsCids[0] = TEST_TOOL_CID;
+        PKPToolRegistryToolFacet(address(diamond)).registerTools(TEST_PKP_TOKEN_ID, toolIpfsCids, true);
+
+        // Step 2: Add delegatee
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = TEST_DELEGATEE;
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Step 3: Set policy for the tool and delegatee
+        string[] memory policyIpfsCids = new string[](1);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            toolIpfsCids,
+            delegatees,
+            policyIpfsCids,
+            true
+        );
+
+        // Step 4: Set multiple policy parameters
+        string[] memory paramNames = new string[](3);
+        paramNames[0] = "maxAmount";
+        paramNames[1] = "allowedTokens";
+        paramNames[2] = "allowedRecipients";
+        bytes[] memory paramValues = new bytes[](3);
+        paramValues[0] = abi.encode(1000);
+        paramValues[1] = abi.encode(["0x1234", "0x5678"]);
+        paramValues[2] = abi.encode(["0xabcd", "0xef01"]);
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramNames,
+            paramValues
+        );
+
+        // Step 5: Remove the delegatee
+        PKPToolRegistryDelegateeFacet(address(diamond)).removeDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Step 6: Add the delegatee back
+        PKPToolRegistryDelegateeFacet(address(diamond)).addDelegatees(TEST_PKP_TOKEN_ID, delegatees);
+
+        // Step 7: Set policy again
+        PKPToolRegistryPolicyFacet(address(diamond)).setToolPoliciesForDelegatees(
+            TEST_PKP_TOKEN_ID,
+            toolIpfsCids,
+            delegatees,
+            policyIpfsCids,
+            true
+        );
+
+        // Verify parameters are empty before setting them again
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parametersBeforeSet = PKPToolRegistryPolicyParameterFacet(address(diamond)).getAllToolPolicyParameters(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE
+        );
+        assertEq(parametersBeforeSet.length, 0, "Parameters should be empty after delegatee removal and re-adding");
+
+        // Also verify using getToolPolicyParameters for each parameter
+        for (uint i = 0; i < paramNames.length; i++) {
+            string[] memory queryParam = new string[](1);
+            queryParam[0] = paramNames[i];
+            PKPToolRegistryPolicyParameterFacet.Parameter[] memory specificParam = PKPToolRegistryPolicyParameterFacet(address(diamond)).getToolPolicyParameters(
+                TEST_PKP_TOKEN_ID,
+                TEST_TOOL_CID,
+                TEST_DELEGATEE,
+                queryParam
+            );
+            assertEq(specificParam.length, 0, string.concat("Parameter ", paramNames[i], " should be removed"));
+        }
+
+        // Step 8: Try to set the same parameters again - this should succeed
+        PKPToolRegistryPolicyParameterFacet(address(diamond)).setToolPolicyParametersForDelegatee(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE,
+            paramNames,
+            paramValues
+        );
+
+        // Verify all parameters were set correctly
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory finalParams = PKPToolRegistryPolicyParameterFacet(address(diamond)).getAllToolPolicyParameters(
+            TEST_PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            TEST_DELEGATEE
+        );
+        assertEq(finalParams.length, 3, "Should have all three parameters");
+
+        vm.stopPrank();
+    }
+
+    /// @notice Test that policy parameters are properly cleaned up when removing a delegatee
+    function test_policyParameterCleanupOnUnpermitTool() public {
+        // Register tool
+        string[] memory toolCids = new string[](1);
+        toolCids[0] = TEST_TOOL_CID;
+        vm.prank(deployer);
+        toolRegistryToolFacet.registerTools(PKP_TOKEN_ID, toolCids, true);
+
+        // Add delegatee
+        address[] memory delegatees = new address[](1);
+        delegatees[0] = DELEGATEE;
+        vm.prank(deployer);
+        toolRegistryDelegateeFacet.addDelegatees(PKP_TOKEN_ID, delegatees);
+
+        // Permit tool for delegatee
+        string[] memory toolsToPermit = new string[](1);
+        toolsToPermit[0] = TEST_TOOL_CID;
+        vm.prank(deployer);
+        toolRegistryToolFacet.permitToolsForDelegatees(PKP_TOKEN_ID, toolsToPermit, delegatees);
+
+        // Set policy for tool and delegatee
+        string[] memory policyIpfsCids = new string[](1);
+        policyIpfsCids[0] = TEST_POLICY_CID;
+        vm.prank(deployer);
+        toolRegistryPolicyFacet.setToolPoliciesForDelegatees(
+            PKP_TOKEN_ID,
+            toolsToPermit,
+            delegatees,
+            policyIpfsCids,
+            true
+        );
+
+        // Set policy parameter
+        string[] memory paramNames = new string[](1);
+        paramNames[0] = "maxAmount";
+        bytes[] memory paramValues = new bytes[](1);
+        paramValues[0] = abi.encode(uint256(100));
+        vm.prank(deployer);
+        toolRegistryPolicyParameterFacet.setToolPolicyParametersForDelegatee(
+            PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            DELEGATEE,
+            paramNames,
+            paramValues
+        );
+
+        // Verify parameter was set
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parametersBeforeUnpermit = toolRegistryPolicyParameterFacet.getToolPolicyParameters(
+            PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            DELEGATEE,
+            paramNames
+        );
+        assertEq(parametersBeforeUnpermit.length, 1);
+        assertEq(abi.decode(parametersBeforeUnpermit[0].value, (uint256)), 100);
+
+        // Unpermit tool for delegatee
+        vm.prank(deployer);
+        toolRegistryToolFacet.unpermitToolsForDelegatees(PKP_TOKEN_ID, toolsToPermit, delegatees);
+
+        // Verify parameters are cleaned up
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parametersAfterUnpermit = toolRegistryPolicyParameterFacet.getToolPolicyParameters(
+            PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            DELEGATEE,
+            paramNames
+        );
+        assertEq(parametersAfterUnpermit.length, 0);
+
+        // Re-permit tool for delegatee
+        vm.prank(deployer);
+        toolRegistryToolFacet.permitToolsForDelegatees(PKP_TOKEN_ID, toolsToPermit, delegatees);
+
+        // Set policy again
+        vm.prank(deployer);
+        toolRegistryPolicyFacet.setToolPoliciesForDelegatees(
+            PKP_TOKEN_ID,
+            toolsToPermit,
+            delegatees,
+            policyIpfsCids,
+            true
+        );
+
+        // Verify we can set the same parameter again
+        vm.prank(deployer);
+        toolRegistryPolicyParameterFacet.setToolPolicyParametersForDelegatee(
+            PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            DELEGATEE,
+            paramNames,
+            paramValues
+        );
+
+        // Verify parameter was set again
+        PKPToolRegistryPolicyParameterFacet.Parameter[] memory parametersAfterReset = toolRegistryPolicyParameterFacet.getToolPolicyParameters(
+            PKP_TOKEN_ID,
+            TEST_TOOL_CID,
+            DELEGATEE,
+            paramNames
+        );
+        assertEq(parametersAfterReset.length, 1);
+        assertEq(parametersAfterReset[0].name, "maxAmount");
+        assertEq(abi.decode(parametersAfterReset[0].value, (uint256)), 100);
     }
 } 

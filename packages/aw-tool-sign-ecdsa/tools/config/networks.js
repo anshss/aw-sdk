@@ -3,7 +3,7 @@
  */
 module.exports = {
   'datil-dev': {
-    pkpToolRegistryAddress: '0xC69f619ec6dB158cec7511823afC9720b942005B',
+    pkpToolRegistryAddress: '0x2707eabb60D262024F8738455811a338B0ECd3EC',
     litNetwork: 'datil-dev',
     outputFiles: [
       'deployed-lit-action-datil-dev.js',
@@ -11,7 +11,7 @@ module.exports = {
     ],
   },
   'datil-test': {
-    pkpToolRegistryAddress: '0xC1665Ba933250E9fB824b60d1B8df17336234973',
+    pkpToolRegistryAddress: '0x525bF2bEb622D7C05E979a8b3fFcDBBEF944450E',
     litNetwork: 'datil-test',
     outputFiles: [
       'deployed-lit-action-datil-test.js',
@@ -19,7 +19,7 @@ module.exports = {
     ],
   },
   datil: {
-    pkpToolRegistryAddress: '0x6d70AAD76e1C9C279acCD3899D432daEAAC19CA3',
+    pkpToolRegistryAddress: '0xBDEd44A02b64416C831A0D82a630488A854ab4b1',
     litNetwork: 'datil',
     outputFiles: [
       'deployed-lit-action-datil.js',

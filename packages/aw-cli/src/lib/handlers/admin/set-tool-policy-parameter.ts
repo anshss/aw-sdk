@@ -139,7 +139,10 @@ const promptPolicyParameter = async (
         value: 'address[]',
       },
       { title: 'String - String Value', value: 'string' },
-      { title: 'String[] - Array of Strings (Comma separated)', value: 'string[]' },
+      {
+        title: 'String[] - Array of Strings (Comma separated)',
+        value: 'string[]',
+      },
       { title: 'Boolean - True/False', value: 'boolean' },
     ],
   });
@@ -198,9 +201,10 @@ const promptPolicyParameter = async (
         break;
       }
       case 'string[]': {
-        const strings = parameterValue.split(',').map((str: string) => str.trim());
+        const strings = parameterValue
+          .split(',')
+          .map((str: string) => str.trim());
         processedValue = JSON.stringify(strings);
-        logger.info(`Processed value: ${processedValue}`);
         break;
       }
       case 'string':
