@@ -1,3 +1,11 @@
+/**
+ * Creates an instance of the PKP Tool Registry contract.
+ * This function initializes a contract instance with the core functions needed for
+ * delegatee verification and policy management within Lit Actions.
+ * 
+ * @param pkpToolRegistryAddress - The Ethereum address of the PKP Tool Registry contract.
+ * @returns A promise that resolves to an ethers Contract instance connected to the PKP Tool Registry.
+ */
 export const getPkpToolRegistryContract = async (
   pkpToolRegistryAddress: string
 ) => {

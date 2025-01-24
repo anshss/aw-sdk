@@ -8,6 +8,7 @@ Welcome to the **Lit Protocol Agent Wallet** project! This repository provides a
 - [Features](#features)
 - [Key Definitions](#key-definitions)
 - [Architecture](#architecture)
+- [Creating a New Tool](#creating-a-new-tool)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -67,14 +68,6 @@ The framework effectively separates the interests of the Agent owner and the dev
   - Ensures that the Agent's private key is never fully reconstructed by any single party.
   - Prevents the Admin, delegatee, or Lit from recreating the private key, enhancing security.
 
-### Interaction with LLMs
-
-The Agent Wallet integrates with LLMs (Large Language Models) through the `aw-subagent-openai` package, which acts as an intermediary between the AI Agent and the tool execution layer. The subagent's primary responsibilities are:
-- Parse the AI Agent's natural language intents into specific tool executions
-- Select the appropriate tool based on the Agent's intent
-- Validate and format parameters for tool execution
-
-The architecture ensures that all interactions are secure and policy-compliant, with LLMs having no direct access to signing operations or wallet controls. The subagent only helps interpret the AI Agent's intent and cannot bypass the policies set by the Admin.
 
 ### Package Dependencies
 
@@ -112,7 +105,6 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - Defines `AwTool` interface and network configurations
   - Implements network-specific configurations
   - Provides foundational types for all tools
-- **Dependencies**: Minimal (constants, tslib, zod)
 
 #### @lit-protocol/aw-tool-registry
 - **Purpose**: Central registry for managing and accessing tools
@@ -136,8 +128,39 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
   - Policy definitions
 - **Examples**:
   - `aw-tool-uniswap-swap`: Uniswap V3 swap functionality
+    - Default policy IPFS CID: `Qmc6RAbV3WAqfNLvkAxp4hYjd4TDim4PwjWyhGbM9X7nbR`
   - `aw-tool-erc20-transfer`: ERC20 token transfers
+    - Default policy IPFS CID: `QmVHC5cTWE1nzBSzEASULdwfHo1QiYMEr5Ht83anxe6uWB`
   - `aw-tool-sign-ecdsa`: ECDSA signing operations
+    - Default policy IPFS CID: `QmPaViiSPUVViC2VkTn3PiRWpkqxnh44BxNY8TcHsuTpJi`
+
+#### Creating a New Tool Package
+To create a new Agent Wallet tool package, use the provided script:
+
+```bash
+pnpm new-tool <tool-name>
+```
+
+For example:
+```bash
+pnpm new-tool my-feature
+```
+
+This will:
+1. Generate a new tool package in `packages/aw-tool-my-feature`
+2. Set up all necessary configuration files
+3. Create template files for your tool's logic
+
+After creation, you'll need to:
+1. Implement your tool's logic in:
+   - `src/lib/lit-actions/tool.ts` (Lit Action code)
+   - `src/lib/lit-actions/policy.ts` (Lit Action policy validation)
+   - `src/lib/policy.ts` (Tool policy configuration)
+   - `src/lib/tool.ts` (Tool functionality)
+
+2. Register your tool in `aw-tool-registry`:
+   - Import your tool in `registry.ts`
+   - Add your package as a dependency
 
 ### Security and Management
 
@@ -186,7 +209,31 @@ The Agent Wallet is composed of several packages, each with a specific purpose a
 
 ## Getting Started
 
-### Prerequisites
+### CLI Users
+
+You can install the Agent Wallet CLI [from NPM](https://www.npmjs.com/package/@lit-protocol/aw-cli) using:
+
+```bash
+pnpm add -g @lit-protocol/aw-cli
+```
+
+or
+
+```bash
+npm install -g @lit-protocol/aw-cli
+```
+
+or 
+
+```bash
+yarn global add @lit-protocol/aw-cli
+```
+
+### For Developers
+
+If you're wanting to develop an Agent Wallet tool, extend the functionality of the CLI, or contribute to the project, you'll need to follow the steps below.
+
+#### Prerequisites
 
 To get started with the Lit Protocol Agent Wallet, ensure the following prerequisites are met:
 
@@ -207,6 +254,9 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
 
    ```bash
    git clone https://github.com/LIT-Protocol/agent-wallet.git
+   ```
+
+   ```bash
    cd agent-wallet
    ```
 
@@ -214,6 +264,9 @@ To get started with the Lit Protocol Agent Wallet, ensure the following prerequi
 
    ```bash
    pnpm i
+   ```
+
+   ```bash
    pnpm build
    ```
 

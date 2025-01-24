@@ -36,7 +36,7 @@ export type PermittedTools = {
 const toolRegistry = new Map<string, NetworkSpecificTool<AwTool<any, any>>>();
 
 /**
- * Registers a tool in the registry.
+ * Registers a tool in the Tool Registry.
  * @param name - The name of the tool.
  * @param tool - The network-specific implementation of the tool.
  */
@@ -48,7 +48,7 @@ export function registerTool<T extends AwTool<any, any>>(
 }
 
 /**
- * Retrieves a tool from the registry by its name and network.
+ * Retrieves a tool from the Tool Registry by its name and network.
  * @param name - The name of the tool.
  * @param network - The Lit network for which the tool is registered.
  * @returns The tool if found, or `null` if the tool is not registered for the specified network.
