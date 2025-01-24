@@ -209,7 +209,31 @@ After creation, you'll need to:
 
 ## Getting Started
 
-### Prerequisites
+### CLI Users
+
+You can install the Agent Wallet CLI [from NPM](https://www.npmjs.com/package/@lit-protocol/aw-cli) using:
+
+```bash
+pnpm add -g @lit-protocol/aw-cli
+```
+
+or
+
+```bash
+npm install -g @lit-protocol/aw-cli
+```
+
+or 
+
+```bash
+yarn global add @lit-protocol/aw-cli
+```
+
+### For Developers
+
+If you're wanting to develop an Agent Wallet tool, extend the functionality of the CLI, or contribute to the project, you'll need to follow the steps below.
+
+#### Prerequisites
 
 To get started with the Lit Protocol Agent Wallet, ensure the following prerequisites are met:
 
