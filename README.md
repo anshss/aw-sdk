@@ -25,7 +25,7 @@ Lit's Agent Wallet provides AI Agents with the ability to be immune to tampering
 
 ## Video Demo
 
-[![Lit Agent Wallet](https://img.youtube.com/vi/e-4nqOHWF6k/0.jpg)](https://www.youtube.com/watch?v=e-4nqOHWF6k)
+[![Lit Agent Wallet](https://img.youtube.com/vi/Bn7Ru90MAQU/0.jpg)](https://www.youtube.com/watch?v=Bn7Ru90MAQU)
 
 ## Features
 
