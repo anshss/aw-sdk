@@ -1,6 +1,3 @@
-// Modified ipfs.ts
-import { join } from 'path';
-
 const DEFAULT_CIDS = {
   'datil-dev': {
     tool: 'DEV_TOOL_IPFS_CID',
@@ -16,23 +13,29 @@ const DEFAULT_CIDS = {
   },
 } as const;
 
+let deployedCids = DEFAULT_CIDS;
+
 function isNode(): boolean {
   return typeof process !== 'undefined' && 
          process.versions != null && 
          process.versions.node != null;
 }
 
-let deployedCids = DEFAULT_CIDS;
-
 if (isNode()) {
-  const { existsSync } = require('fs');
-  const ipfsPath = join(__dirname, '../../../dist/ipfs.json');
-  
-  if (existsSync(ipfsPath)) {
-    const ipfsJson = require(ipfsPath);
-    deployedCids = ipfsJson;
-  } else {
-    console.warn('Failed to read ipfs.json. Using default CIDs.');
+  try {
+    const path = require('path');
+    const fs = require('fs');
+    const url = require('url');
+    
+    const __filename = url.fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const ipfsPath = path.join(__dirname, '../../../dist/ipfs.json');
+    
+    if (fs.existsSync(ipfsPath)) {
+      deployedCids = require(ipfsPath);
+    }
+  } catch (error) {
+    console.warn('Failed to load IPFS config, using defaults');
   }
 }
 
